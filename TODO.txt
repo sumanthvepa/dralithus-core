@@ -1,0 +1,3 @@
+issue001-release0-print-instructions:
+  Read an YAML configuration file and print instructions needed to
+  create virtual machines specifdied in it.

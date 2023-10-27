@@ -1,0 +1,5 @@
+# Ignore the commit message file
+msg
+
+# Ignore Python venv directory
+venv

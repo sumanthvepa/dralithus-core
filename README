@@ -1,0 +1,11 @@
+Dralithus is intended to be a command line tool to 'hydrate' a network of
+virtual machines.
+
+ Dralithus takes a configuration file specified either by the
+--config / -f option or if no option is specified, it will look for a
+file named network.yaml in the current working directory.
+
+Release 0:
+Dralithus will read the contents of the YAML file and print instructions
+to create the VMs specified in it.
+
