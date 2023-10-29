@@ -1,5 +1,10 @@
-# Ignore the commit message file
-msg
+
+# Ignore OS artifacts
+.DS_Store
 
 # Ignore Python venv directory
 venv
+__pycache__
+
+# Ignore the commit message file
+msg

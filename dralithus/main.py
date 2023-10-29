@@ -1,6 +1,6 @@
-#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
-dralithus: A command  line tool to hydrate a network of virtual machines
+main.py: Entry point function for the dralithus command line tool.
 """
 # Copyright 2023. Sumanth Vepa. svepa@milestone42.com
 #
@@ -23,11 +23,7 @@ import sys
 
 import yaml
 
-
-def read_network_configuration(filename: str) -> dict:
-  """ Read the contents of a dralithus network configuration file. """
-  with open(filename, encoding='utf-8') as config_stream:
-    return yaml.safe_load(config_stream)
+from dralithus import configuration
 
 
 def main():
@@ -36,13 +32,9 @@ def main():
     current directory.
   """
   try:
-    config = read_network_configuration('network.yaml')
-    print(type(config))
+    config: dict = configuration.read('network.yaml')
     print(config)
   except yaml.YAMLError as ex:
     print(ex, file=sys.stderr)
     sys.exit(1)
   sys.exit(0)
-
-
-main()

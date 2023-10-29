@@ -1,0 +1,8 @@
+#!/usr/bin/env python3
+"""
+  drl: Command line tool to manage networks of virtual machines.
+"""
+from dralithus.main import main
+
+if __name__ == '__main__':
+  main()
