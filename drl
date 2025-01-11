@@ -1,8 +1,15 @@
 #!/usr/bin/env python3
 """
-  drl: Command line tool to manage networks of virtual machines.
+  drl: Command line tool to deply applications to various environments
 """
-from dralithus.main import main
+
+
+def main() -> None:
+  """
+    Parse the command line and print the environment name and the
+    application name
+  """
+
 
 if __name__ == '__main__':
   main()
