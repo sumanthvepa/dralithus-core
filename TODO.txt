@@ -1,3 +1,6 @@
+issue002-release0-print-command-line-parameters:
+  Parse the command line and print the environment name and the
+  application name
 [CANCELLED]issue001-release0-print-instructions:
   Read an YAML configuration file and print instructions needed to
   create virtual machines specified in it.

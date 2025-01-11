@@ -1,11 +1,61 @@
 Dralithus is intended to be a command line tool to 'hydrate' a network of
-virtual machines.
+virtual machines and containers to deploy applications to various environment
 
- Dralithus takes a configuration file specified either by the
---config / -f option or if no option is specified, it will look for a
-file named network.yaml in the current working directory.
 
 Release 0:
-Dralithus will read the contents of the YAML file and print instructions
-to create the VMs specified in it.
+When invoked as follows:
+dralithus deploy --environment='local' sample
+
+The program should print the following:
+{
+  "application": "sample"
+  "environment": "local"
+}
+
+# The following are notes for a future release
+Release N:
+The following command should work:
+
+dralithus deploy --environment='local' sample
+
+This will deploy the application sample to the local environment
+
+In the code above sample refers to the name of an sample
+CRUD application that stores key/value pairs and allows
+visitors to add, delete or modify such keys and values.
+
+
+
+For this work, the user must provide the following configuration
+files:
+
+environments/local.yaml:
+  This describes virtual machines available in the environment
+  and the purpose they may be used for.
+
+applications/sample.yaml:
+  This describes source code repository that contains
+  the code and files that can build the code
+
+configuration/sample-local.yaml:
+  This describes the parameters, if any, that need to be passed
+  to the build system to build for the environment specified
+  by local.yaml
+
+  In addition it describes and points to any data, including
+  secrets that need to be passed to various components of
+  the application
+
+It is important to note that release0 might *only* be able
+to deploy the sample application, and that only to the
+specific 'local.yaml'  environment. It might make
+assumptions about the environment that are valid
+only for the primary developer of the application
+(svepa@milestone42.com)
+
+The local environment is intended to represent a development
+environment that developer might have. Specifically, 
+we assume that we are deploying to a host running
+almalinux:9 which has already been provisioned correctly
+with docker.
 
