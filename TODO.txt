@@ -1,3 +1,6 @@
-issue001-release0-print-instructions:
+[CANCELLED]issue001-release0-print-instructions:
   Read an YAML configuration file and print instructions needed to
   create virtual machines specified in it.
+  Note: Upon revisiting the project, I felt it best to start it
+  differently based on what I know one year after I initiated the
+  project
