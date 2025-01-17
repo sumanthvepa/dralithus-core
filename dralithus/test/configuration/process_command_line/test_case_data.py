@@ -31,4 +31,4 @@ class TestCaseData(TypedDict):
   """
   args: Args
   expected: Operation | None
-  error: CommandLineError | None
+  error: type[CommandLineError] | None
