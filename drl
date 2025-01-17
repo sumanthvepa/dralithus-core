@@ -2,6 +2,10 @@
 """
   drl: Command line tool to deply applications to various environments
 """
+import sys
+import json
+
+from dralithus.configuration import process_command_line
 
 
 def main() -> None:
@@ -9,6 +13,8 @@ def main() -> None:
     Parse the command line and print the environment name and the
     application name
   """
+  configuration = process_command_line(sys.argv)
+  print(json.dumps(configuration))
 
 
 if __name__ == '__main__':
