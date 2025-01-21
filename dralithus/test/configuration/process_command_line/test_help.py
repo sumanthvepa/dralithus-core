@@ -235,7 +235,8 @@ class TestHelp(unittest.TestCase):
       result = dict(process_command_line(args))
       expected = dict(case['expected'])
       self.assertDictEqual(result, expected,
-        'Failed test case:\n' + str(case['args']) + '\nexpected: ' + str(expected))
+        'Failed test case:\n' + str(case['args']) \
+        + '\nexpected: ' + str(expected) + '\nactual: ' + str(result))
     elif case['error'] is not None:
       # The 'elif' above is not strictly necessary. At this point case['error']
       # is guaranteed to be not None. It there to stop mypy from complaining
