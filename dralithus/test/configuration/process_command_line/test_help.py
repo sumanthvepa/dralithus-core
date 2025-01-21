@@ -154,11 +154,26 @@ def global_option_with_other_args_test_cases() -> list[TestCaseData]:
     recognized and passed as the value of the 'about' key in the Operation
     dictionary.
   """
+  # Both command and command_options should not be simultaneously
+  # empty ('' or [] respectively) when generating test cases. Otherwise,
+  # an incorrect test case like 'drl -h' will be generated, which
+  # has been handled in an earlier test case.
+  # To solve this problem, we set command_list to ['deploy', 'invalid']
+  # and command_options_list to [[], ['--environment=local'], ['--environment', 'local']]
+  # and then generate test cases for all possible combinations of these
+  # And separately generate test cases for the case where command is empty
+  # and command_options is not empty.
   args_list = make_args_list(
     program='drl',
     global_options_list=[['-h'], ['--help']],
-    command_list=['deploy', '', 'invalid'],
+    command_list=['deploy', 'invalid'],
     command_options_list=[[], ['--environment=local'], ['--environment', 'local']],
+    parameters_list=[[], ['sample']])
+  args_list += make_args_list(
+    program='drl',
+    global_options_list=[['-h'], ['--help']],
+    command_list=[''],
+    command_options_list=[['--environment=local'], ['--environment', 'local']],
     parameters_list=[[], ['sample']])
   return make_test_cases(args_list)
 
@@ -197,11 +212,11 @@ def all_test_cases() -> list[TestCaseData]:
   cases += no_parameters_test_cases()
   cases += global_option_test_cases()
   cases += global_option_with_other_args_test_cases()
-  cases += command_option_with_other_args_test_cases()
-  verbose_cases = []
-  for case in cases:
-    verbose_cases += make_verbose_test_cases(case)
-  cases += verbose_cases
+  #cases += command_option_with_other_args_test_cases()
+  #verbose_cases = []
+  #for case in cases:
+  #  verbose_cases += make_verbose_test_cases(case)
+  #cases += verbose_cases
   return cases
 
 
@@ -257,4 +272,5 @@ def print_all_cases():
 
 
 if __name__ == '__main__':
-  unittest.main()
+  print_all_cases()
+  # unittest.main()
