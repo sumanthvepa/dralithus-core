@@ -9,12 +9,13 @@ class CommandLineError(RuntimeError):
     CommandLineError: An error occurred while processing the command line
   """
 
-  def __init__(self, message: str) -> None:
+  def __init__(self, verbosity, message: str) -> None:
     """
       Initialize the CommandLineError
       :param message: The error message
     """
     super().__init__(message)
+    self.verbosity = verbosity
 
 
 class Operation(TypedDict):
@@ -40,6 +41,21 @@ class Operation(TypedDict):
   applications: list[str] | None
   environments: list[str] | None
   verbosity: int
+
+def help_message(command: str | None, verbosity: int) -> str:
+  """
+    Generate a help message
+
+    Generate a help message for the specified command. The verbosity level
+    determines how much information is included in the help message.
+
+    :param command: str: The command to generate help for
+    :param verbosity: int: The verbosity level
+  """
+  # TODO: Implement help_message
+  if command is None:
+    return f"Global help message. Verbosity {verbosity}"
+  return f"Help message for {command}. Verbosity {verbosity}"
 
 
 # pylint: disable=unused-argument
