@@ -96,6 +96,11 @@ def process_command_line(args: list[str]) -> Operation:
     - verbosity: int:  The verbosity level. 0 is the default.
   """
   # TODO: Implement this.
+
+  # If no arguments are provided, raise an error.
+  if len(args) < 2:
+    raise CommandLineError(verbosity=0, message='Command not specified')
+
   return {
     'command': 'help',
     'about': None,
