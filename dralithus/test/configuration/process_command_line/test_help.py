@@ -12,7 +12,11 @@ from typing import Callable
 
 from dralithus.test.configuration.process_command_line import Args, ErrorDict, TestCaseData
 
-from dralithus.configuration import CommandLineError, Operation, process_command_line
+from dralithus.configuration import (
+  CommandLineError,
+   Operation,
+  is_valid_command,
+  process_command_line)
 
 
 def interleave_into(list1: list[str], list2: list[str]) -> list[list[str]]:
@@ -30,10 +34,6 @@ def interleave_lists(list1: list[str], lists: list[list[str]]) -> list[list[str]
   for list2 in lists:
     interleaved += interleave_into(list1, list2)
   return interleaved
-
-def is_valid_command(command: str) -> bool:
-  """ Check if the given command is a valid command """
-  return command in ['deploy']
 
 def make_args_list(
     program: str,
