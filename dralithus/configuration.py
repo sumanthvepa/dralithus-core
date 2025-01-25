@@ -20,6 +20,11 @@ class CommandLineError(RuntimeError):
     self.program = program
     self.verbosity = verbosity
 
+  def __str__(self):
+    message = super().__str__()
+    return ('CommandLineError('
+      + f'program="{self.program}", verbosity={self.verbosity}, message="{message}")')
+
 
 class Operation(TypedDict):
   """
@@ -91,9 +96,10 @@ def get_option_value(regex: str, option: str) -> int | None:
     return int(m.group(1))
   return None
 
-def get_verbosity(command_line: list[str]) -> int:
+def get_verbosity(command_line: list[str]) -> tuple[int, list[str]]:
   """ Get the verbosity level from the command line """
   verbosity = 0
+  command_line_without_verbosity_options = []
   for arg in command_line:
     # If the argument is '-v' or '--verbose', then either
     # increment the verbosity value or set it to the value
@@ -109,16 +115,40 @@ def get_verbosity(command_line: list[str]) -> int:
       if value is not None:
         verbosity = value
         continue
+      pattern = r'^-v (\d+)$'
+      value = get_option_value(pattern, arg)
+      if value is not None:
+        verbosity = value
+        continue
       pattern = r'^--verbose=(\d+)$'
       value = get_option_value(pattern, arg)
       if value is not None:
         verbosity = value
         continue
       verbosity += 1
-  return verbosity
+    else:
+      command_line_without_verbosity_options.append(arg)
+  return verbosity, command_line_without_verbosity_options
+
+
+def irrelevant_help_arguments(command_line: list[str]) -> bool:
+  """
+    Check if there are irrelevant arguments in the command line
+
+    Check if there are irrelevant arguments in the command line. Irrelevant
+    arguments are arguments that are not related to the help command.
+
+    :param command_line: list[str]: The command line arguments
+    :return: bool: True if there are irrelevant arguments, otherwise False
+  """
+  for arg in command_line:
+    if arg not in ['-h', '--help']:
+      return True
+  return False
 
 def is_asking_for_help(
-    program: str, command: str | None,
+    program: str,
+    command: str | None,
     verbosity: int,
     command_line: list[str]) -> Operation | None:
   """
@@ -147,20 +177,25 @@ def is_asking_for_help(
       'verbosity': verbosity
     }
   if '-h' in command_line or '--help' in command_line:
-    if command is None:
+    if command is not None:
+      if not is_valid_command(command):
+        raise CommandLineError(
+          program=program, verbosity=verbosity, message=f'Invalid command {command}')
       return {
         'command': 'help',
-        'about': None,
+        'about': command,
         'applications': None,
         'environments': None,
         'verbosity': verbosity
       }
-    if not is_valid_command(command):
+    # command is None
+    if irrelevant_help_arguments(command_line):
       raise CommandLineError(
-        program=program, verbosity=verbosity, message=f'Invalid command {command}')
+        program=program, verbosity=verbosity, message='Irrelevant arguments found')
+    # The user is asking for global help
     return {
       'command': 'help',
-      'about': command,
+      'about': None,
       'applications': None,
       'environments': None,
       'verbosity': verbosity
@@ -246,12 +281,18 @@ def process_command_line(args: list[str]) -> Operation:
   command_line = merge_option_values(command_line)
 
   command = get_command(command_line)
-  verbosity = get_verbosity(command_line)
+  # Get the verbosity level from the command line, and also remove the
+  # verbosity options from the command line in the process.
+  verbosity, command_line = get_verbosity(command_line)
 
   # If the user is asking for help, return the help operation
   operation = is_asking_for_help(program, command, verbosity, command_line)
   if operation is not None:
     return operation
+
+  if command is None:
+    raise CommandLineError(program=program, verbosity=0, message='Command not specified')
+
 
   # TODO: Implement rest of process_command_line beyond this point
   raise CommandLineError(
