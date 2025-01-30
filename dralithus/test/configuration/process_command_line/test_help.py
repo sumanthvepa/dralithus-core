@@ -10,6 +10,8 @@ import copy
 import unittest
 from typing import Callable
 
+from parameterized import parameterized
+
 from dralithus.test.configuration.process_command_line import Args, ErrorDict, TestCaseData
 
 from dralithus.configuration import (
@@ -51,9 +53,9 @@ def make_args_list(
           args_list.append(args)
   return args_list
 
-def make_test_cases(args_list: list[Args]) -> list[TestCaseData]:
+def make_test_cases(args_list: list[Args]) -> list[tuple[TestCaseData]]:
   """ Generate a list of test cases based on the given list of Args objects """
-  cases: list[TestCaseData] = []
+  cases: list[tuple[TestCaseData]] = []
   for args in args_list:
     expected: Operation = {
       'command': 'help',
@@ -62,18 +64,18 @@ def make_test_cases(args_list: list[Args]) -> list[TestCaseData]:
       'environments': None,
       'verbosity': 0
     }
-    case: TestCaseData = {'args': args, 'expected': expected, 'error': None} \
+    case: tuple[TestCaseData] = ({'args': args, 'expected': expected, 'error': None},) \
       if is_valid_command(args.command) \
-  else {
+  else ({
       'args': args,
       'expected': None,
       'error': {'error_type': CommandLineError, 'verbosity': 0}
-    }
+    },)
     cases.append(case)
   return cases
 
 
-def make_verbose_test_cases(case: TestCaseData) -> list[TestCaseData]:
+def make_verbose_test_cases(case: TestCaseData) -> list[tuple[TestCaseData]]:
   """
   Create a list of test cases based on the given case, where
   the verbosity level is set to between 1 and 4 in all the
@@ -82,7 +84,7 @@ def make_verbose_test_cases(case: TestCaseData) -> list[TestCaseData]:
   :param case The test case to use as a template
   :return:
   """
-  verbose_cases: list[TestCaseData] = []
+  verbose_cases: list[tuple[TestCaseData]] = []
   verbose_flags_generators: list[Callable[[int], list[str]]] = [
     lambda count: ['-v'] * count,  # E.g #-v -v -v
     lambda count: [f'-{"v" * count}'], # E.g. -vvv
@@ -112,22 +114,22 @@ def make_verbose_test_cases(case: TestCaseData) -> list[TestCaseData]:
   for verbosity_count in range(1, 4):
     for flags_generator in verbose_flags_generators:
       global_case = make_case(verbosity_count, flags_generator, global_option=True)
-      verbose_cases.append(global_case)
+      verbose_cases.append((global_case,))
       command_case = make_case(verbosity_count, flags_generator, global_option=False)
-      verbose_cases.append(command_case)
+      verbose_cases.append((command_case,))
 
   return verbose_cases
 
-def no_parameters_test_cases() -> list[TestCaseData]:
+def no_parameters_test_cases() -> list[tuple[TestCaseData]]:
   """
     Test cases representing invocation of drl with no parameters
     i.e. just drl.
   """
   args = Args(program='drl', global_options=[], command='', command_options=[], parameters=[])
-  return [TestCaseData(
-    args=args, expected=None, error={'error_type': CommandLineError, 'verbosity': 0})]
+  return [(TestCaseData(
+    args=args, expected=None, error={'error_type': CommandLineError, 'verbosity': 0}),)]
 
-def global_option_test_cases() -> list[TestCaseData]:
+def global_option_test_cases() -> list[tuple[TestCaseData]]:
   """
     Test cases representing invocation of drl with the --help global option
     and nothing else. i.e. drl --help or drl -h
@@ -135,10 +137,10 @@ def global_option_test_cases() -> list[TestCaseData]:
   # pylint: disable=line-too-long
   args_list = make_args_list('drl', [['-h'], ['--help']], [''], [[]],[[]])
   expected: Operation = {'command': 'help', 'about': None, 'applications': None, 'environments': None, 'verbosity': 0 }
-  return [{'args': args, 'expected': expected, 'error': None} for args in args_list]
+  return [({'args': args, 'expected': expected, 'error': None},) for args in args_list]
 
 
-def global_option_with_other_args_test_cases() -> list[TestCaseData]:
+def global_option_with_other_args_test_cases() -> list[tuple[TestCaseData]]:
   """
     Test cases representing invocation of drl with the --help global option
     other non-verbosity flag arguments.
@@ -178,7 +180,7 @@ def global_option_with_other_args_test_cases() -> list[TestCaseData]:
   return make_test_cases(args_list)
 
 
-def command_option_with_other_args_test_cases() -> list[TestCaseData]:
+def command_option_with_other_args_test_cases() -> list[tuple[TestCaseData]]:
   """
     Test cases representing invocation of drl with the --help
     passed as a command option
@@ -206,17 +208,17 @@ def command_option_with_other_args_test_cases() -> list[TestCaseData]:
     parameters_list=[[], ['sample']])
   return make_test_cases(args_list)
 
-def all_test_cases() -> list[TestCaseData]:
+def all_test_cases() -> list[tuple[TestCaseData]]:
   """ Generate all the test cases for the help option """
-  cases: list[TestCaseData] = []
+  cases: list[tuple[TestCaseData]] = []
   cases += no_parameters_test_cases()
   cases += global_option_test_cases()
   cases += global_option_with_other_args_test_cases()
-  #cases += command_option_with_other_args_test_cases()
-  #verbose_cases = []
-  #for case in cases:
-  #  verbose_cases += make_verbose_test_cases(case)
-  #cases += verbose_cases
+  cases += command_option_with_other_args_test_cases()
+  verbose_cases: list[tuple[TestCaseData]] = []
+  for case in cases:
+    verbose_cases += make_verbose_test_cases(case[0])
+  cases += verbose_cases
   return cases
 
 
@@ -262,11 +264,11 @@ class TestHelp(unittest.TestCase):
         process_command_line(args)
       self.assertEqual(context.exception.verbosity, error['verbosity'])
 
-  def test_all_cases(self):
+  @parameterized.expand(all_test_cases())
+  def test_case(self, case: TestCaseData):
     """ Execute all the test cases """
-    cases = all_test_cases()
-    for case in cases:
-      self.execute_test(case)
+    self.execute_test(case)
+
 
 
 def print_all_cases():
