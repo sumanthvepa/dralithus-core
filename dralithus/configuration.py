@@ -144,6 +144,11 @@ def get_verbosity(command_line: list[str]) -> tuple[int, list[str]]:
       if value is not None:
         verbosity = value
         continue
+      pattern = r'^--verbose (\d+)$'
+      value = get_option_value(pattern, arg)
+      if value is not None:
+        verbosity = value
+        continue
       verbosity += 1
     else:
       command_line_without_verbosity_options.append(arg)
