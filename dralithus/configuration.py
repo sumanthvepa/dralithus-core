@@ -231,7 +231,8 @@ def merge_option_values(command_line: list[str]) -> list[str]:
             merged.append(f'{arg} {value}')
             i += 1 # Skip the next argument as it has been processed already
         except ValueError: # The next argument was not an integer
-          pass
+          # just add the option to the merged list
+          merged.append(arg)
       else:
         # The verbosity option is the last argument in the list
         merged.append(arg)
