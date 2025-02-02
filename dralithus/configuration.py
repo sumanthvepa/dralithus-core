@@ -118,7 +118,7 @@ def get_verbosity(command_line: list[str]) -> tuple[int, list[str]]:
     # If the argument is '-v' or '--verbose', then either
     # increment the verbosity value or set it to the value
     # specified in the argument.
-    if arg.startswith('-v') or arg.startswith('--verbose'):
+    if arg.startswith('-v'):
       pattern = r'^-(v+)$'
       value = get_option_value(pattern, arg)
       if value is not None:
@@ -139,6 +139,7 @@ def get_verbosity(command_line: list[str]) -> tuple[int, list[str]]:
       if value is not None:
         verbosity = value
         continue
+    elif arg.startswith('--verbose'):
       pattern = r'^--verbose=(\d+)$'
       value = get_option_value(pattern, arg)
       if value is not None:
