@@ -1,0 +1,66 @@
+DRL(1)                    General Commands Manual                   DRL(1)
+
+NAME
+     drl - Command line interface for the dralithus application
+
+SYNOPSIS
+     drl [global-options] command [command-options] [parameters]
+
+DESCRIPTION
+     The drl command is used to manage the dralithus application. It
+     supports various commands and options to control the behavior of
+     the application.
+
+GLOBAL OPTIONS
+     -h, --help
+             Display help information for the drl command or a specific
+             command.
+
+     -v, --verbose
+             Increase the verbosity level. This option can be specified
+             multiple times to increase the verbosity level further.
+
+COMMANDS
+     deploy
+             Deploy the specified applications to the specified environments.
+
+COMMAND OPTIONS
+     --environment=ENV
+             Specify the environment to deploy the application to.
+
+     --environment ENV
+             Specify the environment to deploy the application to.
+
+PARAMETERS
+     The parameters are specific to the command being executed.
+     For example, the deploy command may take a list of applications
+     to be deployed.
+
+EXAMPLES
+     Display global help information:
+           drl --help
+
+     Display help information for the deploy command:
+           drl deploy --help
+
+     Deploy an application to the local environment:
+           drl deploy --environment=local myapp
+
+     Deploy an application to the local environment with increased verbosity:
+           drl -v deploy --environment=local myapp
+
+ERRORS
+     If an error occurs while processing the command line, a
+     CommandLineError exception is raised with a message describing the error.
+
+SEE ALSO
+     The dralithus documentation for more detailed information on the
+     available commands and options.
+
+AUTHORS
+     The dralithus development team.
+
+COPYRIGHT
+     This is free software; see the source for copying conditions. There is
+     NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
+     PURPOSE.
