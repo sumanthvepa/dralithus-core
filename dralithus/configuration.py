@@ -294,7 +294,7 @@ def process_command_line(args: list[str]) -> Operation:
     return operation
 
   if command is None:
-    raise CommandLineError(program=program, verbosity=0, message='Command not specified')
+    raise CommandLineError(program=program, verbosity=verbosity, message='Command not specified')
 
 
   # TODO: Implement rest of process_command_line beyond this point
