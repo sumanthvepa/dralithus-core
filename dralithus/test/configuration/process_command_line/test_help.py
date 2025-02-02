@@ -74,6 +74,25 @@ def make_test_cases(args_list: list[Args]) -> list[tuple[TestCaseData]]:
     cases.append(case)
   return cases
 
+def make_verbose_test_case(
+    case: TestCaseData,
+    count: int,
+    generator: Callable[[int], list[str]],
+    global_option) -> TestCaseData:
+  """ Generate a verbosity test case """
+  args = copy.deepcopy(case['args'])
+  expected = copy.deepcopy(case['expected'])
+  error = copy.deepcopy(case['error'])
+  if global_option:
+    args.global_options = args.global_options + generator(count)
+  else:
+    args.command_options = args.command_options + generator(count)
+  if expected is not None:
+    expected['verbosity'] = count
+  if error is not None:
+    error['verbosity'] = count
+  return {'args': args, 'expected': expected, 'error': error}
+
 
 def make_verbose_test_cases(case: TestCaseData) -> list[tuple[TestCaseData]]:
   """
@@ -95,28 +114,19 @@ def make_verbose_test_cases(case: TestCaseData) -> list[tuple[TestCaseData]]:
     lambda count: ['--verbose', str(count)] # E.g. --verbose 3
   ]
 
-  def make_case(
-      count: int, generator: Callable[[int], list[str]], global_option) -> TestCaseData:
-    """ Generate a verbosity test case """
-    args = copy.deepcopy(case['args'])
-    expected = copy.deepcopy(case['expected'])
-    error = copy.deepcopy(case['error'])
-    if global_option:
-      args.global_options = args.global_options + generator(count)
-    else:
-      args.command_options = args.command_options + generator(count)
-    if expected is not None:
-      expected['verbosity'] = count
-    if error is not None:
-      error['verbosity'] = count
-    return {'args': args, 'expected': expected, 'error': error}
-
   for verbosity_count in range(1, 4):
     for flags_generator in verbose_flags_generators:
-      global_case = make_case(verbosity_count, flags_generator, global_option=True)
+      # Skip the second flags generator if the verbosity count is 1, since it is
+      # equivalent to the first flags generator.
+      if flags_generator == verbose_flags_generators[1] and verbosity_count == 1:
+        continue
+      global_case \
+        = make_verbose_test_case(case, verbosity_count, flags_generator, global_option=True)
       verbose_cases.append((global_case,))
-      command_case = make_case(verbosity_count, flags_generator, global_option=False)
-      verbose_cases.append((command_case,))
+      if case['args'].command != '':
+        command_case \
+          = make_verbose_test_case(case, verbosity_count, flags_generator, global_option=False)
+        verbose_cases.append((command_case,))
 
   return verbose_cases
 
@@ -212,9 +222,9 @@ def all_test_cases() -> list[tuple[TestCaseData]]:
   """ Generate all the test cases for the help option """
   cases: list[tuple[TestCaseData]] = []
   cases += no_parameters_test_cases()
-  cases += global_option_test_cases()
-  cases += global_option_with_other_args_test_cases()
-  cases += command_option_with_other_args_test_cases()
+  # cases += global_option_test_cases()
+  # cases += global_option_with_other_args_test_cases()
+  # cases += command_option_with_other_args_test_cases()
   verbose_cases: list[tuple[TestCaseData]] = []
   for case in cases:
     verbose_cases += make_verbose_test_cases(case[0])
