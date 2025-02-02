@@ -89,11 +89,25 @@ def get_command(command_line: list[str]) -> str | None:
 def get_option_value(regex: str, option: str) -> int | None:
   """
     Get the value of an option from a flag.
-    E.g. -v=3 or --verbose=4 or -v 3
+    E.g. -v or -vv or -v=3 or --verbose=4 or -v 3
   """
   m= re.match(regex, option)
   if m:
-    return int(m.group(1))
+    try:
+      str_value = m.group(1)
+      try:
+        int_value = int(str_value)
+        return int_value
+      except ValueError:
+        # The value is not an integer. However, it could be a string
+        # like 'vv'. In that case, return the length of the string.
+        # Otherwise, return None.
+        m1 = re.match(r'^([a-zA-Z]+)$', str_value)
+        if m1:
+          return len(m1.group(1))
+        return None
+    except IndexError:
+      return None # The regex matched but no value was found
   return None
 
 def get_verbosity(command_line: list[str]) -> tuple[int, list[str]]:
@@ -105,6 +119,11 @@ def get_verbosity(command_line: list[str]) -> tuple[int, list[str]]:
     # increment the verbosity value or set it to the value
     # specified in the argument.
     if arg.startswith('-v') or arg.startswith('--verbose'):
+      pattern = r'^-(v+)$'
+      value = get_option_value(pattern, arg)
+      if value is not None:
+        verbosity += value
+        continue
       pattern = r'^-v(\d+)$'
       value = get_option_value(pattern, arg)
       if value is not None:
