@@ -224,7 +224,7 @@ def all_test_cases() -> list[tuple[TestCaseData]]:
   cases += no_parameters_test_cases()
   cases += global_option_test_cases()
   cases += global_option_with_other_args_test_cases()
-  # cases += command_option_with_other_args_test_cases()
+  cases += command_option_with_other_args_test_cases()
   verbose_cases: list[tuple[TestCaseData]] = []
   for case in cases:
     verbose_cases += make_verbose_test_cases(case[0])
