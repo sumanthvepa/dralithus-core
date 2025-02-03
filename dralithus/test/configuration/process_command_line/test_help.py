@@ -6,16 +6,14 @@
   to get help for that command. Or, it can be used without a command to get
   help for the drl program as a whole.
 """
-import copy
-from typing import Callable
-
 from parameterized import parameterized
 
 from dralithus.test.configuration.process_command_line import (
   Args,
   TestCaseData,
   CommandLineTestCase,
-  make_args_list)
+  make_args_list,
+  make_verbose_test_cases)
 
 from dralithus.configuration import (
   CommandLineError,
@@ -58,62 +56,6 @@ def make_test_cases(args_list: list[Args]) -> list[tuple[TestCaseData]]:
     },)
     cases.append(case)
   return cases
-
-def make_verbose_test_case(
-    case: TestCaseData,
-    count: int,
-    generator: Callable[[int], list[str]],
-    global_option) -> TestCaseData:
-  """ Generate a verbosity test case """
-  args = copy.deepcopy(case['args'])
-  expected = copy.deepcopy(case['expected'])
-  error = copy.deepcopy(case['error'])
-  if global_option:
-    args.global_options = args.global_options + generator(count)
-  else:
-    args.command_options = args.command_options + generator(count)
-  if expected is not None:
-    expected['verbosity'] = count
-  if error is not None:
-    error['verbosity'] = count
-  return {'args': args, 'expected': expected, 'error': error}
-
-
-def make_verbose_test_cases(case: TestCaseData) -> list[tuple[TestCaseData]]:
-  """
-  Create a list of test cases based on the given case, where
-  the verbosity level is set to between 1 and 4 in all the
-  ways that it is allowed to set the verbosity level.
-
-  :param case The test case to use as a template
-  :return:
-  """
-  verbose_cases: list[tuple[TestCaseData]] = []
-  verbose_flags_generators: list[Callable[[int], list[str]]] = [
-    lambda count: ['-v'] * count,  # E.g #-v -v -v
-    lambda count: [f'-{"v" * count}'], # E.g. -vvv
-    lambda count: [f'-v={count}'], # E.g. -v=3
-    lambda count: ['-v', str(count)], # E.g. -v 3
-    lambda count: ['--verbose'] * count, # E.g. --verbose --verbose
-    lambda count: [f'--verbose={count}'], # E.g. --verbose=3
-    lambda count: ['--verbose', str(count)] # E.g. --verbose 3
-  ]
-
-  for verbosity_count in range(1, 4):
-    for flags_generator in verbose_flags_generators:
-      # Skip the second flags generator if the verbosity count is 1, since it is
-      # equivalent to the first flags generator.
-      if flags_generator == verbose_flags_generators[1] and verbosity_count == 1:
-        continue
-      global_case \
-        = make_verbose_test_case(case, verbosity_count, flags_generator, global_option=True)
-      verbose_cases.append((global_case,))
-      if case['args'].command != '':
-        command_case \
-          = make_verbose_test_case(case, verbosity_count, flags_generator, global_option=False)
-        verbose_cases.append((command_case,))
-
-  return verbose_cases
 
 def no_parameters_test_cases() -> list[tuple[TestCaseData]]:
   """
