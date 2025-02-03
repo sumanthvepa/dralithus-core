@@ -12,14 +12,17 @@ from typing import Callable
 
 from parameterized import parameterized
 
-from dralithus.test.configuration.process_command_line import Args, ErrorDict, TestCaseData
+from dralithus.test.configuration.process_command_line import (
+  Args,
+  ErrorDict,
+  TestCaseData,
+  make_args_list)
 
 from dralithus.configuration import (
   CommandLineError,
    Operation,
   is_valid_command,
   process_command_line)
-
 
 def interleave_into(list1: list[str], list2: list[str]) -> list[list[str]]:
   """ Interleave the elements of two lists into a list of lists """
@@ -36,22 +39,6 @@ def interleave_lists(list1: list[str], lists: list[list[str]]) -> list[list[str]
   for list2 in lists:
     interleaved += interleave_into(list1, list2)
   return interleaved
-
-def make_args_list(
-    program: str,
-    global_options_list: list[list[str]],
-    command_list: list[str],
-    command_options_list: list[list[str]],
-    parameters_list: list[list[str]]) -> list[Args]:
-  """" Generate a list of Args objects based on the given parameters """
-  args_list: list[Args] = []
-  for global_options in global_options_list:
-    for command in command_list:
-      for command_options in command_options_list:
-        for parameters in parameters_list:
-          args = Args(program, global_options, command, command_options, parameters)
-          args_list.append(args)
-  return args_list
 
 def make_test_cases(args_list: list[Args]) -> list[tuple[TestCaseData]]:
   """ Generate a list of test cases based on the given list of Args objects """
