@@ -86,13 +86,9 @@ def make_test_cases(args_list: list[Args]) -> list[tuple[TestCaseData]]:
       'environments': None,
       'verbosity': 0
     }
+    error = {'error_type': CommandLineError, 'verbosity': 0}
     case: tuple[TestCaseData] = ({'args': args, 'expected': expected, 'error': None},) \
-      if is_valid_command(args.command) \
-  else ({
-      'args': args,
-      'expected': None,
-      'error': {'error_type': CommandLineError, 'verbosity': 0}
-    },)
+      if is_valid_command(args.command) else ({'args': args, 'expected': None, 'error': error},)
     cases.append(case)
   return cases
 
