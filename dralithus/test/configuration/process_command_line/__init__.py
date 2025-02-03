@@ -2,9 +2,10 @@
   process_command_line: Unit tests and helper classes/functions to test the
   dralithus.configuration.process_command_line function.
 """
+import unittest
 from typing import Iterator, TypedDict
 
-from dralithus.configuration import Operation, CommandLineError
+from dralithus.configuration import Operation, CommandLineError, process_command_line
 
 
 # pylint: disable=too-few-public-methods
@@ -111,6 +112,45 @@ class TestCaseData(TypedDict):
   args: Args
   expected: Operation | None
   error: ErrorDict | None
+
+
+class CommandLineTestCase(unittest.TestCase):
+  def execute_test(self, case: TestCaseData) -> None:
+    """ Execute a test using the test case data """
+    # Convert the structured test case data to a list of arguments
+    args: list[str] = list(case['args'])
+    if case['expected'] is not None:
+      # We convert the expected and actual results to dictionaries
+      # so that we can compare them using assertDictEqual
+      expected = dict(case['expected'])
+      try:
+        result = dict(process_command_line(args))
+        self.assertDictEqual(result, expected,
+                             'Failed test case:\n' + str(case['args']) \
+                             + '\nexpected: ' + str(expected) + '\nactual: ' + str(result))
+      except CommandLineError as ex:
+        self.fail('Failed test case:\n' + str(case['args'])
+                  + '\nexpected: ' + str(expected) + '\nactual: ' + str(ex))
+    elif case['error'] is not None:
+      # The 'elif' above is not strictly necessary. At this point case['error']
+      # is guaranteed to be not None. It there to stop mypy from complaining
+      # about incompatible types in the next line where the right side is
+      # type[CommandLineError] | None and the left side is type[CommandLineError]
+      error: ErrorDict = case['error']
+      assert_message = 'Failed test case:\n' \
+                       + str(case['args']) \
+                       + '\nexpected: CommandLineError(verbosity=' \
+                       + str(error['verbosity']) + ')'
+
+      # This code uses a context to capture the exception raised by the
+      # process_command_line function. The with clause ensures checks
+      # that the exception is raised and that it is of the correct type.
+      # It also captures the exception in the context variable.
+      # The assertEqual statement checks that the verbosity level of the
+      # captured exception object.
+      with self.assertRaises(error['error_type'], msg=assert_message) as context:
+        process_command_line(args)
+      self.assertEqual(context.exception.verbosity, error['verbosity'])
 
 
 def make_args_list(
