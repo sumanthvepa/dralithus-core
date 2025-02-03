@@ -230,3 +230,13 @@ def make_verbose_test_cases(case: TestCaseData) -> list[tuple[TestCaseData]]:
         verbose_cases.append((command_case,))
 
   return verbose_cases
+
+
+def print_cases(cases: list[tuple[TestCaseData]]) -> None:
+  """
+    Print the test cases in list
+    :param cases: The list of test cases to print
+    :return: None
+  """
+  for case in cases:
+    print(case)

@@ -13,7 +13,8 @@ from dralithus.test.configuration.process_command_line import (
   TestCaseData,
   CommandLineTestCase,
   make_args_list,
-  make_verbose_test_cases)
+  make_verbose_test_cases,
+  print_cases)
 
 from dralithus.configuration import (
   CommandLineError,
@@ -170,14 +171,6 @@ class TestHelp(CommandLineTestCase):
     self.execute_test(case)
 
 
-
-def print_all_cases():
-  """ Print all the test cases """
-  cases = all_test_cases()
-  for case in cases:
-    print(case)
-
-
 if __name__ == '__main__':
-  print_all_cases()
+  print_cases(all_test_cases())
   # unittest.main()
