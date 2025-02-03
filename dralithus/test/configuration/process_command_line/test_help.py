@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
   test_help.py: Unit tests to test the --help global option in the command line
   interface (process_command_line) for the dralithus application.
@@ -6,6 +7,27 @@
   to get help for that command. Or, it can be used without a command to get
   help for the drl program as a whole.
 """
+# -------------------------------------------------------------------
+# test_help.py: Unit tests to test the --help global option in the
+# command line interface (process_command_line) for the dralithus
+# application.
+#
+# Copyright (C) 2023-25 Sumanth Vepa.
+#
+# This program is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License a
+# published by the Free Software Foundation, either version 3 of the
+# License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see
+# <https://www.gnu.org/licenses/>.
+# -------------------------------------------------------------------
 import copy
 import unittest
 from typing import Callable

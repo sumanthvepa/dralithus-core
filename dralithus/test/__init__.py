@@ -1,7 +1,13 @@
+# -*- coding: utf-8 -*-
 """
-dralithus/test/__init__.py: Module file for the dralithus test directory.
+dralithus/test/__init__.py: Unit tests and helper classes/functions
+to test the dralithus module.
 """
-# Copyright 2023. Sumanth Vepa. svepa@milestone42.com
+# -------------------------------------------------------------------
+# dralithus/test/__init__.py: Unit tests and helper classes/functions
+# to test the dralithus module.
+#
+# Copyright 2023-25. Sumanth Vepa. svepa@milestone42.com
 #
 # This file is part of dralithus-core.
 #
@@ -17,3 +23,4 @@ dralithus/test/__init__.py: Module file for the dralithus test directory.
 #
 # You should have received a copy of the GNU General Public License
 # along with dralithus-core. If not, see <https://www.gnu.org/licenses/>.
+# -------------------------------------------------------------------
