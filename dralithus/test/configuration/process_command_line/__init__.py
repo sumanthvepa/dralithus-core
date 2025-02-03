@@ -51,6 +51,13 @@ class Args:
       args = list(args_obj)
       ```
     """
+    if self.command == '':
+      return iter([
+        self.program,
+        *self.global_options,
+        *self.command_options,
+        *self.parameters
+      ])
     return iter([
       self.program,
       *self.global_options,
@@ -59,6 +66,27 @@ class Args:
       *self.parameters
     ])
 
+  def __str__(self):
+    """ Convert the Args object to a string """
+    return str(list(self))
+
+  def __repr__(self):
+    """ Convert the Args object to a string """
+    return str(self)
+
+class ErrorDict(TypedDict):
+  """
+    A dictionary that holds the expected error type and verbosity level
+
+    This data structure is used to define the expected output of a
+    process_command_line test when the function is expected to fail.
+
+    These are the fields:
+    - error_type: The expected error type
+    - verbosity: The expected verbosity level
+  """
+  error_type: type[CommandLineError]
+  verbosity: int
 
 class TestCaseData(TypedDict):
   """
@@ -82,4 +110,4 @@ class TestCaseData(TypedDict):
   """
   args: Args
   expected: Operation | None
-  error: type[CommandLineError] | None
+  error: ErrorDict | None

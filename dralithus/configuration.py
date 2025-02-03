@@ -1,7 +1,9 @@
 """
   configuration.py: Command line processing for dralithus
 """
+import re
 from typing import TypedDict
+
 
 
 class CommandLineError(RuntimeError):
@@ -9,12 +11,19 @@ class CommandLineError(RuntimeError):
     CommandLineError: An error occurred while processing the command line
   """
 
-  def __init__(self, message: str) -> None:
+  def __init__(self, program, verbosity, message: str) -> None:
     """
       Initialize the CommandLineError
       :param message: The error message
     """
     super().__init__(message)
+    self.program = program
+    self.verbosity = verbosity
+
+  def __str__(self):
+    message = super().__str__()
+    return ('CommandLineError('
+      + f'program="{self.program}", verbosity={self.verbosity}, message="{message}")')
 
 
 class Operation(TypedDict):
@@ -41,9 +50,223 @@ class Operation(TypedDict):
   environments: list[str] | None
   verbosity: int
 
+def help_message(command: str | None, verbosity: int) -> str:
+  """
+    Generate a help message
 
-# pylint: disable=unused-argument
-# noinspection PyUnusedLocal
+    Generate a help message for the specified command. The verbosity level
+    determines how much information is included in the help message.
+
+    :param command: str: The command to generate help for
+    :param verbosity: int: The verbosity level
+  """
+  # TODO: Implement help_message
+  if command is None:
+    return f"Global help message. Verbosity {verbosity}"
+  return f"Help message for {command}. Verbosity {verbosity}"
+
+def is_valid_command(command: str) -> bool:
+  """ Check if the given command is a valid command """
+  return command in ['deploy']
+
+
+def get_command(command_line: list[str]) -> str | None:
+  """
+    Get the command from the command line
+
+    :param command_line: list[str]: The command line arguments
+    :return: str | None: The command if it is found, otherwise None
+  """
+  # Skip over options until the first non-option argument is found
+  # This assumes that options taking values are specified as a single
+  # argument, e.g. '-v3'. i.e. that the merge_option_values function
+  # has been called to process the command line before this functon is called.
+  for arg in command_line:
+    if not arg.startswith('-'):
+      return arg
+  return None
+
+def get_option_value(regex: str, option: str) -> int | None:
+  """
+    Get the value of an option from a flag.
+    E.g. -v or -vv or -v=3 or --verbose=4 or -v 3
+  """
+  m= re.match(regex, option)
+  if m:
+    try:
+      str_value = m.group(1)
+      try:
+        int_value = int(str_value)
+        return int_value
+      except ValueError:
+        # The value is not an integer. However, it could be a string
+        # like 'vv'. In that case, return the length of the string.
+        # Otherwise, return None.
+        m1 = re.match(r'^([a-zA-Z]+)$', str_value)
+        if m1:
+          return len(m1.group(1))
+        return None
+    except IndexError:
+      return None # The regex matched but no value was found
+  return None
+
+def get_verbosity(command_line: list[str]) -> tuple[int, list[str]]:
+  """ Get the verbosity level from the command line """
+  verbosity = 0
+  command_line_without_verbosity_options = []
+  for arg in command_line:
+    # If the argument is '-v' or '--verbose', then either
+    # increment the verbosity value or set it to the value
+    # specified in the argument.
+    if arg.startswith('-v'):
+      pattern = r'^-(v+)$'
+      value = get_option_value(pattern, arg)
+      if value is not None:
+        verbosity += value
+        continue
+      pattern = r'^-v(\d+)$'
+      value = get_option_value(pattern, arg)
+      if value is not None:
+        verbosity = value
+        continue
+      pattern = r'^-v=(\d+)$'
+      value = get_option_value(pattern, arg)
+      if value is not None:
+        verbosity = value
+        continue
+      pattern = r'^-v (\d+)$'
+      value = get_option_value(pattern, arg)
+      if value is not None:
+        verbosity = value
+        continue
+    elif arg.startswith('--verbose'):
+      pattern = r'^--verbose=(\d+)$'
+      value = get_option_value(pattern, arg)
+      if value is not None:
+        verbosity = value
+        continue
+      pattern = r'^--verbose (\d+)$'
+      value = get_option_value(pattern, arg)
+      if value is not None:
+        verbosity = value
+        continue
+      verbosity += 1
+    else:
+      command_line_without_verbosity_options.append(arg)
+  return verbosity, command_line_without_verbosity_options
+
+
+def irrelevant_help_arguments(command_line: list[str]) -> bool:
+  """
+    Check if there are irrelevant arguments in the command line
+
+    Check if there are irrelevant arguments in the command line. Irrelevant
+    arguments are arguments that are not related to the help command.
+
+    :param command_line: list[str]: The command line arguments
+    :return: bool: True if there are irrelevant arguments, otherwise False
+  """
+  for arg in command_line:
+    if arg not in ['-h', '--help']:
+      return True
+  return False
+
+def is_asking_for_help(
+    program: str,
+    command: str | None,
+    verbosity: int,
+    command_line: list[str]) -> Operation | None:
+  """
+    Check if the user is asking for help, and if so, return the command
+    that help is being requested for.
+
+    The user is considered to be asking for help if the '-h' or '--help' option
+    is present in the command line arguments. Or if the command itself is help.
+
+    :param program: str: The name of the program
+    :param command: str | None: The command to be executed. If the command is None
+        then the user is asking for global help.
+    :param verbosity: int: The verbosity level
+    :param command_line: list[str]: The command line arguments (with the program name removed)
+    :return: Operation | None: If help is being requested, then an Operation
+        dictionary is returned. Otherwise, None is
+  """
+  # Scan through the command line arguments to see if any argument is
+  # either '-h' or '--help'.
+  if command == 'help':
+    return {
+      'command': 'help',
+      'about': None,
+      'applications': None,
+      'environments': None,
+      'verbosity': verbosity
+    }
+  if '-h' in command_line or '--help' in command_line:
+    if command is not None:
+      if not is_valid_command(command):
+        raise CommandLineError(
+          program=program, verbosity=verbosity, message=f'Invalid command {command}')
+      return {
+        'command': 'help',
+        'about': command,
+        'applications': None,
+        'environments': None,
+        'verbosity': verbosity
+      }
+    # command is None
+    if irrelevant_help_arguments(command_line):
+      raise CommandLineError(
+        program=program, verbosity=verbosity, message='Irrelevant arguments found')
+    # The user is asking for global help
+    return {
+      'command': 'help',
+      'about': None,
+      'applications': None,
+      'environments': None,
+      'verbosity': verbosity
+    }
+  # No help is being sought
+  return None
+
+def merge_option_values(command_line: list[str]) -> list[str]:
+  """
+    Merge option values that are split into two arguments
+
+    Some options are split into two arguments. For example, the verbosity
+    option can be specified as '-v 3' or '--verbose 3'. This function
+    merges such arguments into a single argument, example ['deploy' '-v' '3'] becomes
+    ['deploy', '-v3']
+
+    # Currently, this function only merges the verbosity option.
+
+    :param command_line: list[str]: The command line arguments
+    :return: list[str]: The command line arguments with the option values merged
+  """
+  merged = []
+  i = 0
+  while i < len(command_line):
+    arg = command_line[i]
+    if arg in ['-v', '--verbose']:
+      if i + 1 < len(command_line): # Don't try to look beyond the end of the list
+        # The next argument is a potential value for the verbosity option
+        potential_option_value = command_line[i + 1]
+        try:
+          value = int(potential_option_value)
+          if value >= 0: # Next argument is a positive integer
+            merged.append(f'{arg} {value}')
+            i += 1 # Skip the next argument as it has been processed already
+        except ValueError: # The next argument was not an integer
+          # just add the option to the merged list
+          merged.append(arg)
+      else:
+        # The verbosity option is the last argument in the list
+        merged.append(arg)
+    else:
+      # The argument is not -v or --verbose, so just add it to the merged list
+      merged.append(arg)
+    i += 1
+  return merged
+
 def process_command_line(args: list[str]) -> Operation:
   """
     Process command line arguments
@@ -61,8 +284,6 @@ def process_command_line(args: list[str]) -> Operation:
     different command line arguments without having to modify the actual command
     line.
 
-    TODO: args is not used, but will be, when the function is implemented.
-
     :param list[str] args: The command line arguments (typically sys.argv)
 
     :return: A dictionary containing details about the command to be executed
@@ -73,17 +294,37 @@ def process_command_line(args: list[str]) -> Operation:
         whole program) is requested. If the command is not help,  then about will
         always be None.
     - applications: None | list[str]: The applications to be deployed. The value
-        will be None if the command is does not take a list of applications.
+        will be None if the command does not take a list of applications.
     - environment: None | list[str]: The environments to deploy the application
         to. The value will be None if the command does not take a list of
         environments.
     - verbosity: int:  The verbosity level. 0 is the default.
   """
-  # TODO: Implement this.
-  return {
-    'command': 'help',
-    'about': None,
-    'applications': None,
-    'environments': None,
-    'verbosity': 0
-  }
+  # Set the program name
+  program = args[0] if len(args) > 0 else 'dralithus'
+  # If no arguments are provided, raise an error.
+  if len(args) < 2:
+    raise CommandLineError(program=program, verbosity=0, message='Command not specified')
+
+  command_line = args[1:]
+  command_line = merge_option_values(command_line)
+
+  command = get_command(command_line)
+  # Get the verbosity level from the command line, and also remove the
+  # verbosity options from the command line in the process.
+  verbosity, command_line = get_verbosity(command_line)
+
+  # If the user is asking for help, return the help operation
+  operation = is_asking_for_help(program, command, verbosity, command_line)
+  if operation is not None:
+    return operation
+
+  if command is None:
+    raise CommandLineError(program=program, verbosity=verbosity, message='Command not specified')
+
+
+  # TODO: Implement rest of process_command_line beyond this point
+  raise CommandLineError(
+    program=program,
+    verbosity=verbosity,
+    message='Feature implementation is not complete')
