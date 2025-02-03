@@ -116,6 +116,11 @@ class TestCaseData(TypedDict):
 
 
 class CommandLineTestCase(unittest.TestCase):
+  """
+  Base class for test cases for the process_command_line function
+
+  This class provides a method to execute a test using a TestCaseData object
+"""
   def execute_test(self, case: TestCaseData) -> None:
     """ Execute a test using the test case data """
     # Convert the structured test case data to a list of arguments
