@@ -7,22 +7,20 @@
   help for the drl program as a whole.
 """
 import copy
-import unittest
 from typing import Callable
 
 from parameterized import parameterized
 
 from dralithus.test.configuration.process_command_line import (
   Args,
-  ErrorDict,
   TestCaseData,
+  CommandLineTestCase,
   make_args_list)
 
 from dralithus.configuration import (
   CommandLineError,
    Operation,
-  is_valid_command,
-  process_command_line)
+  is_valid_command)
 
 def interleave_into(list1: list[str], list2: list[str]) -> list[list[str]]:
   """ Interleave the elements of two lists into a list of lists """
@@ -219,48 +217,11 @@ def all_test_cases() -> list[tuple[TestCaseData]]:
   return cases
 
 
-class TestHelp(unittest.TestCase):
+class TestHelp(CommandLineTestCase):
   """
     Test that the --help option is handled correctly by the
     process_command_line function.
   """
-  def execute_test(self, case: TestCaseData) -> None:
-    """ Execute a test using the test case data """
-    # Convert the structured test case data to a list of arguments
-    args: list[str] = list(case['args'])
-    if case['expected'] is not None:
-      # We convert the expected and actual results to dictionaries
-      # so that we can compare them using assertDictEqual
-      expected = dict(case['expected'])
-      try:
-        result = dict(process_command_line(args))
-        self.assertDictEqual(result, expected,
-          'Failed test case:\n' + str(case['args']) \
-          + '\nexpected: ' + str(expected) + '\nactual: ' + str(result))
-      except CommandLineError as ex:
-        self.fail('Failed test case:\n' + str(case['args'])
-          + '\nexpected: ' + str(expected) + '\nactual: ' + str(ex))
-    elif case['error'] is not None:
-      # The 'elif' above is not strictly necessary. At this point case['error']
-      # is guaranteed to be not None. It there to stop mypy from complaining
-      # about incompatible types in the next line where the right side is
-      # type[CommandLineError] | None and the left side is type[CommandLineError]
-      error: ErrorDict = case['error']
-      assert_message = 'Failed test case:\n' \
-        + str(case['args']) \
-        + '\nexpected: CommandLineError(verbosity=' \
-        + str(error['verbosity']) + ')'
-
-      # This code uses a context to capture the exception raised by the
-      # process_command_line function. The with clause ensures checks
-      # that the exception is raised and that it is of the correct type.
-      # It also captures the exception in the context variable.
-      # The assertEqual statement checks that the verbosity level of the
-      # captured exception object.
-      with self.assertRaises(error['error_type'], msg=assert_message) as context:
-        process_command_line(args)
-      self.assertEqual(context.exception.verbosity, error['verbosity'])
-
   @parameterized.expand(all_test_cases())
   def test_case(self, case: TestCaseData):
     """ Execute all the test cases """
