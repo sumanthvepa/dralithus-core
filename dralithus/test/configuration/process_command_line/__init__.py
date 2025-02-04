@@ -159,6 +159,22 @@ class CommandLineTestCase(unittest.TestCase):
       self.assertEqual(context.exception.verbosity, error['verbosity'])
 
 
+def interleave_into(list1: list[str], list2: list[str]) -> list[list[str]]:
+  """ Interleave the elements of two lists into a list of lists """
+  interleaved: list[list[str]] = []
+  for item1 in list1:
+    for index in range(len(list2)+1):
+      result = list2[:index] + [item1] + list2[index:]
+      interleaved.append(result)
+  return interleaved
+
+def interleave_lists(list1: list[str], lists: list[list[str]]) -> list[list[str]]:
+  """ Interleave the elements of a list into a list of lists """
+  interleaved: list[list[str]] = []
+  for list2 in lists:
+    interleaved += interleave_into(list1, list2)
+  return interleaved
+
 def make_args_list(
     program: str,
     global_options_list: list[list[str]],
