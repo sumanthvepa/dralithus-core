@@ -13,7 +13,7 @@ from dralithus.test.configuration.process_command_line import (
   TestCaseData,
   CommandLineTestCase,
   make_args_list,
-  make_verbose_test_cases,
+  all_test_cases,
   print_cases)
 
 from dralithus.configuration import (
@@ -155,14 +155,6 @@ def help_base_test_cases() -> list[tuple[TestCaseData]]:
   cases += command_option_with_other_args_test_cases()
   return cases
 
-def all_test_cases() -> list[tuple[TestCaseData]]:
-  """ Generate all the test cases for the help option """
-  cases: list[tuple[TestCaseData]] = help_base_test_cases()
-  verbose_cases: list[tuple[TestCaseData]] = []
-  for case in cases:
-    verbose_cases += make_verbose_test_cases(case[0])
-  cases += verbose_cases
-  return cases
 
 
 class TestHelp(CommandLineTestCase):
@@ -170,12 +162,12 @@ class TestHelp(CommandLineTestCase):
     Test that the --help option is handled correctly by the
     process_command_line function.
   """
-  @parameterized.expand(all_test_cases())
+  @parameterized.expand(all_test_cases(help_base_test_cases()))
   def test_case(self, case: TestCaseData):
     """ Execute all the test cases """
     self.execute_test(case)
 
 
 if __name__ == '__main__':
-  print_cases(all_test_cases())
+  print_cases(all_test_cases(help_base_test_cases()))
   # unittest.main()

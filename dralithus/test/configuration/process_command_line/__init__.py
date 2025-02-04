@@ -231,6 +231,13 @@ def make_verbose_test_cases(case: TestCaseData) -> list[tuple[TestCaseData]]:
 
   return verbose_cases
 
+def all_test_cases(cases: list[tuple[TestCaseData]]) -> list[tuple[TestCaseData]]:
+  """ Generate all the test cases for the help option """
+  verbose_cases: list[tuple[TestCaseData]] = []
+  for case in cases:
+    verbose_cases += make_verbose_test_cases(case[0])
+  return cases + verbose_cases
+
 
 def print_cases(cases: list[tuple[TestCaseData]]) -> None:
   """
