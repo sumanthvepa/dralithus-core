@@ -146,13 +146,18 @@ def command_option_with_other_args_test_cases() -> list[tuple[TestCaseData]]:
     parameters_list=[[], ['sample']])
   return make_test_cases(args_list)
 
-def all_test_cases() -> list[tuple[TestCaseData]]:
-  """ Generate all the test cases for the help option """
+def help_base_test_cases() -> list[tuple[TestCaseData]]:
+  """ Generate the base test cases for the help option """
   cases: list[tuple[TestCaseData]] = []
   cases += no_parameters_test_cases()
   cases += global_option_test_cases()
   cases += global_option_with_other_args_test_cases()
   cases += command_option_with_other_args_test_cases()
+  return cases
+
+def all_test_cases() -> list[tuple[TestCaseData]]:
+  """ Generate all the test cases for the help option """
+  cases: list[tuple[TestCaseData]] = help_base_test_cases()
   verbose_cases: list[tuple[TestCaseData]] = []
   for case in cases:
     verbose_cases += make_verbose_test_cases(case[0])
