@@ -240,6 +240,8 @@ def make_verbose_test_cases(case: TestCaseData) -> list[tuple[TestCaseData]]:
       global_case \
         = make_verbose_test_case(case, verbosity_count, flags_generator, global_option=True)
       verbose_cases.append((global_case,))
+      # Only add command cases if there is a command otherwise it will generate
+      # the same test cases as the global case.
       if case['args'].command != '':
         command_case \
           = make_verbose_test_case(case, verbosity_count, flags_generator, global_option=False)
