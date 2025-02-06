@@ -261,8 +261,21 @@ def merge_option_values(command_line: list[str]) -> list[str]:
       else:
         # The verbosity option is the last argument in the list
         merged.append(arg)
+    elif arg in ['-e', '--environment']:
+      # This option requires a value. So as long as the option is not the last
+      # argument in the list, we can merge the option with the next argument,
+      # provided the next argument is not also an option. This, latter condition,
+      # is a user error, will be caught elsewhere.
+      if i + 1 < len(command_line):
+        potential_option_value = command_line[i + 1]
+        # Only merge the potential option value if it does not start with a '-'.
+        # The '-' indicates that the next argument is an option and not a value.
+        if not potential_option_value.startswith('-'):
+          merged.append(f'{arg} {potential_option_value}')
+          i += 1
     else:
-      # The argument is not -v or --verbose, so just add it to the merged list
+      # The argument is not -v, --verbose, -e, or --environment so just add it
+      # to the merged list.
       merged.append(arg)
     i += 1
   return merged

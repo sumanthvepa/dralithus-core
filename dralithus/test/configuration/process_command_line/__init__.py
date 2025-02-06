@@ -3,10 +3,15 @@
   dralithus.configuration.process_command_line function.
 """
 import copy
+import re
 import unittest
 from typing import Callable, Iterator, TypedDict
 
-from dralithus.configuration import Operation, CommandLineError, process_command_line
+from dralithus.configuration import (
+  Operation,
+  CommandLineError,
+  process_command_line,
+  merge_option_values)
 
 
 # pylint: disable=too-few-public-methods
@@ -158,6 +163,19 @@ class CommandLineTestCase(unittest.TestCase):
         process_command_line(args)
       self.assertEqual(context.exception.verbosity, error['verbosity'])
 
+def interleave(list1: list[str], list2: list[str]) -> list[list[str]]:
+  """
+    Interleave the elements of list1 into list2
+
+    For example if list1 = ['a', 'b'] and list2 = ['1', '2', '3'], then
+    the result will be [['a', 'b', '1', '2', '3'], ['1', 'a', 'b', '2', '3'],
+    ['1', '2', 'a', 'b', '3'], ['1', '2', '3', 'a', 'b']]
+  """
+  interleaved: list[list[str]] = []
+  for index in range(len(list2)+1):
+    result = list2[:index] + list1 + list2[index:]
+    interleaved.append(result)
+  return interleaved
 
 def interleave_into(list1: list[str], list2: list[str]) -> list[list[str]]:
   """ Interleave the elements of two lists into a list of lists """
@@ -174,6 +192,35 @@ def interleave_lists(list1: list[str], lists: list[list[str]]) -> list[list[str]
   for list2 in lists:
     interleaved += interleave_into(list1, list2)
   return interleaved
+
+def demerge_option_values(args: list[str]) -> list[str]:
+  """
+    De-merge arguments. A merged argument is an argument with a space
+    separating the option and the value.
+
+    For example '-v 3' is a merged argument. This function will split
+    it into two separate arguments: '-v' and '3'. So if it is passed
+    the following input: ['-v 3'] it will return ['-v', '3']
+    It also works for long options. For example '--verbose 3' will be
+    split into '--verbose' and '3'. So if it is passed the following
+    input: ['--verbose 3'] it will return ['--verbose', '3']
+  """
+  de_merged_args: list[str] = []
+  short_option = re.compile(r'^(-[a-zA-Z]) (\w+)$')
+  long_option = re.compile(r'^--([a-zA-Z-]+) (\w+)$')
+  for arg in args:
+    m = re.match(short_option, arg)
+    if m:
+      de_merged_args.append(f'-{m.group(1)}')
+      de_merged_args.append(m.group(2))
+      continue
+    m = re.match(long_option, arg)
+    if m:
+      de_merged_args.append(f'--{m.group(1)}')
+      de_merged_args.append(m.group(2))
+      continue
+    de_merged_args.append(arg)
+  return de_merged_args
 
 def make_args_list(
     program: str,
@@ -245,8 +292,9 @@ def make_verbose_test_cases(case: TestCaseData) -> list[tuple[TestCaseData]]:
       if case['args'].command != '':
         flag_values = flags_generator(verbosity_count)
         command_options_list: list[list[str]] \
-          = interleave_into(flag_values, case['args'].command_options)
+          = interleave(flag_values, merge_option_values(case['args'].command_options))
         for command_options in command_options_list:
+          command_options = demerge_option_values(command_options)
           args = copy.deepcopy(case['args'])
           expected = copy.deepcopy(case['expected'])
           error = copy.deepcopy(case['error'])

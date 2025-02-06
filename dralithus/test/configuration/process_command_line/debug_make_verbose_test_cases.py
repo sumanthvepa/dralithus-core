@@ -9,7 +9,7 @@ dummy_test_case: TestCaseData = {
     program='drl',
     global_options=[],
     command='deploy',
-    command_options=["--environment='local'"],
+    command_options=['--environment', 'local'],
     parameters=['sample']
   ),
   'expected': {
