@@ -243,10 +243,20 @@ def make_verbose_test_cases(case: TestCaseData) -> list[tuple[TestCaseData]]:
       # Only add command cases if there is a command otherwise it will generate
       # the same test cases as the global case.
       if case['args'].command != '':
-        command_case \
-          = make_verbose_test_case(case, verbosity_count, flags_generator, global_option=False)
-        verbose_cases.append((command_case,))
-
+        flag_values = flags_generator(verbosity_count)
+        command_options_list: list[list[str]] \
+          = interleave_into(flag_values, case['args'].command_options)
+        for command_options in command_options_list:
+          args = copy.deepcopy(case['args'])
+          expected = copy.deepcopy(case['expected'])
+          error = copy.deepcopy(case['error'])
+          args.command_options = command_options
+          if expected is not None:
+            expected['verbosity'] = verbosity_count
+          if error is not None:
+            error['verbosity'] = verbosity_count
+          verbose_case: TestCaseData = {'args': args, 'expected': expected, 'error': error}
+          verbose_cases.append((verbose_case,))
   return verbose_cases
 
 def all_test_cases(cases: list[tuple[TestCaseData]]) -> list[tuple[TestCaseData]]:
