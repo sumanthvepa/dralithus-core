@@ -170,6 +170,58 @@ def irrelevant_help_arguments(command_line: list[str]) -> bool:
       return True
   return False
 
+def merge_option_values(command_line: list[str]) -> list[str]:
+  """
+    Merge option values that are split into two arguments
+
+    Some options are split into two arguments. For example, the verbosity
+    option can be specified as '-v 3' or '--verbose 3'. This function
+    merges such arguments into a single argument, example ['deploy' '-v' '3'] becomes
+    ['deploy', '-v3']
+
+    # Currently, this function only merges the verbosity option.
+
+    :param command_line: list[str]: The command line arguments
+    :return: list[str]: The command line arguments with the option values merged
+  """
+  merged = []
+  i = 0
+  while i < len(command_line):
+    arg = command_line[i]
+    if arg in ['-v', '--verbose']:
+      if i + 1 < len(command_line): # Don't try to look beyond the end of the list
+        # The next argument is a potential value for the verbosity option
+        potential_option_value = command_line[i + 1]
+        try:
+          value = int(potential_option_value)
+          if value >= 0: # Next argument is a positive integer
+            merged.append(f'{arg} {value}')
+            i += 1 # Skip the next argument as it has been processed already
+        except ValueError: # The next argument was not an integer
+          # just add the option to the merged list
+          merged.append(arg)
+      else:
+        # The verbosity option is the last argument in the list
+        merged.append(arg)
+    elif arg in ['-e', '--environment']:
+      # This option requires a value. So as long as the option is not the last
+      # argument in the list, we can merge the option with the next argument,
+      # provided the next argument is not also an option. This, latter condition,
+      # is a user error, will be caught elsewhere.
+      if i + 1 < len(command_line):
+        potential_option_value = command_line[i + 1]
+        # Only merge the potential option value if it does not start with a '-'.
+        # The '-' indicates that the next argument is an option and not a value.
+        if not potential_option_value.startswith('-'):
+          merged.append(f'{arg} {potential_option_value}')
+          i += 1
+    else:
+      # The argument is not -v, --verbose, -e, or --environment so just add it
+      # to the merged list.
+      merged.append(arg)
+    i += 1
+  return merged
+
 def is_asking_for_help(
     program: str,
     command: str | None,
@@ -226,58 +278,6 @@ def is_asking_for_help(
     }
   # No help is being sought
   return None
-
-def merge_option_values(command_line: list[str]) -> list[str]:
-  """
-    Merge option values that are split into two arguments
-
-    Some options are split into two arguments. For example, the verbosity
-    option can be specified as '-v 3' or '--verbose 3'. This function
-    merges such arguments into a single argument, example ['deploy' '-v' '3'] becomes
-    ['deploy', '-v3']
-
-    # Currently, this function only merges the verbosity option.
-
-    :param command_line: list[str]: The command line arguments
-    :return: list[str]: The command line arguments with the option values merged
-  """
-  merged = []
-  i = 0
-  while i < len(command_line):
-    arg = command_line[i]
-    if arg in ['-v', '--verbose']:
-      if i + 1 < len(command_line): # Don't try to look beyond the end of the list
-        # The next argument is a potential value for the verbosity option
-        potential_option_value = command_line[i + 1]
-        try:
-          value = int(potential_option_value)
-          if value >= 0: # Next argument is a positive integer
-            merged.append(f'{arg} {value}')
-            i += 1 # Skip the next argument as it has been processed already
-        except ValueError: # The next argument was not an integer
-          # just add the option to the merged list
-          merged.append(arg)
-      else:
-        # The verbosity option is the last argument in the list
-        merged.append(arg)
-    elif arg in ['-e', '--environment']:
-      # This option requires a value. So as long as the option is not the last
-      # argument in the list, we can merge the option with the next argument,
-      # provided the next argument is not also an option. This, latter condition,
-      # is a user error, will be caught elsewhere.
-      if i + 1 < len(command_line):
-        potential_option_value = command_line[i + 1]
-        # Only merge the potential option value if it does not start with a '-'.
-        # The '-' indicates that the next argument is an option and not a value.
-        if not potential_option_value.startswith('-'):
-          merged.append(f'{arg} {potential_option_value}')
-          i += 1
-    else:
-      # The argument is not -v, --verbose, -e, or --environment so just add it
-      # to the merged list.
-      merged.append(arg)
-    i += 1
-  return merged
 
 def process_command_line(args: list[str]) -> Operation:
   """
