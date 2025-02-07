@@ -5,7 +5,6 @@ import re
 from typing import TypedDict
 
 
-
 class CommandLineError(RuntimeError):
   """
     CommandLineError: An error occurred while processing the command line
@@ -337,7 +336,4 @@ def process_command_line(args: list[str]) -> Operation:
 
 
   # TODO: Implement rest of process_command_line beyond this point
-  raise CommandLineError(
-    program=program,
-    verbosity=verbosity,
-    message='Feature implementation is not complete')
+  raise NotImplementedError('Feature implementation is not complete')
