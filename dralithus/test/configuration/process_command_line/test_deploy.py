@@ -13,6 +13,17 @@ from dralithus.test.configuration.process_command_line import (
   all_test_cases,
   print_cases)
 
+from dralithus.configuration import CommandLineError
+
+
+def no_parameters_test_cases() -> list[tuple[TestCaseData]]:
+  """
+    Test cases representing invocation of drl with the 'deploy' command
+    and no parameters.
+  """
+  args = Args(program='drl', global_options=[], command='deploy', command_options=[], parameters=[])
+  error =  {'error_type': CommandLineError, 'verbosity': 0}
+  return [(TestCaseData(args=args, expected=None, error=error),)]
 
 def deploy_base_test_cases() -> list[tuple[TestCaseData]]:
   """
@@ -20,24 +31,8 @@ def deploy_base_test_cases() -> list[tuple[TestCaseData]]:
     and various ways to specify the environment and applications.
   """
   # TODO: Complete this implementation
-  # This just one test case for now
   cases: list[tuple[TestCaseData]] = []
-  case: TestCaseData = {
-    'args': Args(
-      program='drl',
-      global_options=[],
-      command='deploy',
-      command_options=["--environment='local'"],
-      parameters=['sample']),
-    'expected': {
-      'command': 'deploy',
-      'about': None,
-      'applications': ['sample'],
-      'environments': ['local'],
-      'verbosity': 0},
-    'error': None
-  }
-  cases.append((case,))
+  cases += no_parameters_test_cases()
   return cases
 
 
