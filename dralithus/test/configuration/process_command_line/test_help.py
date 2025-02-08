@@ -23,7 +23,7 @@ from dralithus.configuration import (
   is_valid_command)
 
 
-def make_test_cases(args_list: list[Args]) -> list[tuple[TestCaseData]]:
+def make_test_cases_deprecated(args_list: list[Args]) -> list[tuple[TestCaseData]]:
   """ Generate a list of test cases based on the given list of Args objects """
   cases: list[tuple[TestCaseData]] = []
   for args in args_list:
@@ -101,7 +101,7 @@ def global_option_with_other_args_test_cases() -> list[tuple[TestCaseData]]:
     command_list=[''],
     command_options_list=[['--environment=local'], ['--environment', 'local']],
     parameters_list=[[], ['sample']])
-  return make_test_cases(args_list)
+  return make_test_cases_deprecated(args_list)
 
 
 def command_option_with_other_args_test_cases() -> list[tuple[TestCaseData]]:
@@ -130,7 +130,7 @@ def command_option_with_other_args_test_cases() -> list[tuple[TestCaseData]]:
     command_options_list=interleave_lists(
       ['-h', '--help'], [[], ['--environment=local'], ['--environment', 'local']]),
     parameters_list=[[], ['sample']])
-  return make_test_cases(args_list)
+  return make_test_cases_deprecated(args_list)
 
 def help_base_test_cases() -> list[tuple[TestCaseData]]:
   """ Generate the base test cases for the help option """
