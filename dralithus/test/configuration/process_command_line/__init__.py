@@ -240,8 +240,8 @@ def make_args_list(
 
 def make_test_cases(
     args_list: list[Args],
-    expected: Operation,
-    error: ErrorDict) -> list[tuple[TestCaseData]]:
+    expected: Operation | None,
+    error: ErrorDict | None) -> list[tuple[TestCaseData]]:
   """
     Generate a list of test cases based on the given list of Args
     objects, expected and error objects
