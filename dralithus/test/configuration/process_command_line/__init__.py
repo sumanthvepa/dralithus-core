@@ -238,6 +238,20 @@ def make_args_list(
           args_list.append(args)
   return args_list
 
+def make_test_cases(
+    args_list: list[Args],
+    expected: Operation,
+    error: ErrorDict) -> list[tuple[TestCaseData]]:
+  """
+    Generate a list of test cases based on the given list of Args
+    objects, expected and error objects
+  """
+  cases: list[tuple[TestCaseData]] = []
+  for args in args_list:
+    case = TestCaseData(args=args, expected=expected, error=error)
+    cases.append((case,))
+  return cases
+
 def make_verbose_test_case(
     case: TestCaseData,
     count: int,
