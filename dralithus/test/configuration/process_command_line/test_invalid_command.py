@@ -7,8 +7,11 @@ from parameterized import parameterized
 
 from dralithus.test.configuration.process_command_line import (
   Args,
+  ErrorDict,
   TestCaseData,
   CommandLineTestCase,
+  make_args_list,
+  make_test_cases,
   all_test_cases,
   print_cases)
 
@@ -31,6 +34,25 @@ def no_parameters_test_cases() -> list[tuple[TestCaseData]]:
     args=args,
     expected=None,
     error={'error_type': CommandLineError, 'verbosity': 0}),)]
+
+
+def global_option_test_cases() -> list[tuple[TestCaseData]]:
+  """
+    Test cases representing invocation of drl invalid with some
+    meaningless global options.
+  :return:
+  """
+  args_list = make_args_list(
+    program='drl',
+    global_options_list=[
+      ['--environment=env1'],
+      ['--environment', 'env1'],
+      ['-e', 'env2']],
+    command_list=['invalid', '4number'],
+    command_options_list=[[]],
+    parameters_list=[[]])
+  error: ErrorDict = {'error_type': CommandLineError, 'verbosity': 0}
+  return make_test_cases(args_list, None, error)
 
 
 def invalid_base_test_cases() -> list[tuple[TestCaseData]]:
