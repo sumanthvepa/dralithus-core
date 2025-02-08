@@ -20,30 +20,8 @@ from dralithus.test.configuration.process_command_line import (
 
 from dralithus.configuration import (
   CommandLineError,
-   Operation,
-  is_valid_command)
+   Operation)
 
-
-def make_test_cases_deprecated(args_list: list[Args]) -> list[tuple[TestCaseData]]:
-  """ Generate a list of test cases based on the given list of Args objects """
-  cases: list[tuple[TestCaseData]] = []
-  for args in args_list:
-    expected: Operation = {
-      'command': 'help',
-      'about': args.command if is_valid_command(args.command) else None,
-      'applications': None,
-      'environments': None,
-      'verbosity': 0
-    }
-    case: tuple[TestCaseData] = ({'args': args, 'expected': expected, 'error': None},) \
-      if is_valid_command(args.command) \
-  else ({
-      'args': args,
-      'expected': None,
-      'error': {'error_type': CommandLineError, 'verbosity': 0}
-    },)
-    cases.append(case)
-  return cases
 
 def no_parameters_test_cases() -> list[tuple[TestCaseData]]:
   """
@@ -120,7 +98,6 @@ def global_option_with_other_args_test_cases() -> list[tuple[TestCaseData]]:
     'verbosity': 0 }
   cases += make_test_cases(deploy_command_args_list, expected, None)
   return cases
-
 
 
 def command_option_with_other_args_test_cases() -> list[tuple[TestCaseData]]:
