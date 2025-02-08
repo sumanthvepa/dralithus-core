@@ -14,6 +14,7 @@ from dralithus.test.configuration.process_command_line import (
   CommandLineTestCase,
   interleave_lists,
   make_args_list,
+  make_test_cases,
   all_test_cases,
   print_cases)
 
@@ -89,19 +90,37 @@ def global_option_with_other_args_test_cases() -> list[tuple[TestCaseData]]:
   # and then generate test cases for all possible combinations of these
   # And separately generate test cases for the case where command is empty
   # and command_options is not empty.
-  args_list = make_args_list(
-    program='drl',
-    global_options_list=[['-h'], ['--help']],
-    command_list=['deploy', 'invalid'],
-    command_options_list=[[], ['--environment=local'], ['--environment', 'local']],
-    parameters_list=[[], ['sample']])
-  args_list += make_args_list(
-    program='drl',
-    global_options_list=[['-h'], ['--help']],
-    command_list=[''],
-    command_options_list=[['--environment=local'], ['--environment', 'local']],
-    parameters_list=[[], ['sample']])
-  return make_test_cases_deprecated(args_list)
+  cases: list[tuple[TestCaseData]] = []
+  global_options_list = [['-h'], ['--help']]
+  command_options_list = [[], ['--environment=local'], ['--environment', 'local']]
+  parameters_list = [[], ['sample']]
+
+  empty_command_args_list = make_args_list(
+    'drl', global_options_list,[''], command_options_list, parameters_list)
+  expected: Operation = {
+    'command': 'help',
+    'about': None,
+    'applications': None,
+    'environments': None,
+    'verbosity': 0 }
+  cases += make_test_cases(empty_command_args_list, expected, None)
+
+  invalid_command_args_list = make_args_list(
+    'drl', global_options_list, ['invalid'], command_options_list, parameters_list)
+  error = {'error_type': CommandLineError, 'verbosity': 0}
+  cases += make_test_cases(invalid_command_args_list, None, error)
+
+  deploy_command_args_list = make_args_list(
+    'drl', global_options_list, ['deploy'], command_options_list, parameters_list)
+  expected = {
+    'command': 'help',
+    'about': 'deploy',
+    'applications': None,
+    'environments': None,
+    'verbosity': 0 }
+  cases += make_test_cases(deploy_command_args_list, expected, None)
+  return cases
+
 
 
 def command_option_with_other_args_test_cases() -> list[tuple[TestCaseData]]:
@@ -123,14 +142,29 @@ def command_option_with_other_args_test_cases() -> list[tuple[TestCaseData]]:
     recognized and passed as the value of the 'about' key in the Operation
     dictionary.
   """
-  args_list = make_args_list(
-    program='drl',
-    global_options_list=[[]],
-    command_list=['deploy', 'invalid'],
-    command_options_list=interleave_lists(
-      ['-h', '--help'], [[], ['--environment=local'], ['--environment', 'local']]),
-    parameters_list=[[], ['sample']])
-  return make_test_cases_deprecated(args_list)
+  cases: list[tuple[TestCaseData]] = []
+  global_options_list = [[]]
+  command_options_list = interleave_lists(
+    ['-h', '--help'],
+    [[], ['--environment=local'], ['--environment', 'local']])
+  parameters_list = [[], ['sample']]
+
+  deploy_args_list = make_args_list(
+    'drl', global_options_list, ['deploy'], command_options_list, parameters_list)
+  expected = {
+    'command': 'help',
+    'about': 'deploy',
+    'applications': None,
+    'environments': None,
+    'verbosity': 0 }
+  cases += make_test_cases(deploy_args_list, expected, None)
+
+  invalid_args_list = make_args_list(
+    'drl', global_options_list, ['invalid'], command_options_list, parameters_list)
+  error = {'error_type': CommandLineError, 'verbosity': 0}
+  cases += make_test_cases(invalid_args_list, None, error)
+  return cases
+
 
 def help_base_test_cases() -> list[tuple[TestCaseData]]:
   """ Generate the base test cases for the help option """
