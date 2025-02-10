@@ -252,26 +252,6 @@ def make_test_cases(
     cases.append((case,))
   return cases
 
-def make_verbose_test_case(
-    case: TestCaseData,
-    count: int,
-    generator: Callable[[int], list[str]],
-    global_option) -> TestCaseData:
-  """ Generate a verbosity test case """
-  args = copy.deepcopy(case['args'])
-  expected = copy.deepcopy(case['expected'])
-  error = copy.deepcopy(case['error'])
-  if global_option:
-    args.global_options = args.global_options + generator(count)
-  else:
-    args.command_options = args.command_options + generator(count)
-  if expected is not None:
-    expected['verbosity'] = count
-  if error is not None:
-    error['verbosity'] = count
-  return {'args': args, 'expected': expected, 'error': error}
-
-
 def make_verbose_test_cases(case: TestCaseData) -> list[tuple[TestCaseData]]:
   """
   Create a list of test cases based on the given case, where
