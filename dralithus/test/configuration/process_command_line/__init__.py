@@ -163,13 +163,17 @@ class CommandLineTestCase(unittest.TestCase):
         process_command_line(args)
       self.assertEqual(context.exception.verbosity, error['verbosity'])
 
-def interleave(list1: list[str], list2: list[str]) -> list[list[str]]:
+def insert_everywhere(list1: list[str], list2: list[str]) -> list[list[str]]:
   """
-    Interleave the elements of list1 into list2
+    Insert list1 into list2 at every possible position in list2
 
     For example if list1 = ['a', 'b'] and list2 = ['1', '2', '3'], then
     the result will be [['a', 'b', '1', '2', '3'], ['1', 'a', 'b', '2', '3'],
     ['1', '2', 'a', 'b', '3'], ['1', '2', '3', 'a', 'b']]
+
+    :param list1: The list to interleaved into list2
+    :param list2: The list to be interleaved into
+    :return: A list of lists with the list1 interleaved into list2
   """
   interleaved: list[list[str]] = []
   for index in range(len(list2)+1):
@@ -177,8 +181,18 @@ def interleave(list1: list[str], list2: list[str]) -> list[list[str]]:
     interleaved.append(result)
   return interleaved
 
-def interleave_into(list1: list[str], list2: list[str]) -> list[list[str]]:
-  """ Interleave the elements of two lists into a list of lists """
+def insert_every_element_everywhere(list1: list[str], list2: list[str]) -> list[list[str]]:
+  """
+    Insert every element of list1 into list2 at every possible position
+
+    For example if list1 = ['a', 'b'] and list2 = ['1', '2', '3'], then
+    the result will be [['a', '1', '2', '3'], ['1', 'a', '2', '3'],
+    ['1', '2', 'a', '3'], ['1', '2', '3', 'a'], ['b', '1', '2', '3'],
+    ['1', 'b', '2', '3'], ['1', '2', 'b', '3'], ['1', '2', '3', 'b']]
+
+    :param list1: The list to interleaved into list2
+    :param list2: The list to be interleaved into
+  """
   interleaved: list[list[str]] = []
   for item1 in list1:
     for index in range(len(list2)+1):
@@ -186,11 +200,27 @@ def interleave_into(list1: list[str], list2: list[str]) -> list[list[str]]:
       interleaved.append(result)
   return interleaved
 
-def interleave_lists(list1: list[str], lists: list[list[str]]) -> list[list[str]]:
-  """ Interleave the elements of a list into a list of lists """
+def insert_every_element_everywhere_for_all_lists(
+    list1: list[str],
+    lists: list[list[str]]) -> list[list[str]]:
+  """
+    Insert every element of list1 into every list in lists at every possible
+    position within each list in lists.
+
+    For example if list1 = ['a', 'b'] and lists = [['1', '2', '3'], ['4', '5']],
+    then the result will be [['a', '1', '2', '3'], ['1', 'a', '2', '3'],
+    ['1', '2', 'a', '3'], ['1', '2', '3', 'a'], ['b', '1', '2', '3'],
+    ['1', 'b', '2', '3'], ['1', '2', 'b', '3'], ['1', '2', '3', 'b'],
+    ['a', '4', '5'], ['4', 'a', '5'], ['4', '5', 'a'], ['b', '4', '5'],
+    ['4', 'b', '5'], ['4', '5', 'b']]
+
+    :param list1: The list to interleaved into all the lists in lists
+    :param lists: A list of lists to be interleaved into
+    :return: A list of lists with the list1 interleaved into all the lists in lists
+  """
   interleaved: list[list[str]] = []
   for list2 in lists:
-    interleaved += interleave_into(list1, list2)
+    interleaved += insert_every_element_everywhere(list1, list2)
   return interleaved
 
 def demerge_option_values(args: list[str]) -> list[str]:
@@ -315,14 +345,14 @@ def make_verbose_test_cases(case: TestCaseData) -> list[tuple[TestCaseData]]:
         continue
       flag_values: list[str] = flags_generator(verbosity_count)
       global_options_list: list[list[str]] \
-        = interleave(flag_values, merge_option_values(case['args'].global_options))
+        = insert_everywhere(flag_values, merge_option_values(case['args'].global_options))
       verbose_cases += make_verbose_test_cases_from_options_list(
         case, global_options_list, verbosity_count, True)
       # Only add command cases if there is a command otherwise it will generate
       # the same test cases as the global case.
       if case['args'].command != '':
         command_options_list: list[list[str]] \
-          = interleave(flag_values, merge_option_values(case['args'].command_options))
+          = insert_everywhere(flag_values, merge_option_values(case['args'].command_options))
         verbose_cases += make_verbose_test_cases_from_options_list(
           case, command_options_list, verbosity_count, False)
   return verbose_cases

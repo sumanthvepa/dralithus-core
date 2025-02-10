@@ -12,7 +12,7 @@ from dralithus.test.configuration.process_command_line import (
   Args,
   TestCaseData,
   CommandLineTestCase,
-  interleave_lists,
+  insert_every_element_everywhere_for_all_lists,
   make_args_list,
   make_test_cases,
   all_test_cases,
@@ -121,7 +121,7 @@ def command_option_with_other_args_test_cases() -> list[tuple[TestCaseData]]:
   """
   cases: list[tuple[TestCaseData]] = []
   global_options_list = [[]]
-  command_options_list = interleave_lists(
+  command_options_list = insert_every_element_everywhere_for_all_lists(
     ['-h', '--help'],
     [[], ['--environment=local'], ['--environment', 'local']])
   parameters_list = [[], ['sample']]
