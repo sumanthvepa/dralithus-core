@@ -7,7 +7,7 @@ from dralithus.test.configuration.process_command_line import (
 dummy_test_case: TestCaseData = {
   'args': Args(
     program='drl',
-    global_options=[],
+    global_options=['--environment', 'env1'],
     command='deploy',
     command_options=['--environment', 'local'],
     parameters=['sample']
