@@ -298,13 +298,23 @@ def make_verbose_test_cases(case: TestCaseData) -> list[tuple[TestCaseData]]:
       # equivalent to the first flags generator.
       if flags_generator == verbose_flags_generators[1] and verbosity_count == 1:
         continue
-      global_case \
-        = make_verbose_test_case(case, verbosity_count, flags_generator, global_option=True)
-      verbose_cases.append((global_case,))
+      flag_values = flags_generator(verbosity_count)
+      global_options_list = interleave(flag_values, merge_option_values(case['args'].global_options))
+      for global_options in global_options_list:
+        global_options = demerge_option_values(global_options)
+        args = copy.deepcopy(case['args'])
+        expected = copy.deepcopy(case['expected'])
+        error = copy.deepcopy(case['error'])
+        args.global_options = global_options
+        if expected is not None:
+          expected['verbosity'] = verbosity_count
+        if error is not None:
+          error['verbosity'] = verbosity_count
+        verbose_case: TestCaseData = {'args': args, 'expected': expected, 'error': error}
+        verbose_cases.append((verbose_case,))
       # Only add command cases if there is a command otherwise it will generate
       # the same test cases as the global case.
       if case['args'].command != '':
-        flag_values = flags_generator(verbosity_count)
         command_options_list: list[list[str]] \
           = interleave(flag_values, merge_option_values(case['args'].command_options))
         for command_options in command_options_list:
