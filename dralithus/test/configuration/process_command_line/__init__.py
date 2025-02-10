@@ -252,6 +252,41 @@ def make_test_cases(
     cases.append((case,))
   return cases
 
+
+def make_verbose_test_cases_from_options_list(
+    case: TestCaseData,
+    options_list: list[list[str]],
+    verbosity_count: int,
+    assign_global_options: bool) -> list[tuple[TestCaseData]]:
+  """
+  Generate a list of
+  :param options_list: A list of lists of options, each list corresponds to a test case
+  :param case: The base case to use as a template
+  :param verbosity_count: The verbosity count to set
+  :param assign_global_options: If True, the options are assigned to the global options
+  and the command options are left unchanged. If False, the options are assigned to the
+  command options and the global options are left unchanged.
+  :return: A list of test case tuples.
+  """
+  verbose_cases: list[tuple[TestCaseData]] = []
+  for options in options_list:
+    options = demerge_option_values(options)
+    args = copy.deepcopy(case['args'])
+    expected = copy.deepcopy(case['expected'])
+    error = copy.deepcopy(case['error'])
+    if assign_global_options:
+      args.global_options = options
+    else:
+      args.command_options = options
+    if expected is not None:
+      expected['verbosity'] = verbosity_count
+    if error is not None:
+      error['verbosity'] = verbosity_count
+    verbose_case: TestCaseData = {'args': args, 'expected': expected, 'error': error}
+    verbose_cases.append((verbose_case,))
+  return verbose_cases
+
+
 def make_verbose_test_cases(case: TestCaseData) -> list[tuple[TestCaseData]]:
   """
   Create a list of test cases based on the given case, where
@@ -278,38 +313,20 @@ def make_verbose_test_cases(case: TestCaseData) -> list[tuple[TestCaseData]]:
       # equivalent to the first flags generator.
       if flags_generator == verbose_flags_generators[1] and verbosity_count == 1:
         continue
-      flag_values = flags_generator(verbosity_count)
-      global_options_list = interleave(flag_values, merge_option_values(case['args'].global_options))
-      for global_options in global_options_list:
-        global_options = demerge_option_values(global_options)
-        args = copy.deepcopy(case['args'])
-        expected = copy.deepcopy(case['expected'])
-        error = copy.deepcopy(case['error'])
-        args.global_options = global_options
-        if expected is not None:
-          expected['verbosity'] = verbosity_count
-        if error is not None:
-          error['verbosity'] = verbosity_count
-        verbose_case: TestCaseData = {'args': args, 'expected': expected, 'error': error}
-        verbose_cases.append((verbose_case,))
+      flag_values: list[str] = flags_generator(verbosity_count)
+      global_options_list: list[list[str]] \
+        = interleave(flag_values, merge_option_values(case['args'].global_options))
+      verbose_cases += make_verbose_test_cases_from_options_list(
+        case, global_options_list, verbosity_count, True)
       # Only add command cases if there is a command otherwise it will generate
       # the same test cases as the global case.
       if case['args'].command != '':
         command_options_list: list[list[str]] \
           = interleave(flag_values, merge_option_values(case['args'].command_options))
-        for command_options in command_options_list:
-          command_options = demerge_option_values(command_options)
-          args = copy.deepcopy(case['args'])
-          expected = copy.deepcopy(case['expected'])
-          error = copy.deepcopy(case['error'])
-          args.command_options = command_options
-          if expected is not None:
-            expected['verbosity'] = verbosity_count
-          if error is not None:
-            error['verbosity'] = verbosity_count
-          verbose_case: TestCaseData = {'args': args, 'expected': expected, 'error': error}
-          verbose_cases.append((verbose_case,))
+        verbose_cases += make_verbose_test_cases_from_options_list(
+          case, command_options_list, verbosity_count, False)
   return verbose_cases
+
 
 def all_test_cases(cases: list[tuple[TestCaseData]]) -> list[tuple[TestCaseData]]:
   """ Generate all the test cases for the help option """
