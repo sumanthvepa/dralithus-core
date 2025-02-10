@@ -62,6 +62,7 @@ def invalid_base_test_cases() -> list[tuple[TestCaseData]]:
   """
   cases: list[tuple[TestCaseData]] = []
   cases += no_parameters_test_cases()
+  cases += global_option_test_cases()
   return cases
 
 
