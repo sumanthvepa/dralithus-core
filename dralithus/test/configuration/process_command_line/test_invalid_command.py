@@ -19,10 +19,11 @@ from dralithus.configuration import CommandLineError
 
 def global_and_command_option_test_cases() -> list[tuple[TestCaseData]]:
   """
-    Test cases representing invocation of drl invalid with some
-    meaningless global and command options.
-  :return:
-  """
+    Test cases representing invocation of drl with an invalid command and
+    variouss ways to specify the environment and applications.
+
+    :return: A list of test cases where an invalid command is specified.
+"""
   args_list = make_args_list(
     program='drl',
     global_options_list=[
@@ -41,22 +42,12 @@ def global_and_command_option_test_cases() -> list[tuple[TestCaseData]]:
   return make_test_cases(args_list, None, error)
 
 
-def invalid_base_test_cases() -> list[tuple[TestCaseData]]:
-  """
-    Test cases representing invocation of drl with an invalid command
-    and various ways to specify the environment and applications.
-  """
-  cases: list[tuple[TestCaseData]] = []
-  cases += global_and_command_option_test_cases()
-  return cases
-
-
 class TestInvalidCommand(CommandLineTestCase):
   """
     Test that an invalid command is handled correctly by the
     process_command_line function.
   """
-  @parameterized.expand(all_test_cases(invalid_base_test_cases()))
+  @parameterized.expand(all_test_cases(global_and_command_option_test_cases()))
   def test_case(self, case: TestCaseData) -> None:
     """ Execute all the test cases """
     self.execute_test(case)
@@ -64,4 +55,4 @@ class TestInvalidCommand(CommandLineTestCase):
 
 if __name__ == '__main__':
   # print_cases(invalid_base_test_cases())
-  print_cases(all_test_cases(invalid_base_test_cases()))
+  print_cases(all_test_cases(global_and_command_option_test_cases()))
