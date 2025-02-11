@@ -8,6 +8,10 @@
 """
 from parameterized import parameterized
 
+from dralithus.configuration import (
+  CommandLineError,
+  Operation)
+
 from dralithus.test.configuration.process_command_line import (
   Args,
   TestCaseData,
@@ -17,10 +21,6 @@ from dralithus.test.configuration.process_command_line import (
   make_test_cases,
   all_test_cases,
   print_cases)
-
-from dralithus.configuration import (
-  CommandLineError,
-   Operation)
 
 
 def no_parameters_test_cases() -> list[tuple[TestCaseData]]:
