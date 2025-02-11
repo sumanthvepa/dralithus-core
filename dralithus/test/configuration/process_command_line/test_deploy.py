@@ -32,6 +32,8 @@ def deploy_valid_test_cases() -> list[tuple[TestCaseData]]:
     command_options_list=[
       ['--environment=local'],
       ['--environment', 'local'],
+      ['--env=local'],
+      ['--env', 'local'],
       ['-elocal'],
       ['-e', 'local']],
     parameters_list=[['sample']])
