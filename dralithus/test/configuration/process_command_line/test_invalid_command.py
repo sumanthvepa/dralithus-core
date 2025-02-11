@@ -6,7 +6,6 @@
 from parameterized import parameterized
 
 from dralithus.test.configuration.process_command_line import (
-  Args,
   ErrorDict,
   TestCaseData,
   CommandLineTestCase,
