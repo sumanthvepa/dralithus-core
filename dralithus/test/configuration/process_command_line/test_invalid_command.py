@@ -20,7 +20,7 @@ from dralithus.configuration import CommandLineError
 def invalid_command_base_test_cases() -> list[tuple[TestCaseData]]:
   """
     Test cases representing invocation of drl with an invalid command and
-    variouss ways to specify the environment and applications.
+    various ways to specify the environment and applications.
 
     :return: A list of test cases where an invalid command is specified.
 """
