@@ -74,6 +74,30 @@ def command_option_test_cases() -> list[tuple[TestCaseData]]:
   return make_test_cases(args_list, None, error)
 
 
+def global_and_command_option_test_cases() -> list[tuple[TestCaseData]]:
+  """
+    Test cases representing invocation of drl invalid with some
+    meaningless global and command options.
+  :return:
+  """
+  args_list = make_args_list(
+    program='drl',
+    global_options_list=[
+      [],
+      ['--environment=env1'],
+      ['--environment', 'env1'],
+      ['-e', 'env2']],
+    command_list=['invalid', '4number'],
+    command_options_list=[
+      [],
+      ['--environment=env1'],
+      ['--environment', 'env1'],
+      ['-e', 'env2']],
+    parameters_list=[[]])
+  error: ErrorDict = {'error_type': CommandLineError, 'verbosity': 0}
+  return make_test_cases(args_list, None, error)
+
+
 def invalid_base_test_cases() -> list[tuple[TestCaseData]]:
   """
     Test cases representing invocation of drl with an invalid command
@@ -83,6 +107,7 @@ def invalid_base_test_cases() -> list[tuple[TestCaseData]]:
   cases += no_parameters_test_cases()
   cases += global_option_test_cases()
   cases += command_option_test_cases()
+  cases += global_and_command_option_test_cases()
   return cases
 
 
@@ -98,4 +123,5 @@ class TestInvalidCommand(CommandLineTestCase):
 
 
 if __name__ == '__main__':
+  # print_cases(invalid_base_test_cases())
   print_cases(all_test_cases(invalid_base_test_cases()))
