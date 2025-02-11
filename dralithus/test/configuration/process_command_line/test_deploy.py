@@ -34,7 +34,7 @@ def deploy_valid_test_cases() -> list[tuple[TestCaseData]]:
       ['--environment', 'local'],
       ['-elocal'],
       ['-e', 'local']],
-    parameters_list=[[]])
+    parameters_list=[['sample']])
   expected: Operation = {
     'command': 'deploy',
     'about': None,
