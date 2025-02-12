@@ -334,6 +334,9 @@ def process_command_line(args: list[str]) -> Operation:
   if command is None:
     raise CommandLineError(program=program, verbosity=verbosity, message='Command not specified')
 
+  if not is_valid_command(command):
+    raise CommandLineError(program=program, verbosity=verbosity, message=f'Invalid command {command}')
+
 
   # TODO: Implement rest of process_command_line beyond this point
   raise NotImplementedError('Feature implementation is not complete')
