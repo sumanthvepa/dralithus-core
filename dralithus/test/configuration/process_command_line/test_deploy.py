@@ -332,7 +332,6 @@ def deploy_base_test_cases() -> list[tuple[TestCaseData]]:
 
   :return: A list of test cases where the 'deploy' command is specified.
   """
-  # TODO: Complete this implementation
   cases: list[tuple[TestCaseData]] = []
   cases += deploy_valid_test_cases()
   cases += deploy_valid_multi_environment_test_cases()
