@@ -23,6 +23,28 @@ from dralithus.test.configuration.process_command_line import (
   print_cases)
 
 
+def valid_global_no_command_help_test_cases() -> list[tuple[TestCaseData]]:
+  """
+    Test cases representing a valid invocation of drl with the help as
+    a global option, but no command.
+    i.e. drl -h or drl --help
+
+    :return: list[tuple[TestCaseData]] - A list of test cases encased in a tuple
+  """
+  args_list = make_args_list(
+    program='drl',
+    global_options_list=[['-h'], ['--help']],
+    command_list=[''],
+    command_options_list=[[]],
+    parameters_list=[[]])
+  expected: Operation = {
+    'command': 'help',
+    'about': None,
+    'applications': None,
+    'environments': None,
+    'verbosity': 0 }
+  return make_test_cases(args_list, expected, None)
+
 def no_parameters_test_cases() -> list[tuple[TestCaseData]]:
   """
     Test cases representing invocation of drl with no parameters
@@ -146,6 +168,7 @@ def command_option_with_other_args_test_cases() -> list[tuple[TestCaseData]]:
 def help_base_test_cases() -> list[tuple[TestCaseData]]:
   """ Generate the base test cases for the help option """
   cases: list[tuple[TestCaseData]] = []
+  # cases += valid_global_no_command_help_test_cases()
   cases += no_parameters_test_cases()
   cases += global_option_test_cases()
   cases += global_option_with_other_args_test_cases()
