@@ -111,6 +111,41 @@ def deploy_valid_multi_application_test_cases() -> list[tuple[TestCaseData]]:
   return make_test_cases(args_list, expected, None)
 
 
+def deploy_multi_environment_multi_application_test_cases() -> list[tuple[TestCaseData]]:
+  """
+    Test cases representing invocation of drl with the 'deploy' command and
+    various ways to CORRECTLY specify multiple environments and applications.
+
+    :return: A list of test cases where the 'deploy' command is specified and
+    the environment and applications are specified correctly.
+  """
+  args_list = make_args_list(
+    program='drl',
+    global_options_list=[[]],
+    command_list=['deploy'],
+    command_options_list=[
+      ['--environment=local', '--environment=dev'],
+      ['--environment', 'local', '--environment', 'dev'],
+      ['--env=local', '--env=dev'],
+      ['--env', 'local', '--env', 'dev'],
+      ['-elocal', '-edev'],
+      ['-e', 'local', '-e', 'dev'],
+      ['--environment=local,dev'],
+      ['--environment', 'local,dev'],
+      ['--env=local,dev'],
+      ['--env', 'local,dev'],
+      ['-elocal,dev'],
+      ['-e', 'local,dev']],
+    parameters_list=[['sample', 'echo']])
+  expected: Operation = {
+    'command': 'deploy',
+    'about': None,
+    'environments': ['local', 'dev'],
+    'applications': ['sample', 'echo'],
+    'verbosity': 0}
+  return make_test_cases(args_list, expected, None)
+
+
 def deploy_missing_application_test_cases() -> list[tuple[TestCaseData]]:
   """
     Test cases where the application name is missing
