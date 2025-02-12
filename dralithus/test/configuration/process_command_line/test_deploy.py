@@ -135,6 +135,26 @@ def deploy_invalid_application_test_cases() -> list[tuple[TestCaseData]]:
   return make_test_cases(args_list, None, error)
 
 
+def deploy_invalid_environment_and_application_test_cases() -> list[tuple[TestCaseData]]:
+  """
+    Test cases where the environment and application names are invalid
+  """
+  args_list = make_args_list(
+    program='drl',
+    global_options_list=[[]],
+    command_list=['deploy'],
+    command_options_list=[
+      ['--environment=garbage'],
+      ['--environment', 'garbage'],
+      ['--env=garbage'],
+      ['--env', 'garbage'],
+      ['-egarbage'],
+      ['-e', 'garbage']],
+    parameters_list=[['garbage']])
+  error: ErrorDict = {'error_type': CommandLineError, 'verbosity': 0 }
+  return make_test_cases(args_list, None, error)
+
+
 def deploy_base_test_cases() -> list[tuple[TestCaseData]]:
   """
     Test cases representing invocation of drl with the 'deploy' command
@@ -150,6 +170,7 @@ def deploy_base_test_cases() -> list[tuple[TestCaseData]]:
   cases += deploy_missing_environment_and_application_test_cases()
   cases += deploy_invalid_environment_test_cases()
   cases += deploy_invalid_application_test_cases()
+  cases += deploy_invalid_environment_and_application_test_cases()
   return cases
 
 
