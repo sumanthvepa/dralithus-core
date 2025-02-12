@@ -94,6 +94,7 @@ def deploy_missing_environment_and_application_test_cases() -> list[tuple[TestCa
   error: ErrorDict = {'error_type': CommandLineError, 'verbosity': 0 }
   return make_test_cases(args_list, None, error)
 
+
 def deploy_invalid_environment_test_cases() -> list[tuple[TestCaseData]]:
   """
     Test cases where the environment name is invalid
