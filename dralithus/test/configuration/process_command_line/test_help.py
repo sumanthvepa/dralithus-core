@@ -22,7 +22,10 @@ from dralithus.test.configuration.process_command_line import (
   all_test_cases,
   print_cases)
 
-from dralithus.test.configuration.process_command_line.test_deploy import deploy_valid_test_cases
+from dralithus.test.configuration.process_command_line.test_deploy import (
+  deploy_valid_test_cases,
+  deploy_invalid_base_test_cases)
+
 
 def help_valid_global_no_command_test_cases() -> list[tuple[TestCaseData]]:
   """
@@ -76,6 +79,30 @@ def help_valid_global_deploy_test_cases() -> list[tuple[TestCaseData]]:
       'environments': None,
       'verbosity': 0 }
     cases += make_test_cases(args_list, expected, None)
+  return cases
+
+
+def help_invalid_global_deploy_test_cases() -> list[tuple[TestCaseData]]:
+  """
+    Test cases representing an invalid invocation of drl with the help as
+    a global option, and an invalid command.
+    i.e. drl -h invalid or drl --help invalid
+
+    :return: list[tuple[TestCaseData]] - A list of test cases encased in a tuple
+  """
+  base_cases: list[tuple[TestCaseData]] = deploy_invalid_base_test_cases()
+  cases: list[tuple[TestCaseData]] = []
+  for tuple_list in base_cases:
+    case: TestCaseData = tuple_list[0]
+    args: Args = case['args']
+    args_list: list[Args] = make_args_list(
+      program=args.program,
+      global_options_list=[['-h'], ['--help']],
+      command_list=['invalid'],
+      command_options_list=[[]],
+      parameters_list=[[]])
+    error = {'error_type': CommandLineError, 'verbosity': 0}
+    cases += make_test_cases(args_list, None, error)
   return cases
 
 
