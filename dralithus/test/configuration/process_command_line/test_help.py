@@ -22,6 +22,7 @@ from dralithus.test.configuration.process_command_line import (
   all_test_cases,
   print_cases)
 
+from dralithus.test.configuration.process_command_line.test_deploy import deploy_valid_test_cases
 
 def help_valid_global_no_command_test_cases() -> list[tuple[TestCaseData]]:
   """
@@ -54,22 +55,28 @@ def help_valid_global_deploy_test_cases() -> list[tuple[TestCaseData]]:
 
     :return: list[tuple[TestCaseData]] - A list of test cases encased in a tuple
   """
-  args_list = make_args_list(
-    program='drl',
-    global_options_list=[['-h'], ['--help']],
-    command_list=['deploy'],
-    command_options_list=[
-      ['--environment=local'],
-      ['--environment', 'local'],
-      ['']],
-    parameters_list=[[]])
-  expected: Operation = {
-    'command': 'help',
-    'about': 'deploy',
-    'applications': None,
-    'environments': None,
-    'verbosity': 0 }
-  return make_test_cases(args_list, expected, None)
+  # First, generate test cases for the 'deploy' command
+  base_cases = deploy_valid_test_cases()
+
+  # Then iterate over the base cases making cases with global help options
+  cases: list[tuple[TestCaseData]] = []
+  for tuple_list in base_cases:
+    case: TestCaseData = tuple_list[0]
+    args: Args = case['args']
+    args_list: list[Args] = make_args_list(
+      program=args.program,
+      global_options_list=[['-h'], ['--help']],
+      command_list=[args.command],
+      command_options_list=[args.command_options],
+      parameters_list=[args.parameters])
+    expected: Operation = {
+      'command': 'help',
+      'about': args.command,
+      'applications': None,
+      'environments': None,
+      'verbosity': 0 }
+    cases += make_test_cases(args_list, expected, None)
+  return cases
 
 
 def no_parameters_test_cases() -> list[tuple[TestCaseData]]:
