@@ -46,7 +46,7 @@ def help_valid_global_no_command_test_cases() -> list[tuple[TestCaseData]]:
   return make_test_cases(args_list, expected, None)
 
 
-def help_valid_global_option_test_cases() -> list[tuple[TestCaseData]]:
+def help_valid_global_deploy_test_cases() -> list[tuple[TestCaseData]]:
   """
     Test cases representing a valid invocation of drl with the help as
     a global option, and a command.
@@ -196,6 +196,7 @@ def help_base_test_cases() -> list[tuple[TestCaseData]]:
   """ Generate the base test cases for the help option """
   cases: list[tuple[TestCaseData]] = []
   # cases += help_valid_global_no_command_test_cases()
+  # cases += help_valid_global_deploy_test_cases()
   cases += no_parameters_test_cases()
   cases += global_option_test_cases()
   cases += global_option_with_other_args_test_cases()
