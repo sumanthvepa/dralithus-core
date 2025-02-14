@@ -231,6 +231,7 @@ def help_base_test_cases() -> list[tuple[TestCaseData]]:
   cases: list[tuple[TestCaseData]] = []
   # cases += help_valid_global_no_command_test_cases()
   # cases += help_valid_global_deploy_test_cases()
+  # cases += help_invalid_global_deploy_test_cases()
   cases += no_parameters_test_cases()
   cases += global_option_test_cases()
   cases += global_option_with_other_args_test_cases()
