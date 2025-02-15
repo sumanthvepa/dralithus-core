@@ -275,7 +275,6 @@ def help_base_test_cases() -> list[tuple[TestCaseData]]:
   return cases
 
 
-
 class TestHelp(CommandLineTestCase):
   """
     Test that the --help option is handled correctly by the
