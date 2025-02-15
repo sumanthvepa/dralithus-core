@@ -287,5 +287,6 @@ class TestHelp(CommandLineTestCase):
 
 
 if __name__ == '__main__':
-  print_cases(all_test_cases(help_base_test_cases()))
+  print_cases(help_base_test_cases())
+  # print_cases(all_test_cases(help_base_test_cases()))
   # unittest.main()
