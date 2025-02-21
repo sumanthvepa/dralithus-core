@@ -311,7 +311,6 @@ def test_invalid_multi_environment_multi_application_test_cases() -> list[tuple[
       ['--environment=local,garbage'],
       ['--environment', 'garbage,local'],
       ['--environment', 'local,garbage'],
-      ['--environment', 'garbage,local'],
       ['--env=local,garbage'],
       ['--env=garbage,local'],
       ['--env', 'local,garbage'],
@@ -383,4 +382,5 @@ class TestDeploy(CommandLineTestCase):
 
 if __name__ == '__main__':
   # print_cases(deploy_base_test_cases())
-  print_cases(all_test_cases(deploy_base_test_cases()))
+  print_cases(deploy_invalid_base_test_cases())
+  #print_cases(all_test_cases(deploy_base_test_cases()))

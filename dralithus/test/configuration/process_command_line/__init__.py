@@ -81,6 +81,27 @@ class Args:
     """ Convert the Args object to a string """
     return str(self)
 
+  def __eq__(self, other):
+    """ Compare two Args objects """
+    def equal_lists(list1: list[str], list2: list[str]) -> bool:
+      """ Compare two lists """
+      if len(list1) != len(list2):
+        return False
+      for index, item in enumerate(list1):
+        if item != list2[index]:
+          return False
+      return True
+
+    if (not isinstance(other, Args)) \
+        or (self.program != other.program) \
+        or (equal_lists(self.global_options, other.global_options) is False) \
+        or (self.command != other.command) \
+        or (equal_lists(self.command_options, other.command_options) is False) \
+        or (equal_lists(self.parameters, other.parameters) is False):
+      return False
+    return True
+
+
 class ErrorDict(TypedDict):
   """
     A dictionary that holds the expected error type and verbosity level
@@ -222,6 +243,20 @@ def insert_every_element_everywhere_for_all_lists(
   for list2 in lists:
     interleaved += insert_every_element_everywhere(list1, list2)
   return interleaved
+
+def all_combinations(lists1: list[list[str]], lists2: list[list[str]]) -> list[list[str]]:
+  """
+    Generate all combinations of the elements of list1 and list2
+    :param lists1: A list of lists
+    :param lists2: A list of lists
+    :return: A list of lists with all the combinations of the elements of list1 and list2
+  """
+  result: list[list[str]] = []
+  for list1 in lists1:
+    combinations: list[list[str]] = insert_every_element_everywhere_for_all_lists(list1, lists2)
+    result += combinations
+  return result
+
 
 def demerge_option_values(args: list[str]) -> list[str]:
   """

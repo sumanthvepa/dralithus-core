@@ -10,13 +10,17 @@ from parameterized import parameterized
 
 from dralithus.configuration import (
   CommandLineError,
-  Operation)
+  Operation,
+  merge_option_values)
 
 from dralithus.test.configuration.process_command_line import (
   Args,
   TestCaseData,
   CommandLineTestCase,
+  insert_every_element_everywhere,
   insert_every_element_everywhere_for_all_lists,
+  all_combinations,
+  demerge_option_values,
   make_args_list,
   make_test_cases,
   all_test_cases,
@@ -25,6 +29,16 @@ from dralithus.test.configuration.process_command_line import (
 from dralithus.test.configuration.process_command_line.test_deploy import (
   deploy_valid_test_cases,
   deploy_invalid_base_test_cases)
+
+
+def no_parameters_test_cases() -> list[tuple[TestCaseData]]:
+  """
+    Test cases representing invocation of drl with no parameters
+    i.e. just drl.
+  """
+  args = Args(program='drl', global_options=[], command='', command_options=[], parameters=[])
+  return [(TestCaseData(
+    args=args, expected=None, error={'error_type': CommandLineError, 'verbosity': 0}),)]
 
 
 def help_valid_global_no_command_test_cases() -> list[tuple[TestCaseData]]:
@@ -82,6 +96,82 @@ def help_valid_global_deploy_test_cases() -> list[tuple[TestCaseData]]:
   return cases
 
 
+def help_valid_deploy_help_test_cases() -> list[tuple[TestCaseData]]:
+  """
+    Test cases representing a valid invocation of drl with just the help
+    flag as a command option.
+
+    i.e. drl deploy -h or drl deploy --help
+
+    :return: list[tuple[TestCaseData]] - A list of test cases encased in a tuple
+  :return:
+  """
+  expected: Operation = {
+    'command': 'help',
+    'about': 'deploy',
+    'applications': None,
+    'environments': None,
+    'verbosity': 0 }
+  cases: list[tuple[TestCaseData]] = []
+  # Add valid cases where the help flag is passed as a command option
+  # to the 'deploy' command with no other options or parameters. This
+  # is not handled in the valid base cases for the 'deploy' command
+  # without help since 'deploy' with no options or parameters is
+  # invalid.
+  args_list = make_args_list(
+    program='drl',
+    global_options_list=[[]],
+    command_list=['deploy'],
+    command_options_list=[['-h'], ['--help']],
+    parameters_list=[[]])
+  cases += make_test_cases(args_list, expected, None)
+  base_cases = deploy_valid_test_cases()
+  for tuple_list in base_cases:
+    case: TestCaseData = tuple_list[0]
+    args: Args = case['args']
+    help_options = ['-h', '--help']
+    merged_command_options = merge_option_values(args.command_options)
+    merged_command_options_with_help_list = insert_every_element_everywhere(
+      help_options,
+      merged_command_options)
+    command_options_list: list[list[str]] = []
+    for merged_command_options_with_help in merged_command_options_with_help_list:
+      command_options = demerge_option_values(merged_command_options_with_help)
+      command_options_list.append(command_options)
+    args_list: list[Args] = make_args_list(
+        program=args.program,
+        global_options_list=[[]],
+        command_list=[args.command],
+        command_options_list=command_options_list,
+        parameters_list=[args.parameters])
+    cases += make_test_cases(args_list, expected, None)
+  return cases
+
+
+def help_invalid_global_no_command_test_cases() -> list[tuple[TestCaseData]]:
+  """
+    Test cases representing an invalid invocation of drl with the help as
+    a global option, but no command.
+    For example: drl -h --env=local or drl --help -e local
+    In the examples above, the help option is followed by an invalid
+    global option, which should result in a CommandLineError.
+
+    :return: list[tuple[TestCaseData]] - A list of test cases encased in a tuple
+  """
+  base_global_options_list = [
+    ['--environment=local'],
+    ['--environment', 'local']]
+  help_options_list = [['-h'], ['--help']]
+  global_options_list = all_combinations(help_options_list, base_global_options_list)
+  args_list = make_args_list(
+    program='drl',
+    global_options_list=global_options_list,
+    command_list=[''],
+    command_options_list=[[]],
+    parameters_list=[[]])
+  error = {'error_type': CommandLineError, 'verbosity': 0}
+  return make_test_cases(args_list, None, error)
+
 def help_invalid_global_deploy_test_cases() -> list[tuple[TestCaseData]]:
   """
     Test cases representing an invalid invocation of drl with the help as
@@ -98,11 +188,55 @@ def help_invalid_global_deploy_test_cases() -> list[tuple[TestCaseData]]:
     args_list: list[Args] = make_args_list(
       program=args.program,
       global_options_list=[['-h'], ['--help']],
-      command_list=['invalid'],
-      command_options_list=[[]],
-      parameters_list=[[]])
+      command_list=[args.command],
+      command_options_list=[args.command_options],
+      parameters_list=[args.parameters])
     error = {'error_type': CommandLineError, 'verbosity': 0}
     cases += make_test_cases(args_list, None, error)
+  return cases
+
+def help_invalid_deploy_help_test_cases() -> list[tuple[TestCaseData]]:
+  """
+    Test cases representing an invalid invocation of drl with just the help
+    flag as a command option.
+
+    E.g. drl deploy -h --environment=local  # missing an application
+    or drl deploy --help sample # missing an environment.
+
+    :return: list[tuple[TestCaseData]] - A list of test cases encased in a tuple
+  """
+  help_options = ['-h', '--help']
+  base_cases: list[tuple[TestCaseData]] = deploy_invalid_base_test_cases()
+  cases: list[tuple[TestCaseData]] = []
+  for tuple_list in base_cases:
+    case: TestCaseData = tuple_list[0]
+    args: Args = case['args']
+    command_options_list = insert_every_element_everywhere(help_options, args.command_options)
+    args_list: list[Args] = make_args_list(
+      program=args.program,
+      global_options_list=[[]],
+      command_list=[args.command],
+      command_options_list=command_options_list,
+      parameters_list=[args.parameters])
+    error = {'error_type': CommandLineError, 'verbosity': 0}
+    cases += make_test_cases(args_list, None, error)
+
+  command_options_list = [
+    ['--environment', '-h', 'local'],
+    ['-e', '-h', 'local'],
+    ['--env', '-h', 'local'],
+    ['--environment', '--help', 'local'],
+    ['-e', '--help', 'local'],
+    ['--env', '--help', 'local']
+  ]
+  args_list = make_args_list(
+    program='drl',
+    global_options_list=[[]],
+    command_list=['deploy'],
+    command_options_list=command_options_list,
+    parameters_list=[['sample']])
+  error = {'error_type': CommandLineError, 'verbosity': 0}
+  cases += make_test_cases(args_list, None, error)
   return cases
 
 
@@ -141,14 +275,6 @@ def help_invalid_global_invalid_command_test_cases() -> list[tuple[TestCaseData]
   error = {'error_type': CommandLineError, 'verbosity': 0}
   return make_test_cases(args_list, None, error)
 
-def no_parameters_test_cases() -> list[tuple[TestCaseData]]:
-  """
-    Test cases representing invocation of drl with no parameters
-    i.e. just drl.
-  """
-  args = Args(program='drl', global_options=[], command='', command_options=[], parameters=[])
-  return [(TestCaseData(
-    args=args, expected=None, error={'error_type': CommandLineError, 'verbosity': 0}),)]
 
 def global_option_test_cases() -> list[tuple[TestCaseData]]:
   """
@@ -264,16 +390,26 @@ def command_option_with_other_args_test_cases() -> list[tuple[TestCaseData]]:
 def help_base_test_cases() -> list[tuple[TestCaseData]]:
   """ Generate the base test cases for the help option """
   cases: list[tuple[TestCaseData]] = []
-  # cases += help_valid_global_no_command_test_cases()
-  # cases += help_valid_global_deploy_test_cases()
-  # cases += help_invalid_global_deploy_test_cases()
-  # cases += help_invalid_global_invalid_command_test_cases()
+
+  cases += no_parameters_test_cases()
+  cases += help_valid_global_no_command_test_cases()
+  cases += help_valid_global_deploy_test_cases()
+  cases += help_valid_deploy_help_test_cases()
+  cases += help_invalid_global_no_command_test_cases()
+  cases += help_invalid_global_deploy_test_cases()
+  cases += help_invalid_global_invalid_command_test_cases()
+  cases += help_invalid_deploy_help_test_cases()
+  return cases
+
+def old_help_base_test_cases() -> list[tuple[TestCaseData]]:
+  """ Generate the base test cases for the help option """
+  cases: list[tuple[TestCaseData]] = []
+
   cases += no_parameters_test_cases()
   cases += global_option_test_cases()
   cases += global_option_with_other_args_test_cases()
   cases += command_option_with_other_args_test_cases()
   return cases
-
 
 class TestHelp(CommandLineTestCase):
   """
@@ -287,6 +423,7 @@ class TestHelp(CommandLineTestCase):
 
 
 if __name__ == '__main__':
-  print_cases(help_base_test_cases())
+  # print_cases(help_base_test_cases())
+  print_cases(old_help_base_test_cases())
   # print_cases(all_test_cases(help_base_test_cases()))
   # unittest.main()
