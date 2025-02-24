@@ -74,7 +74,6 @@ def help_valid_global_deploy_test_cases() -> list[tuple[TestCaseData]]:
   """
   # First, generate test cases for the 'deploy' command
   base_cases = deploy_valid_test_cases()
-
   # Then iterate over the base cases making cases with global help options
   cases: list[tuple[TestCaseData]] = []
   for tuple_list in base_cases:
@@ -276,6 +275,42 @@ def help_invalid_global_invalid_command_test_cases() -> list[tuple[TestCaseData]
   return make_test_cases(args_list, None, error)
 
 
+def help_invalid_invalid_command_test_cases() -> list[tuple[TestCaseData]]:
+  """
+    Test cases representing an invalid invocation of drl with the help as
+    a command option passed to an invalid command.
+    :return:
+  """
+  help_options = ['-h', '--help']
+  base_command_options_list = [
+    [],
+    ['--environment=local'],
+    ['--environment', 'local'],
+    ['-elocal'],
+    ['-e', 'local'],
+    ['--environment=local,dev'],
+    ['--environment', 'local,dev'],
+    ['--unknown'],
+    ['--unknown=value'],
+    ['--unknown', 'value'],
+    ['-uvalue'],
+    ['-u', 'value']]
+  command_options_list = insert_every_element_everywhere_for_all_lists(help_options, base_command_options_list)
+  args_list = make_args_list(
+    program='drl',
+    global_options_list=[[]],
+    command_list=['invalid'],
+    command_options_list=command_options_list,
+    parameters_list=[
+      [],
+      ['sample'],
+      ['sample', 'echo '],
+      ['garbage', 'unknown']
+    ])
+  error = {'error_type': CommandLineError, 'verbosity': 0}
+  return make_test_cases(args_list, None, error)
+
+
 def global_option_test_cases() -> list[tuple[TestCaseData]]:
   """
     Test cases representing invocation of drl with the --help global option
@@ -398,6 +433,7 @@ def help_base_test_cases() -> list[tuple[TestCaseData]]:
   cases += help_invalid_global_no_command_test_cases()
   cases += help_invalid_global_deploy_test_cases()
   cases += help_invalid_global_invalid_command_test_cases()
+  cases += help_invalid_invalid_command_test_cases()
   cases += help_invalid_deploy_help_test_cases()
   return cases
 
@@ -423,7 +459,6 @@ class TestHelp(CommandLineTestCase):
 
 
 if __name__ == '__main__':
-  # print_cases(help_base_test_cases())
-  print_cases(old_help_base_test_cases())
+   print_cases(help_base_test_cases())
   # print_cases(all_test_cases(help_base_test_cases()))
   # unittest.main()
