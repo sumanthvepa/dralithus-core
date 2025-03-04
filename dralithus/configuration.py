@@ -74,7 +74,8 @@ def get_command(command_line: list[str]) -> str | None:
     Get the command from the command line
 
     :param command_line: list[str]: The command line arguments
-    :return: str | None: The command if it is found, otherwise None
+        no command is found, and rest of the command line arguments
+    :return: str | None: The command if found, otherwise None
   """
   # Skip over options until the first non-option argument is found
   # This assumes that options taking values are specified as a single
@@ -279,6 +280,79 @@ def is_asking_for_help(
   # No help is being sought
   return None
 
+
+def get_global_and_command_specific_options(
+    command: str, command_line: list[str]) -> tuple[list[str], list[str]]:
+  """
+    Get the global and command specific options from the command line
+    :param command: str: The command to be executed
+    :param command_line: list[str]: The command line arguments
+    :return: tuple[list[str], list[str]]: A tuple containing two lists.
+        The first list contains the global options, and the second list
+        contains the command specific options.
+  """
+  command_index = command_line.index(command)
+  global_options = command_line[:command_index]
+  command_options = command_line[command_index + 1:]
+  return global_options, command_options
+
+
+def get_environments(program: str, command_line: list[str]) -> list[str]:
+  """
+    Get the environments from the command line
+    :param program: str: The name of the program
+    :param command_line: list[str]: The command line arguments
+    :return: list[str]: The environments
+  """
+  environments = []
+  i = 0
+  while i < len(command_line):
+    if command_line[i] in ['-e', '--environment']:
+      if i + 1 < len(command_line):
+        environments.append(command_line[i + 1])
+        i += 1
+    i += 1
+  return environments
+
+def get_applications(program: str, command_line: list[str]) -> list[str]:
+  """
+    Get the applications from the command line
+    :param program: str: The name of the program
+    :param command_line: list[str]: The command line arguments
+    :return: list[str]: The applications
+  """
+  applications = []
+  i = 0
+  while i < len(command_line) and command_line[i].startswith('-'):
+    i += 1
+  while i < len(command_line):
+    if not command_line[i].startswith('-'):
+      applications.append(command_line[i])
+    i += 1
+  return applications
+
+
+def process_deploy_command(
+    program: str, global_options: list[str], command_options: list[str], verbosity: int) -> Operation:
+  """
+    Process the 'deploy' command
+    :param program: str: The name of the program
+    :param global_options: list[str]: The global options list (not currently used)
+    :param command_options: list[str]: The command options list
+    :param verbosity: int: The verbosity level
+    :return: Operation: The operation to be performed
+  """
+  environments = get_environments(program, command_options)
+  applications = get_applications(program, command_options)
+  return {
+    'command': 'deploy',
+    'about': None,
+    'applications': applications,
+    'environments': environments,
+    'verbosity': verbosity
+  }
+
+
 def process_command_line(args: list[str]) -> Operation:
   """
     Process command line arguments
@@ -341,6 +415,10 @@ def process_command_line(args: list[str]) -> Operation:
       program=program,
       verbosity=verbosity,
       message=f'Invalid command {command}')
+
+  global_options, command_options = get_global_and_command_specific_options(command, command_line)
+  if command == 'deploy':
+    return process_deploy_command(program, global_options, command_options, verbosity)
 
   # TODO: Implement rest of process_command_line beyond this point
   raise NotImplementedError('Feature implementation is not complete')
