@@ -331,6 +331,34 @@ def get_applications(program: str, command_line: list[str]) -> list[str]:
     i += 1
   return applications
 
+def remove_equality_signs(command_line: list[str]) -> list[str]:
+  """
+    Remove equality signs from the command line arguments
+
+    This function removes the equality signs from the command line arguments.
+    For example, '-e=env' becomes two elements, '-e', 'env'
+
+    :param command_line: list[str]: The command line arguments
+    :return: list[str]: The command line arguments with the equality signs removed
+  """
+  modified_command_line: list[str] = []
+  for element in command_line:
+    if element.startswith('-'):
+      # The argument is an option, so check if it contains an equality sign
+      if '=' in element:
+        # Split the argument into two parts
+        parts = element.split('=')
+        # Remove the equality sign and add the two parts to the list
+        modified_command_line.append(parts[0])
+        modified_command_line.append(parts[1])
+      else:
+        # The argument is just an option, so add it to the list
+        modified_command_line.append(element)
+    else:
+      # The argument is not an option, so just add it to the list
+      modified_command_line.append(element)
+  return command_line
+
 
 def process_deploy_command(
     program: str, global_options: list[str], command_options: list[str], verbosity: int) -> Operation:
@@ -342,6 +370,7 @@ def process_deploy_command(
     :param verbosity: int: The verbosity level
     :return: Operation: The operation to be performed
   """
+  command_options = remove_equality_signs(command_options)
   environments = get_environments(program, command_options)
   applications = get_applications(program, command_options)
   return {
