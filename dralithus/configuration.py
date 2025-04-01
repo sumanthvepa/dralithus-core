@@ -357,7 +357,7 @@ def remove_equality_signs(command_line: list[str]) -> list[str]:
     else:
       # The argument is not an option, so just add it to the list
       modified_command_line.append(element)
-  return command_line
+  return modified_command_line
 
 
 def process_deploy_command(
