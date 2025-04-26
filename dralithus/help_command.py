@@ -22,7 +22,7 @@
 # -------------------------------------------------------------------
 from typing_extensions import override
 
-from dralithus.configuration2 import CommandLineError
+from dralithus.errors import CommandLineError
 from dralithus.command import Command
 
 
@@ -34,10 +34,11 @@ class HelpCommand(Command):
     directly if they specify the help option on the command line,
     or indirectly, if there is an error on the command line.
   """
+  @override
   def __init__(
       self,
       verbosity: int,
-      command_name: str | None,
+      command_needing_help: str | None,
       error: CommandLineError | None) -> None:
     """
       Initialize the help command with a verbosity level.
@@ -45,7 +46,7 @@ class HelpCommand(Command):
       :param verbosity: The verbosity level of the command
     """
     super().__init__("help", verbosity)
-    self._command_name = command_name
+    self._command_needing_help = command_needing_help
     self._error = error
 
   @property
@@ -58,15 +59,16 @@ class HelpCommand(Command):
     return self._error
 
   @property
-  def command_name(self) -> str | None:
+  def command_needing_help(self) -> str | None:
     """
       The name of the command that caused the help command
       to be invoked.
-    :return: The name of the command that caused the help command
-      to be invoked, or None if the help request was for global
-      help.
+
+      :return: The name of the command that caused the help command
+        to be invoked, or None if the help request was for global
+        help.
     """
-    return self._command_name
+    return self._command_needing_help
 
   @override
   def execute(self) -> int:
