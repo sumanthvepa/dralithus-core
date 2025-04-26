@@ -1,5 +1,5 @@
 """
-  configuration2.py: New configuration processing for dralithus
+  command_line.py: Define class CommandLine and CommandLineError
 """
 
 from dralithus.errors import DralithusError, ExitCode
