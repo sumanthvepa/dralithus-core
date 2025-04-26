@@ -20,6 +20,8 @@
 # along with this program.  If not, see
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
+from typing import TypedDict
+
 from dralithus.errors import DralithusError, ExitCode
 
 
@@ -42,3 +44,36 @@ class CommandLineError(DralithusError):
       :param message: The error message
     """
     super().__init__(message, exit_code=ExitCode.INVALID_COMMAND_LINE)
+
+
+class GlobalOptions(TypedDict):
+  """
+    Global options applicable to all commands
+
+    This class should NOT be used outside of this module.
+
+    Global options are options that appear before the command name
+    and are applicable to all commands. There are two global options
+    that are currently supported:
+      -h, --help: Show an appropriate help message. This is a boolean
+      option that is set to True if the help option was specified at
+      least once.
+      -v, --verbose, --verbosity: Set the verbosity level of the
+      command. This is an integer option that can be specified
+      multiple times either as a flag (-v or --verbose) or as an
+      option with a value (-v 1 or --verbosity 1, or --verbose=2). The
+      verbosity level is an integer and each appearance of the
+      flag/option increases the verbosity by 1.
+
+    This dictionary holds any global options that were specified
+    on the command line. This class is used internally by the
+    CommandLine class to store the global options during command
+    line parsing.
+
+    Options here are combined with command options to create the
+    appropriate Command object during parsing.
+
+    :param help: True if the help option was specified as a global option.
+  """
+  help: bool
+  verbosity: int
