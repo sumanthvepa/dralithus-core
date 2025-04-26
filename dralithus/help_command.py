@@ -37,9 +37,9 @@ class HelpCommand(Command):
   @override
   def __init__(
       self,
-      verbosity: int,
       command_needing_help: str | None,
-      error: CommandLineError | None) -> None:
+      error: CommandLineError | None,
+      verbosity: int) -> None:
     """
       Initialize the help command with a verbosity level.
 
