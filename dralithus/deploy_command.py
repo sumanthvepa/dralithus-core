@@ -29,7 +29,11 @@ class DeployCommand(Command):
   """
     Command to deploy an application to a target environment.
   """
-  def __init__(self, environments: list[str], applications: list[str], verbosity: int) -> None:
+  @override
+  def __init__(
+      self, environments: list[str],
+      applications: list[str],
+      verbosity: int) -> None:
     """
       Initialize the 'deploy' command with a verbosity level.
 
