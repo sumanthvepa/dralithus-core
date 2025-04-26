@@ -296,14 +296,14 @@ def get_global_and_command_specific_options(
   command_options = command_line[command_index + 1:]
   return global_options, command_options
 
-
-def get_environments(program: str, command_line: list[str]) -> list[str]:
+def get_environments(program: str, command_line: list[str]) -> tuple[list[str], list[str]]:
   """
     Get the environments from the command line
     :param program: str: The name of the program
     :param command_line: list[str]: The command line arguments
     :return: list[str]: The environments
   """
+  modified_command_line: list[str] = []
   environments = []
   i = 0
   while i < len(command_line):
@@ -311,8 +311,9 @@ def get_environments(program: str, command_line: list[str]) -> list[str]:
       if i + 1 < len(command_line):
         environments.append(command_line[i + 1])
         i += 1
+    modified_command_line.append(command_line[i])
     i += 1
-  return environments
+  return environments, modified_command_line
 
 def get_applications(program: str, command_line: list[str]) -> list[str]:
   """
