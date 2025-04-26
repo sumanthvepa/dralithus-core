@@ -25,7 +25,6 @@ import re
 from typing import TypedDict
 
 
-
 class CommandLineError(RuntimeError):
   """
     CommandLineError: An error occurred while processing the command line
@@ -95,7 +94,8 @@ def get_command(command_line: list[str]) -> str | None:
     Get the command from the command line
 
     :param command_line: list[str]: The command line arguments
-    :return: str | None: The command if it is found, otherwise None
+        no command is found, and rest of the command line arguments
+    :return: str | None: The command if found, otherwise None
   """
   # Skip over options until the first non-option argument is found
   # This assumes that options taking values are specified as a single
@@ -191,6 +191,58 @@ def irrelevant_help_arguments(command_line: list[str]) -> bool:
       return True
   return False
 
+def merge_option_values(command_line: list[str]) -> list[str]:
+  """
+    Merge option values that are split into two arguments
+
+    Some options are split into two arguments. For example, the verbosity
+    option can be specified as '-v 3' or '--verbose 3'. This function
+    merges such arguments into a single argument, example ['deploy' '-v' '3'] becomes
+    ['deploy', '-v3']
+
+    # Currently, this function only merges the verbosity option.
+
+    :param command_line: list[str]: The command line arguments
+    :return: list[str]: The command line arguments with the option values merged
+  """
+  merged = []
+  i = 0
+  while i < len(command_line):
+    arg = command_line[i]
+    if arg in ['-v', '--verbose']:
+      if i + 1 < len(command_line): # Don't try to look beyond the end of the list
+        # The next argument is a potential value for the verbosity option
+        potential_option_value = command_line[i + 1]
+        try:
+          value = int(potential_option_value)
+          if value >= 0: # Next argument is a positive integer
+            merged.append(f'{arg} {value}')
+            i += 1 # Skip the next argument as it has been processed already
+        except ValueError: # The next argument was not an integer
+          # just add the option to the merged list
+          merged.append(arg)
+      else:
+        # The verbosity option is the last argument in the list
+        merged.append(arg)
+    elif arg in ['-e', '--environment']:
+      # This option requires a value. So as long as the option is not the last
+      # argument in the list, we can merge the option with the next argument,
+      # provided the next argument is not also an option. This, latter condition,
+      # is a user error, will be caught elsewhere.
+      if i + 1 < len(command_line):
+        potential_option_value = command_line[i + 1]
+        # Only merge the potential option value if it does not start with a '-'.
+        # The '-' indicates that the next argument is an option and not a value.
+        if not potential_option_value.startswith('-'):
+          merged.append(f'{arg} {potential_option_value}')
+          i += 1
+    else:
+      # The argument is not -v, --verbose, -e, or --environment so just add it
+      # to the merged list.
+      merged.append(arg)
+    i += 1
+  return merged
+
 def is_asking_for_help(
     program: str,
     command: str | None,
@@ -248,44 +300,108 @@ def is_asking_for_help(
   # No help is being sought
   return None
 
-def merge_option_values(command_line: list[str]) -> list[str]:
+
+def get_global_and_command_specific_options(
+    command: str, command_line: list[str]) -> tuple[list[str], list[str]]:
   """
-    Merge option values that are split into two arguments
-
-    Some options are split into two arguments. For example, the verbosity
-    option can be specified as '-v 3' or '--verbose 3'. This function
-    merges such arguments into a single argument, example ['deploy' '-v' '3'] becomes
-    ['deploy', '-v3']
-
-    # Currently, this function only merges the verbosity option.
-
+    Get the global and command specific options from the command line
+    :param command: str: The command to be executed
     :param command_line: list[str]: The command line arguments
-    :return: list[str]: The command line arguments with the option values merged
+    :return: tuple[list[str], list[str]]: A tuple containing two lists.
+        The first list contains the global options, and the second list
+        contains the command specific options.
   """
-  merged = []
+  command_index = command_line.index(command)
+  global_options = command_line[:command_index]
+  command_options = command_line[command_index + 1:]
+  return global_options, command_options
+
+def get_environments(program: str, command_line: list[str]) -> tuple[list[str], list[str]]:
+  """
+    Get the environments from the command line
+    :param program: str: The name of the program
+    :param command_line: list[str]: The command line arguments
+    :return: list[str]: The environments
+  """
+  modified_command_line: list[str] = []
+  environments = []
   i = 0
   while i < len(command_line):
-    arg = command_line[i]
-    if arg in ['-v', '--verbose']:
-      if i + 1 < len(command_line): # Don't try to look beyond the end of the list
-        # The next argument is a potential value for the verbosity option
-        potential_option_value = command_line[i + 1]
-        try:
-          value = int(potential_option_value)
-          if value >= 0: # Next argument is a positive integer
-            merged.append(f'{arg} {value}')
-            i += 1 # Skip the next argument as it has been processed already
-        except ValueError: # The next argument was not an integer
-          # just add the option to the merged list
-          merged.append(arg)
-      else:
-        # The verbosity option is the last argument in the list
-        merged.append(arg)
-    else:
-      # The argument is not -v or --verbose, so just add it to the merged list
-      merged.append(arg)
+    if command_line[i] in ['-e', '--environment']:
+      if i + 1 < len(command_line):
+        environments.append(command_line[i + 1])
+        i += 1
+    modified_command_line.append(command_line[i])
     i += 1
-  return merged
+  return environments, modified_command_line
+
+def get_applications(program: str, command_line: list[str]) -> list[str]:
+  """
+    Get the applications from the command line
+    :param program: str: The name of the program
+    :param command_line: list[str]: The command line arguments
+    :return: list[str]: The applications
+  """
+  applications = []
+  i = 0
+  while i < len(command_line) and command_line[i].startswith('-'):
+    i += 1
+  while i < len(command_line):
+    if not command_line[i].startswith('-'):
+      applications.append(command_line[i])
+    i += 1
+  return applications
+
+def remove_equality_signs(command_line: list[str]) -> list[str]:
+  """
+    Remove equality signs from the command line arguments
+
+    This function removes the equality signs from the command line arguments.
+    For example, '-e=env' becomes two elements, '-e', 'env'
+
+    :param command_line: list[str]: The command line arguments
+    :return: list[str]: The command line arguments with the equality signs removed
+  """
+  modified_command_line: list[str] = []
+  for element in command_line:
+    if element.startswith('-'):
+      # The argument is an option, so check if it contains an equality sign
+      if '=' in element:
+        # Split the argument into two parts
+        parts = element.split('=')
+        # Remove the equality sign and add the two parts to the list
+        modified_command_line.append(parts[0])
+        modified_command_line.append(parts[1])
+      else:
+        # The argument is just an option, so add it to the list
+        modified_command_line.append(element)
+    else:
+      # The argument is not an option, so just add it to the list
+      modified_command_line.append(element)
+  return modified_command_line
+
+
+def process_deploy_command(
+    program: str, global_options: list[str], command_options: list[str], verbosity: int) -> Operation:
+  """
+    Process the 'deploy' command
+    :param program: str: The name of the program
+    :param global_options: list[str]: The global options list (not currently used)
+    :param command_options: list[str]: The command options list
+    :param verbosity: int: The verbosity level
+    :return: Operation: The operation to be performed
+  """
+  command_options = remove_equality_signs(command_options)
+  environments = get_environments(program, command_options)
+  applications = get_applications(program, command_options)
+  return {
+    'command': 'deploy',
+    'about': None,
+    'applications': applications,
+    'environments': environments,
+    'verbosity': verbosity
+  }
+
 
 def process_command_line(args: list[str]) -> Operation:
   """
@@ -339,12 +455,20 @@ def process_command_line(args: list[str]) -> Operation:
   if operation is not None:
     return operation
 
+  # There has to be a command for the program to do anything
   if command is None:
     raise CommandLineError(program=program, verbosity=verbosity, message='Command not specified')
 
+  # But the command has to be valid
+  if not is_valid_command(command):
+    raise CommandLineError(
+      program=program,
+      verbosity=verbosity,
+      message=f'Invalid command {command}')
+
+  global_options, command_options = get_global_and_command_specific_options(command, command_line)
+  if command == 'deploy':
+    return process_deploy_command(program, global_options, command_options, verbosity)
 
   # TODO: Implement rest of process_command_line beyond this point
-  raise CommandLineError(
-    program=program,
-    verbosity=verbosity,
-    message='Feature implementation is not complete')
+  raise NotImplementedError('Feature implementation is not complete')
