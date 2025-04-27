@@ -106,5 +106,5 @@ class CommandOptions(TypedDict):
   """
   help: bool
   verbosity: int
-  environment: list[str]
+  environments: list[str]
   applications: list[str]
