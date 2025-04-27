@@ -20,7 +20,6 @@
 # along with this program.  If not, see
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
-import copy
 from typing import TypedDict
 
 from dralithus.errors import CommandLineError
@@ -136,7 +135,8 @@ class CommandLineParser:  # pylint: disable=too-few-public-methods
     """
     # Note that we copy the args list, since we will be modifying it
     # during parsing. We do not want to modify the original list.
-    self._args: list[str] = copy.deepcopy(args)
+    self._program_name: str = args[0]
+    self._args: list[str] = args[1:]
     self._command_name: str | None = None
     self._global_options: GlobalOptions \
       = GlobalOptions(help=False, verbosity=0)
