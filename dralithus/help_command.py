@@ -37,17 +37,35 @@ class HelpCommand(Command):
   @override
   def __init__(
       self,
+      program_name: str,
       command_needing_help: str | None,
       error: CommandLineError | None,
       verbosity: int) -> None:
     """
       Initialize the help command with a verbosity level.
 
+      :param program_name: The name of the program
+      :param command_needing_help: The name of the command that
+        caused the help command to be invoked, or None if the help
+        request was for global help.
+      :param error: The error that caused the help command to be
+      invoked, or None if the help command was invoked directly
+      via the help option.
       :param verbosity: The verbosity level of the command
     """
     super().__init__("help", verbosity)
+    self._program_name = program_name
     self._command_needing_help = command_needing_help
     self._error = error
+
+  @property
+  def program_name(self) -> str:
+    """
+      The name of the program
+
+      :return: The name of the program
+    """
+    return self._program_name
 
   @property
   def error(self) -> CommandLineError | None:

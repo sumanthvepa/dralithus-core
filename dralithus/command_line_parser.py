@@ -199,6 +199,7 @@ class CommandLineParser:  # pylint: disable=too-few-public-methods
       :return: HelpCommand
     """
     return HelpCommand(
+      program_name=self._program_name,
       command_needing_help=self._command_name,
       error=error,
       verbosity=self._get_verbosity())
