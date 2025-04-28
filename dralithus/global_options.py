@@ -49,9 +49,10 @@ class GlobalOptions:
     Options here are combined with command options to create the
     appropriate Command object during parsing.
 
-    :param help: True if the help option was specified as a global option.
+    :param requires_help: True if the help option was specified as a global option.
+    :param verbosity: The verbosity level of the command.
   """
-  def __init__(self, requires_help: bool = False, verbosity: int = 0):
+  def __init__(self, requires_help: bool, verbosity: int):
     """
       Initialize the global options with default values.
 
