@@ -20,10 +20,9 @@
 # along with this program.  If not, see
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
-from typing import TypedDict
 
 
-class GlobalOptions(TypedDict):
+class GlobalOptions:
   """
     Global options applicable to all commands
 
@@ -52,5 +51,12 @@ class GlobalOptions(TypedDict):
 
     :param help: True if the help option was specified as a global option.
   """
-  help: bool
-  verbosity: int
+  def __init__(self, requires_help: bool = False, verbosity: int = 0):
+    """
+      Initialize the global options with default values.
+
+      :param requires_help: True if the help option was specified as a global option.
+      :param verbosity: The verbosity level of the command.
+    """
+    self.requires_help = requires_help
+    self.verbosity = verbosity

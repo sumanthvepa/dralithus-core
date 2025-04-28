@@ -52,8 +52,7 @@ class CommandLineParser:  # pylint: disable=too-few-public-methods
     self._program_name: str = args[0]
     self._args: list[str] = args[1:]
     self._command_name: str | None = None
-    self._global_options: GlobalOptions \
-      = GlobalOptions(help=False, verbosity=0)
+    self._global_options = GlobalOptions()
     self._command_options: CommandOptions \
       = CommandOptions(help=False, verbosity=0, environments=[], applications=[])
 
@@ -94,7 +93,7 @@ class CommandLineParser:  # pylint: disable=too-few-public-methods
 
       :return: The verbosity level
     """
-    return self._global_options['verbosity'] + self._command_options['verbosity']
+    return self._global_options.verbosity + self._command_options['verbosity']
 
   def _is_asking_for_help(self) -> bool:
     """
@@ -102,7 +101,7 @@ class CommandLineParser:  # pylint: disable=too-few-public-methods
 
       :return: True if the user is asking for help
     """
-    return self._global_options['help'] \
+    return self._global_options.requires_help \
       or self._command_options['help'] \
       or self._command_name == 'help'
 
