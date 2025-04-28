@@ -20,7 +20,6 @@
 # along with this program.  If not, see
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
-
 from dralithus.errors import CommandLineError
 from dralithus.command import Command
 from dralithus.deploy_command import DeployCommand
