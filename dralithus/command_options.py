@@ -39,10 +39,9 @@
 # along with this program.  If not, see
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
-from typing import TypedDict
 
 
-class CommandOptions(TypedDict):
+class CommandOptions:
   """
     Options applicable to a specific command.
 
@@ -90,7 +89,21 @@ class CommandOptions(TypedDict):
       be valid application names. For now the valid application names
       are sample, which is hardcoded to be a sample application.
   """
-  help: bool
-  verbosity: int
-  environments: list[str]
-  applications: list[str]
+  def __init__(
+      self,
+      requires_help: bool,
+      verbosity: int,
+      environments: list[str],
+      applications: list[str]):
+    """
+      Initialize the command options with default values.
+
+      :param requires_help: True if the help option was specified as a global option.
+      :param verbosity: The verbosity level of the command.
+      :param environments: The list of environment names to deploy to.
+      :param applications: The list of application names to deploy.
+    """
+    self.requires_help = requires_help
+    self.verbosity = verbosity
+    self.environments = environments
+    self.applications = applications

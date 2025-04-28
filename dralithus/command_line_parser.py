@@ -53,8 +53,12 @@ class CommandLineParser:  # pylint: disable=too-few-public-methods
     self._args: list[str] = args[1:]
     self._command_name: str | None = None
     self._global_options = GlobalOptions()
-    self._command_options: CommandOptions \
-      = CommandOptions(help=False, verbosity=0, environments=[], applications=[])
+    self._command_options \
+      = CommandOptions(
+      requires_help=False,
+      verbosity=0,
+      environments=[],
+      applications=[])
 
   def _parse_global_options(self) -> GlobalOptions:
     """
@@ -93,7 +97,7 @@ class CommandLineParser:  # pylint: disable=too-few-public-methods
 
       :return: The verbosity level
     """
-    return self._global_options.verbosity + self._command_options['verbosity']
+    return self._global_options.verbosity + self._command_options.verbosity
 
   def _is_asking_for_help(self) -> bool:
     """
@@ -102,7 +106,7 @@ class CommandLineParser:  # pylint: disable=too-few-public-methods
       :return: True if the user is asking for help
     """
     return self._global_options.requires_help \
-      or self._command_options['help'] \
+      or self._command_options.requires_help \
       or self._command_name == 'help'
 
   def _make_help_command(self, error: CommandLineError | None = None) -> HelpCommand:
@@ -124,8 +128,8 @@ class CommandLineParser:  # pylint: disable=too-few-public-methods
       :return: DeployCommand
     """
     return DeployCommand(
-      environments=self._command_options["environments"],
-      applications=self._command_options["applications"],
+      environments=self._command_options.environments,
+      applications=self._command_options.applications,
       verbosity=self._get_verbosity())
 
   def _make_command(self) -> Command:
