@@ -26,6 +26,7 @@ from dralithus.errors import CommandLineError
 from dralithus.command import Command
 from dralithus.deploy_command import DeployCommand
 from dralithus.help_command import HelpCommand
+from dralithus.command_options import CommandOptions
 
 
 class GlobalOptions(TypedDict):
@@ -59,60 +60,6 @@ class GlobalOptions(TypedDict):
   """
   help: bool
   verbosity: int
-
-
-class CommandOptions(TypedDict):
-  """
-    Options applicable to a specific command.
-
-    This class should NOT be used outside of this module.
-
-    Command options are options that appear after the command name
-    and are applicable to the command. The options supported for
-    each command are described below:
-    help command:
-      -v, --verbose, --verbosity: Set the verbosity level of the
-      command. This is an integer option that can be specified
-      multiple times either as a flag (-v or --verbose) or as an
-      option with a value (-v 1 or --verbose=2). The verbosity
-      level is an integer and each appearance of the flag/option
-      increases the verbosity by 1.
-    deploy command:
-      -h, --help: Show help message about this command. This is a
-      boolean option that is set to True if the help option was
-      specified at least once.
-
-      -v, --verbose, --verbosity: Set the verbosity level of the
-      command. The semantics are the same as for the help command.
-      -e, --env --environment: Specify the environment(s) to deploy
-      to. This is a list of environment names. The environment names
-      can be specified as a comma separated list after the flag: e.g.
-
-      -e=env1,env2,env3 or -e env1,env2,env3 or --env env1,env2,env3
-      or --environment env1,env2,env3. The environment names can also
-      be specified my repeating the flag: e.g. -e env1 -e env2 -e env3
-      (or -e env1 --env env2 --environment=env3,env4).
-      The names of the environments must be valid environment names.
-      For now the valid environment names are hardcoded to be:
-      - local:  A default local environment
-      - dev:    A default development environment
-      - test:   A default test environment
-      - stage: A default staging environment
-      - prod:   A default production environment
-      - all:    All environments
-
-      Strictly speaking these environment names are actually aliases
-      for the real environment names.
-
-      applications: These are specified as a list of arguments passed
-      to the command rather than as flags/options. The names must
-      be valid application names. For now the valid application names
-      are sample, which is hardcoded to be a sample application.
-  """
-  help: bool
-  verbosity: int
-  environments: list[str]
-  applications: list[str]
 
 
 class CommandLineParser:  # pylint: disable=too-few-public-methods
