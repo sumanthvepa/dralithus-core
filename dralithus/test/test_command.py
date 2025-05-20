@@ -1,0 +1,63 @@
+"""
+  test_command.py: Unit tests for the dralithus.command module
+"""
+# -------------------------------------------------------------------
+# test_command.py: Unit tests for the dralithus.command module
+#
+# Copyright (C) 2023-25 Sumanth Vepa.
+#
+# This program is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License a
+# published by the Free Software Foundation, either version 3 of the
+# License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see
+# <https://www.gnu.org/licenses/>.
+# -------------------------------------------------------------------
+
+import unittest
+from parameterized import parameterized
+
+from dralithus.command import Command
+from dralithus.help_command import HelpCommand
+from dralithus.errors import CommandLineError
+from dralithus.test import CaseData, CaseExecutor
+
+
+def command_make_cases() -> list[tuple[str, CaseData]]:
+  """
+    Test cases for the make method of the Command class
+  """
+  # pylint: disable=line-too-long
+  return[
+    ('no_arguments', CaseData(args=[], expected=HelpCommand(program_name='drl', command_needing_help=None, error=CommandLineError('No command specified'), verbosity=0), error=None))
+  ]
+
+class TestCommand(unittest.TestCase, CaseExecutor):
+  """
+    Unit tests for class Command
+  """
+  def __init__(self, *args, **kwargs):
+    """
+      Initialize the test case.
+    """
+    unittest.TestCase.__init__(self, *args, **kwargs)
+    CaseExecutor.__init__(self, Command.make)
+
+  # pylint: disable=unused-argument
+  # noinspection PyUnusedLocal
+  @parameterized.expand(command_make_cases())
+  def test_make(self, name: str, case: CaseData) -> None:
+    """
+      Test the make method of the Command class
+
+      :param name: The name of the test case
+      :param case: The test case
+    """
+    self.execute(case)
