@@ -20,6 +20,7 @@
 # along with this program.  If not, see
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
+from __future__ import annotations
 from abc import ABC, abstractmethod
 
 
@@ -65,3 +66,13 @@ class Command(ABC):
       :return: The program exit code
     """
     raise NotImplementedError("execute() must be implemented in derived class")
+
+  @classmethod
+  def make(cls, args: list[str]) -> 'Command':
+    """
+      Create a command from the command line arguments.
+
+      :param args: The command line arguments
+      :return: The command object
+    """
+    raise NotImplementedError("Not yet implemented")
