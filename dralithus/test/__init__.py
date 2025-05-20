@@ -23,8 +23,7 @@ dralithus/test/__init__.py: Helper classes and functions for unit tests
 # You should have received a copy of the GNU General Public License
 # along with dralithus-core. If not, see <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
-from typing import Callable, Protocol
-
+from typing import Any, Callable, Protocol
 
 class CaseData:
   """
@@ -32,7 +31,7 @@ class CaseData:
   """
   def __init__(self,
       args: list[str],
-      expected: tuple[dict[str, None | bool | int | str | set[str]], set[str]] | None,
+      expected: Any,
       error: type[Exception] | None):
     """
       Initialize the test case.
@@ -58,7 +57,7 @@ class CaseData:
     return self._args
 
   @property
-  def expected(self) -> tuple[dict[str, None | bool | int | str | set[str]], set[str]] | None:
+  def expected(self) -> Any:
     """
       Get the expected output of the test case.
 
@@ -80,23 +79,12 @@ class RequiresAsserts(Protocol):
   """ Protocol for objects that require 'assert*' methods usable by CaseExecutor. """
   # pylint: disable=invalid-name
   # noinspection PyPep8Naming
-  def assertDictEqual(
-      self,
-      first: dict[str, None | bool | int | str | set[str]],
-      second: dict[str, None | bool | int | str | set[str]]) -> None:
-    """ Compare two dictionaries for equality. """
+  def assertEqual(self, first: Any, second: Any, msg: str | None = None) -> None:
+    """ Assert that two values are equal. """
 
   # pylint: disable=invalid-name
   # noinspection PyPep8Naming
-  def assertSetEqual(
-      self,
-      first: set[str],
-      second: set[str]) -> None:
-    """ Compare two sets for equality. """
-
-  # pylint: disable=invalid-name
-  # noinspection PyPep8Naming
-  def assertRaises(self, expected_exception, *args, **kwargs):
+  def assertRaises(self, expected_exception: type[Exception], *args, **kwargs):
     """ Assert that an exception is raised. """
 
 
@@ -105,8 +93,7 @@ class CaseExecutor(RequiresAsserts):
   """
     A class to execute test cases.
   """
-  def __init__(self,
-    function: Callable[[list[str]], tuple[dict[str, None | bool | int | str | set[str]], set[str]]]):
+  def __init__(self, function: Callable):
     """
       Initialize the CaseExecutor.
     """
@@ -119,10 +106,7 @@ class CaseExecutor(RequiresAsserts):
       :param case: The test case to execute
     """
     if case.expected is not None:
-      expected_options, expected_parameters = case.expected
-      options, parameters = self.function(case.args)
-      self.assertDictEqual(expected_options, options)
-      self.assertSetEqual(expected_parameters, parameters)
+      self.assertEqual(case.expected, self.function(case.args))
     else:
       assert case.error is not None
       with self.assertRaises(case.error):
