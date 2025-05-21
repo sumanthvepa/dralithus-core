@@ -24,7 +24,7 @@
 import unittest
 from parameterized import parameterized
 
-from dralithus.command import Command
+from dralithus.command import make
 from dralithus.help_command import HelpCommand
 from dralithus.errors import CommandLineError
 from dralithus.test import CaseData, CaseExecutor
@@ -35,7 +35,7 @@ def command_make_cases() -> list[tuple[str, CaseData]]:
     Test cases for the make method of the Command class
   """
   # pylint: disable=line-too-long
-  return[
+  return [
     ('no_arguments', CaseData(args=[], expected=HelpCommand(program_name='drl', command_needing_help=None, error=CommandLineError('No command specified'), verbosity=0), error=None))
   ]
 
@@ -48,7 +48,7 @@ class TestCommand(unittest.TestCase, CaseExecutor):
       Initialize the test case.
     """
     unittest.TestCase.__init__(self, *args, **kwargs)
-    CaseExecutor.__init__(self, Command.make)
+    CaseExecutor.__init__(self, make)
 
   # pylint: disable=unused-argument
   # noinspection PyUnusedLocal

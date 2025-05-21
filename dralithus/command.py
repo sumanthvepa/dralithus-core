@@ -23,6 +23,8 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
 
+from dralithus.command_line.command_line import CommandLine
+
 
 class Command(ABC):
   """
@@ -67,12 +69,21 @@ class Command(ABC):
     """
     raise NotImplementedError("execute() must be implemented in derived class")
 
-  @classmethod
-  def make(cls, args: list[str]) -> 'Command':
-    """
-      Create a command from the command line arguments.
 
-      :param args: The command line arguments
-      :return: The command object
-    """
-    raise NotImplementedError("Not yet implemented")
+def make(args: list[str]) -> Command:
+  """
+    Create a command from the command line arguments.
+
+    :param args: The command line arguments
+    :return: The command object
+  """
+  # pylint: disable=import-outside-toplevel
+  from dralithus.help_command import make as make_help
+  from dralithus.deploy_command import make as make_deploy
+
+  cmdline = CommandLine(args)
+  if cmdline.command_name == 'deploy':
+    return make_deploy(cmdline.program, cmdline.global_options, cmdline.command_options)
+  if cmdline.command_name == 'help':
+    return make_help(cmdline.program, cmdline.global_options, cmdline.command_options)
+  raise AssertionError(f'Program error: Invalid command name {cmdline.command_name}')
