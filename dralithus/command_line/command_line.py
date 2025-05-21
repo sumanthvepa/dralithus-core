@@ -23,6 +23,7 @@
 
 from dralithus.command_line.options import Options
 
+
 class CommandLine:
   """
     Represents parsed command line arguments.
