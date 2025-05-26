@@ -8,7 +8,6 @@ from parameterized import parameterized
 from dralithus.command_line.help_option import HelpOption
 
 
-@unittest.skip("disabled until tests pass")
 class TestHelpOption(unittest.TestCase):
   """
     Unit tests for class HelpOption
