@@ -30,7 +30,7 @@ class CaseData:
     A test case for dralithus
   """
   def __init__(self,
-      args: list[str],
+      args: Any,
       expected: Any,
       error: type[Exception] | None):
     """
@@ -48,7 +48,7 @@ class CaseData:
     self._error = error
 
   @property
-  def args(self) -> list[str]:
+  def args(self) -> Any:
     """
       Get the input of the test case.
 
@@ -93,7 +93,7 @@ class CaseExecutor(RequiresAsserts):
   """
     A class to execute test cases.
   """
-  def __init__(self, function: Callable):
+  def __init__(self, function: Callable[[list[str]], Any]) -> None:
     """
       Initialize the CaseExecutor.
     """
@@ -111,3 +111,22 @@ class CaseExecutor(RequiresAsserts):
       assert case.error is not None
       with self.assertRaises(case.error):
         self.function(case.args)
+
+
+class CaseExecutor2(RequiresAsserts):
+  """
+    A class to execute test cases.
+  """
+  def execute(self, function: Callable[[list[Any]], Any], case: CaseData) -> None:
+    """
+      Execute a test case.
+
+      :param function: The function to execute
+      :param case: The test case to execute
+    """
+    if case.expected is not None:
+      self.assertEqual(case.expected, function(case.args))
+    else:
+      assert case.error is not None
+      with self.assertRaises(case.error):
+        function(case.args)
