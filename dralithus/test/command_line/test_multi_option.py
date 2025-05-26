@@ -50,7 +50,6 @@ def make_incorrect_cases():
     ('multi-option16', '-x', 'parameter', ValueError)]
 
 
-@unittest.skip("disabled until tests pass")
 class TestMultiOption(unittest.TestCase):
   """
     Unit tests for the multi-option module.
