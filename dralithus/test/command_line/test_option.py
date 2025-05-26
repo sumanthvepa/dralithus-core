@@ -76,9 +76,15 @@ def type_of_cases() -> list[tuple[str, CaseData]]:
     Test cases for the Option.type_of() method.
     :return: A list of test cases
   """
+  # Note that Option.type_of() is expected to return None if the
+  # argument is not an option. However, expected=None indicates to the
+  # CaseExecutor framework that an error (i.e. an exception) is expected.
+  # To overcome this, the CaseExecutor framework will interpret a list
+  # with a single None element as an expected value of None.
+  # So when a None value is expected, the test case should pass a list
+  # with a single None element, i.e. [None].
   # pylint: disable=line-too-long
   return [
-    ('option-terminator', '--', None, OptionTerminator),
     ('option-terminator', CaseData(args=['--', None], expected=OptionTerminator, error=None)),
     ('short-help', CaseData(args=['-h', None], expected=HelpOption, error=None)),
     ('long-help', CaseData(args=['--help', None], expected=HelpOption, error=None)),
@@ -87,30 +93,30 @@ def type_of_cases() -> list[tuple[str, CaseData]]:
     ('long-verbosity-value', CaseData(args=['--verbosity=2', None], expected=VerbosityOption, error=None)),
     ('long2-verbosity', CaseData(args=['--verbose', None], expected=VerbosityOption, error=None)),
     ('long2-verbosity-value', CaseData(args=['--verbose=2', None], expected=VerbosityOption, error=None)),
-    ('short-verbosity-bad-value', CaseData(args=['-v=bad_value', None], expected=None, error=ValueError)),
-    ('short-verbosity-bad-value2', CaseData(args=['-v=True', None], expected=None, error=ValueError)),
-    ('short-verbosity-bad-value3', CaseData(args=['-v=-2', None], expected=None, error=ValueError)),
-    ('long-verbosity-bad-value', CaseData(args=['--verbosity=bad_value', None], expected=None, error=ValueError)),
-    ('long-verbosity-bad-value2', CaseData(args=['--verbosity=True', None], expected=None, error=ValueError)),
-    ('long-verbosity-bad-value3', CaseData(args=['--verbosity=-2', None], expected=None, error=ValueError)),
-    ('short-env', CaseData(args=['-e', None], expected=None, error=ValueError)),
+    ('short-verbosity-bad-value', CaseData(args=['-v=bad_value', None], expected=[None], error=None)),
+    ('short-verbosity-bad-value2', CaseData(args=['-v=True', None], expected=[None], error=None)),
+    ('short-verbosity-bad-value3', CaseData(args=['-v=-2', None], expected=[None], error=None)),
+    ('long-verbosity-bad-value', CaseData(args=['--verbosity=bad_value', None], expected=[None], error=None)),
+    ('long-verbosity-bad-value2', CaseData(args=['--verbosity=True', None], expected=[None], error=None)),
+    ('long-verbosity-bad-value3', CaseData(args=['--verbosity=-2', None], expected=[None], error=None)),
+    ('short-env', CaseData(args=['-e', None], expected=[None], error=None)),
     ('short-env-value', CaseData(args=['-e=local', None], expected=EnvironmentOption, error=None)),
     ('short-env-multi-value', CaseData(args=['-e=local,test', None], expected=EnvironmentOption, error=None)),
-    ('short-env-bad_value', CaseData(args=['-e=bad_value', None], expected=None, error=ValueError)),
-    ('short-env-bad_multi-value', CaseData(args=['-e=bad_value,local', None], expected=None, error=ValueError)),
-    ('short-env-bad-multi-value2', CaseData(args=['-e=local,bad_value', None], expected=None, error=ValueError)),
-    ('long-env', CaseData(args=['--env', None], expected=None, error=ValueError)),
+    ('short-env-bad_value', CaseData(args=['-e=bad_value', None], expected=[None], error=None)),
+    ('short-env-bad_multi-value', CaseData(args=['-e=bad_value,local', None], expected=[None], error=None)),
+    ('short-env-bad-multi-value2', CaseData(args=['-e=local,bad_value', None], expected=[None], error=None)),
+    ('long-env', CaseData(args=['--env', None], expected=[None], error=None)),
     ('long-env-value', CaseData(args=['--env=local', None], expected=EnvironmentOption, error=None)),
     ('long-env-multi-value', CaseData(args=['--env=local,test', None], expected=EnvironmentOption, error=None)),
-    ('long-env-bad_value', CaseData(args=['--env=bad_value', None], expected=None, error=ValueError)),
-    ('long-env-bad_multi-value', CaseData(args=['--env=bad_value,local', None], expected=None, error=ValueError)),
-    ('long-env-bad-multi-value2', CaseData(args=['--env=local,bad_value', None], expected=None, error=ValueError)),
-    ('long2-env', CaseData(args=['--environment', None], expected=None, error=ValueError)),
+    ('long-env-bad_value', CaseData(args=['--env=bad_value', None], expected=[None], error=None)),
+    ('long-env-bad_multi-value', CaseData(args=['--env=bad_value,local', None], expected=[None], error=None)),
+    ('long-env-bad-multi-value2', CaseData(args=['--env=local,bad_value', None], expected=[None], error=None)),
+    ('long2-env', CaseData(args=['--environment', None], expected=[None], error=None)),
     ('long2-env-value', CaseData(args=['--environment=local', None], expected=EnvironmentOption, error=None)),
     ('long2-env-multi-value', CaseData(args=['--environment=local,test', None], expected=EnvironmentOption, error=None)),
-    ('long2-env-bad_value', CaseData(args=['--environment=bad_value', None], expected=None, error=ValueError)),
-    ('long2-env-bad_multi-value', CaseData(args=['--environment=bad_value,local', None], expected=None, error=ValueError)),
-    ('long2-env-bad-multi-value2', CaseData(args=['--environment=local,bad_value', None], expected=None, error=ValueError)),
+    ('long2-env-bad_value', CaseData(args=['--environment=bad_value', None], expected=[None], error=None)),
+    ('long2-env-bad_multi-value', CaseData(args=['--environment=bad_value,local', None], expected=[None], error=None)),
+    ('long2-env-bad-multi-value2', CaseData(args=['--environment=local,bad_value', None], expected=[None], error=None)),
   ]
 
 
@@ -223,7 +229,6 @@ def make_cases() -> list[tuple[str, CaseData]]:
   ]
 
 
-@unittest.skip("disabled until tests pass")
 class TestOption(unittest.TestCase, CaseExecutor2):
   """
     Unit tests for the Option.make() method
