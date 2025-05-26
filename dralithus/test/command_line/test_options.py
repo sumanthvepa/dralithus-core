@@ -266,7 +266,6 @@ def all_cases() -> list[tuple[str, CaseData]]:
   return correct_cases() + incorrect_cases()
 
 
-@unittest.skip
 class TestOptions(unittest.TestCase, CaseExecutor2):
   """
     Unit tests for the Options class.
@@ -285,4 +284,11 @@ class TestOptions(unittest.TestCase, CaseExecutor2):
     """
       Test the constructor of the Options class.
     """
-    self.execute(Options, case)
+    def wrapper(params: list[str]) -> tuple[dict[str, None | bool | int | str | set[str]], int]:
+      """
+        Wrapper function to call the Options constructor and check the result.
+      """
+      opt = Options(params)
+      return dict(opt), opt.end_index
+
+    self.execute(wrapper, case)
