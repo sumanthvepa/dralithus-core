@@ -23,8 +23,6 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
 
-from dralithus.command_line.command_line import CommandLine
-
 
 class Command(ABC):
   """
@@ -78,12 +76,13 @@ def make(args: list[str]) -> Command:
     :return: The command object
   """
   # pylint: disable=import-outside-toplevel
+  from dralithus.command_line.command_line import parse
   from dralithus.help_command import make as make_help
   from dralithus.deploy_command import make as make_deploy
 
-  cmdline = CommandLine(args)
+  cmdline = parse(args)
   if cmdline.command_name == 'deploy':
-    return make_deploy(cmdline.program, cmdline.global_options, cmdline.command_options)
+    return make_deploy(cmdline.program, cmdline.global_options, cmdline.command_options, cmdline.parameters)
   if cmdline.command_name == 'help':
-    return make_help(cmdline.program, cmdline.global_options, cmdline.command_options)
+    return make_help(cmdline.program, cmdline.global_options, cmdline.command_options, cmdline.parameters)
   raise AssertionError(f'Program error: Invalid command name {cmdline.command_name}')
