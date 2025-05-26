@@ -20,9 +20,11 @@
 # along with this program.  If not, see
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
+from __future__ import annotations
 from typing_extensions import override
 
 from dralithus.command import Command
+from dralithus.command_line.options import Options
 
 
 class DeployCommand(Command):
@@ -71,3 +73,16 @@ class DeployCommand(Command):
       :return: The program exit code
     """
     raise NotImplementedError("DeployCommand.execute() is not yet implemented")
+
+
+def make(program: str, global_options: Options, command_options: Options, parameters: set[str]) -> DeployCommand:
+  """
+    Create a help command from the command line arguments.
+
+    :param program: The name of the program
+    :param global_options: The global options for the command line
+    :param command_options: The command options for the command line
+    :param parameters: The parameters for the command line
+    :return: The help command object
+  """
+  raise NotImplementedError("HelpCommand.make() is not yet implemented")
