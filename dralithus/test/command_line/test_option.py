@@ -223,7 +223,7 @@ def make_cases() -> list[tuple[str, CaseData]]:
   ]
 
 
-@unittest.skip
+@unittest.skip("disabled until tests pass")
 class TestOption2(unittest.TestCase, CaseExecutor2):
   """
     Unit tests for the Option.make() method
@@ -266,7 +266,7 @@ class TestOption2(unittest.TestCase, CaseExecutor2):
     self.execute(lambda parameters: Option.make(parameters[0], parameters[1]), case)
 
 
-@unittest.skip
+@unittest.skip("disabled until tests pass")
 class TestOptionSubclassing(unittest.TestCase):
   """
     Test that subclassing Option works.
