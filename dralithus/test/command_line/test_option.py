@@ -224,7 +224,7 @@ def make_cases() -> list[tuple[str, CaseData]]:
 
 
 @unittest.skip("disabled until tests pass")
-class TestOption2(unittest.TestCase, CaseExecutor2):
+class TestOption(unittest.TestCase, CaseExecutor2):
   """
     Unit tests for the Option.make() method
   """
