@@ -266,7 +266,6 @@ class TestOption(unittest.TestCase, CaseExecutor2):
     self.execute(lambda parameters: Option.make(parameters[0], parameters[1]), case)
 
 
-@unittest.skip("disabled until tests pass")
 class TestOptionSubclassing(unittest.TestCase):
   """
     Test that subclassing Option works.
