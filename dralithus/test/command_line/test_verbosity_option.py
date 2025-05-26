@@ -41,10 +41,10 @@ def add_to_cases() -> list[tuple[str, CaseData]]:
   """
   # pylint: disable=line-too-long
   return [
-    ('add_2_to_empty_dict', CaseData(args=[VerbosityOption('v', 2), {}], expected={'verbosity', 2}, error=None)),
-    ('add_3_to_dict_1', CaseData(args=[VerbosityOption('v', 3), {'verbosity': 1}], expected={'verbosity', 4}, error=None)),
-    ('add_1_to_none_dict', CaseData(args=[VerbosityOption('v', 1), {'verbosity': None}], expected={'verbosity', 1}, error=None)),
-    ('and_1_to_dict_0', CaseData(args=[VerbosityOption('v', 1), {'verbosity': 0}], expected={'verbosity', 1}, error=None))
+    ('add_2_to_empty_dict', CaseData(args=[VerbosityOption('v', 2), {}], expected={'verbosity': 2}, error=None)),
+    ('add_3_to_dict_1', CaseData(args=[VerbosityOption('v', 3), {'verbosity': 1}], expected={'verbosity': 4}, error=None)),
+    ('add_1_to_none_dict', CaseData(args=[VerbosityOption('v', 1), {'verbosity': None}], expected={'verbosity': 1}, error=None)),
+    ('and_1_to_dict_0', CaseData(args=[VerbosityOption('v', 1), {'verbosity': 0}], expected={'verbosity': 1}, error=None))
   ]
 
 
@@ -99,7 +99,6 @@ def make_cases() -> list[tuple[str, CaseData]]:
     ('wrong_no_option', CaseData(args=['parameter', None], expected=None, error=AssertionError))
   ]
 
-@unittest.skip("disabled until tests pass")
 class TestVerbosityOption(unittest.TestCase, CaseExecutor2):
   """
     Unit tests for class VerbosityOption
