@@ -104,7 +104,7 @@ class OptionTerminator(Option):
 
       :param current_arg: The current arg. Used to check if it is, in
         fact, an option terminator.
-      :param _next_arg: The next argument string
+      :param next_arg: The next argument string
       :return: A tuple containing the OptionTerminator object and a
         boolean indicating whether to skip the next argument (always False).
     """
