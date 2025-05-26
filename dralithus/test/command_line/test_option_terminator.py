@@ -6,7 +6,7 @@ import unittest
 from dralithus.command_line.option_terminator import OptionTerminator
 
 
-@unittest.skip
+@unittest.skip("disabled until tests pass")
 class TestOptionTerminator(unittest.TestCase):
   """
     Unit tests for class OptionTerminator
