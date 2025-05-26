@@ -52,7 +52,6 @@ def add_to_cases() -> list[tuple[str, CaseData]]:
   """
   # pylint: disable=line-too-long
   return [
-    ('add_local_to_empty_dict', {'local'}, {}, {'local'}),
     ('add_local_to_empty_dict', CaseData(args=[EnvironmentOption('e', {'local'}), {}], expected={'environments': {'local'}}, error=None)),
     ('add_local_to_non_empty_dict', CaseData(args=[EnvironmentOption('e', {'local'}), {'environments': {'test'}}], expected={'environments': {'test', 'local'}}, error=None)),
     ('add_duplicate_to_non_empty_dict', CaseData(args=[EnvironmentOption('e', {'local'}), {'environments': {'test', 'local'}}], expected={'environments': {'test', 'local'}}, error=None))
@@ -67,7 +66,7 @@ def make_cases() -> list[tuple[str, CaseData]]:
   """
   # pylint: disable=line-too-long
   return [
-    ('short_equal_value_no_ext_arg', CaseData(args=['-e=local', None], expected=EnvironmentOption('e', {'local'}), error=None)),
+    ('short_equal_value_no_next_arg', CaseData(args=['-e=local', None], expected=EnvironmentOption('e', {'local'}), error=None)),
     ('short_equal_multi_value_no_next_arg', CaseData(args=['-e=local,test', None], expected=EnvironmentOption('e', {'local', 'test'}), error=None)),
     ('long_equal_value_no_next_arg', CaseData(args=['--env=local', None], expected=EnvironmentOption('env', {'local'}), error=None)),
     ('long_equal_multi_value_no_next_arg', CaseData(args=['--env=local,test', None], expected=EnvironmentOption('env', {'local', 'test'}), error=None)),
@@ -120,7 +119,6 @@ def make_cases() -> list[tuple[str, CaseData]]:
   ]
 
 
-@unittest.skip("disabled until tests pass")
 class TestEnvironmentOption(unittest.TestCase, CaseExecutor2):
   """
     Unit tests for class EnvironmentOption
