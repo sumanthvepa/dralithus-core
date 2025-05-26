@@ -125,7 +125,18 @@ class CaseExecutor2(RequiresAsserts):
       :param case: The test case to execute
     """
     if case.expected is not None:
-      self.assertEqual(case.expected, function(case.args))
+      expected = case.expected
+      # Since we use None to indicate that an error is expected, we cannot
+      # use None as an expected value when the function under test returns None.
+      # To overcome this, test cases that expect None as the output of the
+      # function, should pass a list with a single None element. This code
+      # checks for that, and sets expected to None if the expected value is a
+      # list with a single None element. Of course, one hopes that the function
+      # under test does not return a list with a single None element. This
+      # framework will not work for such situations.
+      if isinstance(case.expected, list) and len(case.expected) == 1 and case.expected[0] is None:
+        expected = None
+      self.assertEqual(expected, function(case.args))
     else:
       assert case.error is not None
       with self.assertRaises(case.error):
