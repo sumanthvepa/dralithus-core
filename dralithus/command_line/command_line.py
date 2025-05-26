@@ -22,6 +22,7 @@
 # -------------------------------------------------------------------
 
 from dralithus.command_line.options import Options
+from dralithus.errors import CommandLineError
 
 
 class CommandLine:
@@ -31,11 +32,13 @@ class CommandLine:
     The CommandLine class takes a list of command line arguments,
     parses them, and provides methods to access the parsed arguments.
   """
+  # pylint: disable=too-many-arguments
   def __init__(self,
       program: str,
-      command_name: str,
+      command_name: str | None,
       global_options: Options,
-      command_options: Options) -> None:
+      command_options: Options,
+      parameters: set[str]) -> None:
     """
       Initialize the command line with arguments
 
@@ -43,8 +46,13 @@ class CommandLine:
       :param command_name: The name of the command
       :param global_options: Any global options specified before the command
       :param command_options: Any command specific options
+      :param parameters: Any parameters specified after the options
     """
-    raise NotImplementedError("CommandLine class is not yet implemented.")
+    self._program = program
+    self._command_name = command_name
+    self._global_options = global_options
+    self._command_options = command_options
+    self._parameters = parameters
 
   @property
   def program(self) -> str:
@@ -53,16 +61,16 @@ class CommandLine:
 
       :return: The name of the program
     """
-    raise NotImplementedError("CommandLine class is not yet implemented.")
+    return self._program
 
   @property
-  def command_name(self) -> str:
+  def command_name(self) -> str | None:
     """
       The name of the command.
 
       :return: The name of the command
     """
-    raise NotImplementedError("CommandLine class is not yet implemented.")
+    return self._command_name
 
   @property
   def global_options(self) -> Options:
@@ -71,7 +79,7 @@ class CommandLine:
 
       :return: The global options
     """
-    raise NotImplementedError("CommandLine class is not yet implemented.")
+    return self._global_options
 
   @property
   def command_options(self) -> Options:
@@ -80,7 +88,16 @@ class CommandLine:
 
       :return: The command options
     """
-    raise NotImplementedError("CommandLine class is not yet implemented.")
+    return self._command_options
+
+  @property
+  def parameters(self) -> set[str]:
+    """
+      The parameters for the command line.
+
+      :return: The parameters
+    """
+    return self._parameters
 
 def parse(args: list[str]) -> CommandLine:
   """
@@ -88,5 +105,17 @@ def parse(args: list[str]) -> CommandLine:
 
     :param args: The command line arguments
     :return: A CommandLine object
+    :raises: CommandLineError if the arguments are invalid
+             AssertionError if there is bug in the code
   """
-  raise NotImplementedError("command_line.make() is not yet implemented.")
+  try:
+    assert len(args) > 0, "args must contain at least one argument (the name of the program)"
+    program = args[0]
+    global_options = Options(args[1:])
+    command_name = args[global_options.end_index] if global_options.end_index < len(args) else None
+    # will be an empty list if the index is out of range
+    command_options = Options(args[global_options.end_index + 1:])
+    parameters = set(args[command_options.end_index + 1:])
+    return CommandLine(program, command_name, global_options, command_options, parameters)
+  except ValueError as ex:
+    raise CommandLineError(f"Invalid command line arguments: {ex}") from ex
