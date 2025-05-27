@@ -78,10 +78,10 @@ def parse_cases() -> list[tuple[str, CaseData]]:
               parameter)
             case = (name, CaseData(args, expected=cmdline, error=None))
             cases.append(case)
+            case_number += 1
   return cases
 
 
-@unittest.skip("disabled until tests pass")
 class TestCommandLine(unittest.TestCase, CaseExecutor2):
   """
     Unit tests for the CommandLine class and the parse function
