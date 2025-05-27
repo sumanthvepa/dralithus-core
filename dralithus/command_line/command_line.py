@@ -54,6 +54,21 @@ class CommandLine:
     self._command_options = command_options
     self._parameters = parameters
 
+  def __eq__(self, other: object) -> bool:
+    """
+      Check if two CommandLine objects are equal.
+
+      :param other: The other CommandLine object to compare with
+      :return: True if the two CommandLine objects are equal, False otherwise
+    """
+    if not isinstance(other, CommandLine):
+      return False
+    return (self.program == other.program and
+            self.command_name == other.command_name and
+            self.global_options == other.global_options and
+            self.command_options == other.command_options and
+            self.parameters == other.parameters)
+
   @property
   def program(self) -> str:
     """
@@ -99,6 +114,67 @@ class CommandLine:
     """
     return self._parameters
 
+def _parse_program(args: list[str]) -> tuple[str, int]:
+  """
+    Parse the program name from the command line arguments.
+
+    :param args: The command line arguments
+    :param index: The current index in the arguments list
+    :return: A tuple containing the program name and the next index
+    :raises: ValueError if the program name is not found
+  """
+  assert len(args) > 0, "args must contain at least one argument (the name of the program)"
+  return args[0], 1
+
+def _parse_global_options(args: list[str], index: int) -> tuple[Options, int]:
+  """
+    Parse the global options from the command line arguments.
+
+    :param args: The command line arguments
+    :param index: The current index in the arguments list
+    :return: A tuple containing the global options and the next index
+    :raises: ValueError if the global options are invalid
+  """
+  global_options = Options(args[index:])
+  return global_options, index + global_options.end_index
+
+
+def _parse_command_name(args: list[str], index: int) -> tuple[str | None, int]:
+  """
+    Parse the command name from the command line arguments.
+
+    :param args: The command line arguments
+    :param index: The current index in the arguments list
+    :return: A tuple containing the command name and the next index
+    :raises: ValueError if the command name is not found
+  """
+  return (args[index], index + 1) if index < len(args) else (None, index)
+
+
+def _parse_command_options(args: list[str], index: int) -> tuple[Options, int]:
+  """
+    Parse the command options from the command line arguments.
+
+    :param args: The command line arguments
+    :param index: The current index in the arguments list
+    :return: A tuple containing the command options and the next index
+    :raises: ValueError if the command options are invalid
+  """
+  command_options = Options(args[index:])
+  return command_options, index + command_options.end_index
+
+
+def _parse_parameters(args: list[str], index: int) -> set[str]:
+  """
+    Parse the parameters from the command line arguments.
+
+    :param args: The command line arguments
+    :param index: The current index in the arguments list
+    :return: A set containing the parameters
+    :raises: ValueError if the parameters are invalid
+  """
+  return set(args[index:]) if index < len(args) else set()
+
 def parse(args: list[str]) -> CommandLine:
   """
     Parse the command line arguments to create a CommandLine object.
@@ -110,12 +186,11 @@ def parse(args: list[str]) -> CommandLine:
   """
   try:
     assert len(args) > 0, "args must contain at least one argument (the name of the program)"
-    program = args[0]
-    global_options = Options(args[1:])
-    command_name = args[global_options.end_index] if global_options.end_index < len(args) else None
-    # will be an empty list if the index is out of range
-    command_options = Options(args[global_options.end_index + 1:])
-    parameters = set(args[command_options.end_index + 1:])
+    program, index = _parse_program(args)
+    global_options, index = _parse_global_options(args, index)
+    command_name, index = _parse_command_name(args, index)
+    command_options, index = _parse_command_options(args, index)
+    parameters = _parse_parameters(args, index)
     return CommandLine(program, command_name, global_options, command_options, parameters)
   except ValueError as ex:
     raise CommandLineError(f"Invalid command line arguments: {ex}") from ex
