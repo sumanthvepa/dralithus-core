@@ -137,7 +137,7 @@ class CaseExecutor2(RequiresAsserts):
       if isinstance(case.expected, list) and len(case.expected) == 1 and case.expected[0] is None:
         expected = None
       actual = function(case.args)
-      self.assertEqual(expected, actual)
+      self.assertEqual(expected, actual, f'Expected {expected} but got {actual}')
     else:
       assert case.error is not None
       with self.assertRaises(case.error):
