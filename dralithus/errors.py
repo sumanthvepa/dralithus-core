@@ -78,7 +78,7 @@ class CommandLineError(DralithusError):
     that is executed. The help command when executed will print
     the error, and then provide an appropriate help message.
   """
-  def __init__(self, message: str) -> None:
+  def __init__(self, program: str, message: str) -> None:
     """
       Initialize the InvalidCommandLineError with a message.
 
@@ -87,3 +87,14 @@ class CommandLineError(DralithusError):
       :param message: The error message
     """
     super().__init__(message, exit_code=ExitCode.INVALID_COMMAND_LINE)
+    self._program = program
+
+  @property
+  def program(self) -> str:
+    """
+      The name of the program that caused the error.
+
+      :return: The name of the program
+    """
+    return self._program
+
