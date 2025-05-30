@@ -132,7 +132,7 @@ class Option(ABC):
   #     :param other: The other option to compare to
   #     :return: True if the options are equal, False otherwise
   #   """
-  #   raise NotImplementedError("Option.__eq__() is an abstract method")
+  #   raise NotImplementedError('Option.__eq__() is an abstract method')
 
   @property
   @abstractmethod
@@ -142,7 +142,7 @@ class Option(ABC):
 
     :return:
     """
-    raise NotImplementedError("Option.flag is an abstract property")
+    raise NotImplementedError('Option.flag is an abstract property')
 
   # pylint: disable=line-too-long
   # Note that the order of the decorators is important. The @abstractmethod
@@ -156,7 +156,7 @@ class Option(ABC):
 
       :return: The value of the option
     """
-    raise NotImplementedError("Option.value is an abstract property")
+    raise NotImplementedError('Option.value is an abstract property')
 
   @abstractmethod
   def add_to(self, dictionary: dict[str, None | bool | int | str | set[str]]) -> None:
@@ -171,7 +171,7 @@ class Option(ABC):
 
       :param dictionary: The dictionary to add the option to
     """
-    raise NotImplementedError("Option.add_to() is an abstract method")
+    raise NotImplementedError('Option.add_to() is an abstract method')
 
   @classmethod
   def is_option(cls, arg: str, next_arg: str | None) -> bool:  # pylint: disable=unused-argument
@@ -202,7 +202,7 @@ class Option(ABC):
       :param str_value: The value to check
       :return: True if the value is valid, False otherwise
     """
-    raise NotImplementedError("Option.is_valid_value() is an abstract method")
+    raise NotImplementedError('Option.is_valid_value() is an abstract method')
 
   @staticmethod
   def supported_sub_types() -> list[type[Option]]:
@@ -282,17 +282,17 @@ class Option(ABC):
         # This is a parameter, not an option.
         return None, False
       # This likely a mis-formed option. E.g. '-v='
-      raise ValueError(f"Invalid option: {current_arg}")
+      raise ValueError(f'Invalid option: {current_arg}')
 
     actual_class: type[Option] | None = Option.type_of(current_arg, next_arg)
     if actual_class is None:
       flag = Option._extract_flag(current_arg)
       if flag not in cls.supported_short_flags() and flag not in cls.supported_long_flags():
         # This is an unknown option.
-        raise ValueError(f"Unknown option: {current_arg}")
+        raise ValueError(f'Unknown option: {current_arg}')
       # This is a valid flag, but the value is not valid for this
       # option. It is either not present, if present is of the wrong
       # type or an invalid value.
-      raise ValueError(f"Invalid option: {current_arg}")
+      raise ValueError(f'Invalid option: {current_arg}')
 
     return actual_class.make(current_arg, next_arg)
