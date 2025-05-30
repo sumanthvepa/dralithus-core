@@ -2,7 +2,7 @@
   multi_option.py: Define class MultiOption
 """
 from __future__ import annotations
-from typing import override
+from typing import override, Any
 
 from dralithus.command_line.option import Option
 from dralithus.command_line.help_option import HelpOption
@@ -43,7 +43,7 @@ class MultiOption(Option):
     return []
 
   @override
-  def __eq__(self, other):
+  def __eq__(self, other: Any) -> bool:
     """
       Check if two options are equal.
 
