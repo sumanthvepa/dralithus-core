@@ -23,6 +23,10 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
 
+from dralithus.command_line.command_line import parse
+from dralithus.command_line.options import Options
+from dralithus.errors import CommandLineError
+
 
 class Command(ABC):
   """
@@ -67,6 +71,23 @@ class Command(ABC):
     """
     raise NotImplementedError("execute() must be implemented in derived class")
 
+def is_help_requested(
+    command_name: str | None,
+    global_options: Options,
+    command_options: Options) -> bool:
+  """
+    Check if help is requested for the command.
+
+    :param command_name: The name of the command
+    :param global_options: Global options
+    :param command_options:  Command specific options
+    :return: True if help is requested, False otherwise
+  """
+  help_requested = global_options.get('requires_help', False) \
+                  or command_options.get('requires_help', False)
+  assert isinstance(help_requested, bool)
+  return command_name == 'help' or help_requested
+
 
 def make(args: list[str]) -> Command:
   """
@@ -75,14 +96,28 @@ def make(args: list[str]) -> Command:
     :param args: The command line arguments
     :return: The command object
   """
+  # We import the command modules here to avoid circular imports.
   # pylint: disable=import-outside-toplevel
-  from dralithus.command_line.command_line import parse
-  from dralithus.help_command import make as make_help
+  from dralithus.help_command import make as make_help, make_from_error as make_help_from_error
   from dralithus.deploy_command import make as make_deploy
 
-  cmdline = parse(args)
-  if cmdline.command_name == 'deploy':
-    return make_deploy(cmdline.program, cmdline.global_options, cmdline.command_options, cmdline.parameters)
-  if cmdline.command_name == 'help':
-    return make_help(cmdline.program, cmdline.global_options, cmdline.command_options, cmdline.parameters)
-  raise AssertionError(f'Program error: Invalid command name {cmdline.command_name}')
+  # The type ignore directives in the code below are to bypass
+  # a bug in how mypy runs within IntelliJ IDEA. The error does
+  # not occur when running mypy from the command line.
+  try:
+    cmdln = parse(args)
+
+    if is_help_requested(cmdln.command_name, cmdln.global_options, cmdln.command_options):
+      return make_help(  # type: ignore[return-value]
+        cmdln.program, cmdln.command_name, cmdln.global_options, cmdln.command_options)
+
+    if cmdln.command_name == 'deploy':
+      return make_deploy(  # type: ignore[return-value]
+        cmdln.program, cmdln.global_options, cmdln.command_options, cmdln.parameters)
+
+    if cmdln.command_name is None:
+      raise CommandLineError(cmdln.program,'No command specified')
+
+    raise CommandLineError(cmdln.program,f'Unknown command \'{cmdln.command_name}\' specified')
+  except CommandLineError as ex:
+    return make_help_from_error(ex)  # type: ignore[return-value]
