@@ -80,7 +80,7 @@ class Command(ABC):
 
       :return: The program exit code
     """
-    raise NotImplementedError("execute() must be implemented in derived class")
+    raise NotImplementedError('execute() must be implemented in derived class')
 
 def is_help_requested(
     command_name: str | None,
