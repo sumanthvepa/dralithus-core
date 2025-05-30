@@ -25,9 +25,10 @@ from typing_extensions import override
 
 
 from dralithus.command import Command
-from dralithus.errors import CommandLineError
+from dralithus.errors import ExitCode, CommandLineError
 
 from dralithus.command_line.options import Options
+
 
 class HelpCommand(Command):
   """
@@ -98,18 +99,47 @@ class HelpCommand(Command):
 
       :return: The program exit code
     """
-    raise NotImplementedError("HelpCommand.execute() is not yet implemented")
+    # TODO: Implement this
+    print (f'Help is not yet implemented for {self.program_name}.')
+    return ExitCode.SUCCESS
 
 
-def make(program: str, global_options: Options, command_options: Options, parameters: set[str]) -> HelpCommand:
+def make(
+    program: str,
+    command_name: str | None,
+    global_options: Options,
+    command_options: Options) -> HelpCommand:
   """
     Create a help command from the command line arguments.
 
     :param program: The name of the program
+    :param command_name: The name of the command that caused the help
+      command to be invoked, or None if the help request was for global help.
     :param global_options: The global options for the command line
     :param command_options: The command options for the command line
-    :param parameters: The parameters for the command line
     :return: The help command object
 
   """
-  raise NotImplementedError("help_command.make() is not yet implemented")
+  global_verbosity = global_options.get('verbosity', 0)
+  assert isinstance(global_verbosity, int)
+  command_verbosity = command_options.get('verbosity', 0)
+  assert isinstance(command_verbosity, int)
+  verbosity = min(global_verbosity + command_verbosity, 3)
+  return HelpCommand(
+      program_name=program,
+      command_needing_help=command_name,
+      error=None,  # No error is passed to the help command
+      verbosity=verbosity)
+
+def make_from_error(ex: CommandLineError) -> HelpCommand:
+  """
+    Create a help command from an error.
+
+    :param ex: The error that caused the help command to be invoked
+    :return: The help command object
+  """
+  return HelpCommand(
+      program_name=ex.program,
+      command_needing_help=None,
+      error=ex,
+      verbosity=0)
