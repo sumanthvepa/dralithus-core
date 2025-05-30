@@ -36,6 +36,8 @@ class ExitCode(IntEnum):
   """
   SUCCESS = 0 # Success
   INVALID_COMMAND_LINE = 1 # Associated with CommandLineError
+  ENVIRONMENT_ERROR = 2 # Associated with EnvironmentError
+  APPLICATION_ERROR = 3 # Associated with ApplicationError
 
 
 class DralithusError(RuntimeError):
@@ -122,3 +124,44 @@ class CommandLineError(DralithusError):
     """
     return self._program
 
+
+class DralithusEnvironmentError(DralithusError):
+  """
+    Exception raised for errors related to environments.
+
+    We choose the name `DralithusEnvironmentError` to avoid
+    confusion with the standard library's `EnvironmentError`
+
+    This exception is used to indicate errors that occur while
+    working with environments, such as loading or deploying them.
+  """
+  def __init__(self, message: str) -> None:
+    """
+      Initialize the EnvironmentError with a message.
+
+      The exit code is set to ExitCode.INVALID_COMMAND_LINE.
+
+      :param message: The error message
+    """
+    super().__init__(message, exit_code=ExitCode.ENVIRONMENT_ERROR)
+
+
+class DralithusApplicationError(DralithusError):
+  """
+    Exception raised for errors related to applications.
+
+    We choose the name `DralithusApplicationError` to keep
+    consistency with the naming of `DralithusEnvironmentError`
+
+    This exception is used to indicate errors that occur while
+    working with applications, such as loading or deploying them.
+  """
+  def __init__(self, message: str) -> None:
+    """
+      Initialize the ApplicationError with a message.
+
+      The exit code is set to ExitCode.INVALID_COMMAND_LINE.
+
+      :param message: The error message
+    """
+    super().__init__(message, exit_code=ExitCode.APPLICATION_ERROR)
