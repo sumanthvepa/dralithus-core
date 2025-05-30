@@ -84,7 +84,7 @@ class RequiresAsserts(Protocol):
 
   # pylint: disable=invalid-name
   # noinspection PyPep8Naming
-  def assertRaises(self, expected_exception: type[Exception], *args, **kwargs):
+  def assertRaises(self, expected_exception:  type[BaseException] | tuple[type[BaseException], ...], *args: Any, **kwargs: Any) -> Any:
     """ Assert that an exception is raised. """
 
 
@@ -117,7 +117,7 @@ class CaseExecutor2(RequiresAsserts):
   """
     A class to execute test cases.
   """
-  def execute(self, function: Callable[[list[Any]], Any], case: CaseData) -> None:
+  def execute(self, function: Callable[..., Any], case: CaseData) -> None:
     """
       Execute a test case.
 
