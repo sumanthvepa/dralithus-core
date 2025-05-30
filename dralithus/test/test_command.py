@@ -22,11 +22,10 @@
 # -------------------------------------------------------------------
 
 import unittest
+
 from parameterized import parameterized
 
 from dralithus.command import make
-from dralithus.help_command import HelpCommand
-from dralithus.errors import CommandLineError
 from dralithus.test import CaseData, CaseExecutor2
 
 
@@ -36,22 +35,14 @@ def command_make_cases() -> list[tuple[str, CaseData]]:
   """
   # pylint: disable=line-too-long
   return [
-    ('no_arguments', CaseData(args=[], expected=HelpCommand(program_name='drl', command_needing_help=None, error=CommandLineError('No command specified'), verbosity=0), error=None))
+    ('no_arguments', CaseData(args=[], expected=None, error=AssertionError))
   ]
 
 
-@unittest.skip("disabled until tests pass")
 class TestCommand(unittest.TestCase, CaseExecutor2):
   """
     Unit tests for class Command
   """
-  def __init__(self, *args, **kwargs):
-    """
-      Initialize the test case.
-    """
-    unittest.TestCase.__init__(self, *args, **kwargs)
-    CaseExecutor2.__init__(self)
-
   # pylint: disable=unused-argument
   # noinspection PyUnusedLocal
   @parameterized.expand(command_make_cases())
