@@ -57,7 +57,7 @@ class HelpCommand(Command):
       via the help option.
       :param verbosity: The verbosity level of the command
     """
-    super().__init__("help", verbosity)
+    super().__init__('help', verbosity)
     self._program_name = program_name
     self._command_needing_help = command_needing_help
     self._error = error
