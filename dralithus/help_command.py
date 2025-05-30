@@ -62,6 +62,28 @@ class HelpCommand(Command):
     self._command_needing_help = command_needing_help
     self._error = error
 
+  def __eq__(self, other: object) -> bool:
+    """
+      Check if two help commands are equal.
+
+      :param other: The other command to compare with
+      :return: True if the commands are equal, False otherwise
+    """
+    if not isinstance(other, HelpCommand):
+      return NotImplemented
+    # Uncomment when debugging equality issues
+    # a = super().__eq__(other)
+    # b = self.program_name == other.program_name
+    # c = self.command_needing_help == other.command_needing_help
+    # d = self.error == other.error
+    # e = self.verbosity == other.verbosity
+    # return a and b and c and d and e
+    return (super().__eq__(other) and
+      self.program_name == other.program_name and
+      self.command_needing_help == other.command_needing_help and
+      self.error == other.error and
+      self.verbosity == other.verbosity)
+
   @property
   def program_name(self) -> str:
     """
