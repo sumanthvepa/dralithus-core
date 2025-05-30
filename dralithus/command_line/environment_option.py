@@ -22,7 +22,7 @@ class EnvironmentOption(Option):
   """
     A class to represent an environment option.
   """
-  def __init__(self, flag, environments: set[str]) -> None:
+  def __init__(self, flag: str, environments: set[str]) -> None:
     """
       Initialize the environment option with a set of environment names.
 
@@ -152,9 +152,9 @@ class EnvironmentOption(Option):
     assert cls.is_option(current_arg, next_arg)
     flag, str_value, skip_next_arg = cls._extract_value(current_arg, next_arg)
     if str_value is None:
-      raise ValueError(f"Missing value for environment option: {current_arg}")
+      raise ValueError(f'Missing value for environment option: {current_arg}')
     environments: set[str] = {env.strip() for env in str_value.split(',')}
     for environment in environments:
       if not cls.is_valid_environment(environment):
-        raise ValueError(f"Invalid environment name: {environment}")
+        raise ValueError(f'Invalid environment name: {environment}')
     return EnvironmentOption(flag, environments), skip_next_arg
