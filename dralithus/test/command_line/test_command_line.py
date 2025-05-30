@@ -48,7 +48,7 @@ def all_options() -> list[list[str]]:
   ]
 
 
-def parse_cases() -> list[tuple[str, CaseData]]:
+def parse_correct_cases() -> list[tuple[str, CaseData]]:
   """
     Test cases for the CommandLine class
   """
@@ -80,6 +80,21 @@ def parse_cases() -> list[tuple[str, CaseData]]:
             cases.append(case)
             case_number += 1
   return cases
+
+def parse_incorrect_cases() -> list[tuple[str, CaseData]]:
+  """
+    Test cases for the CommandLine class that are expected to fail
+  """
+  return [
+    ('parse_incorrect_case_0', CaseData(args=[], expected=None, error=AssertionError)),
+  ]
+
+def parse_cases() -> list[tuple[str, CaseData]]:
+  """
+    Combine the correct and incorrect cases for the parse function
+    :return: A list of test cases for the parse function
+  """
+  return parse_correct_cases() + parse_incorrect_cases()
 
 
 class TestCommandLine(unittest.TestCase, CaseExecutor2):
