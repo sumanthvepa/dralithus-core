@@ -41,6 +41,17 @@ class Command(ABC):
     self._name = name
     self._verbosity = verbosity
 
+  def __eq__(self, other: object) -> bool:
+    """
+      Check if two commands are equal.
+
+      :param other: The other command to compare with
+      :return: True if the commands are equal, False otherwise
+    """
+    if not isinstance(other, Command):
+      return NotImplemented
+    return self.name == other.name and self.verbosity == other.verbosity
+
   @property
   def name(self) -> str:
     """
