@@ -184,13 +184,13 @@ def parse(args: list[str]) -> CommandLine:
     :raises: CommandLineError if the arguments are invalid
              AssertionError if there is bug in the code
   """
+  assert len(args) > 0, 'args must contain at least one argument (the name of the program)'
+  program, index = _parse_program(args)
   try:
-    assert len(args) > 0, "args must contain at least one argument (the name of the program)"
-    program, index = _parse_program(args)
     global_options, index = _parse_global_options(args, index)
     command_name, index = _parse_command_name(args, index)
     command_options, index = _parse_command_options(args, index)
     parameters = _parse_parameters(args, index)
     return CommandLine(program, command_name, global_options, command_options, parameters)
   except ValueError as ex:
-    raise CommandLineError(f"Invalid command line arguments: {ex}") from ex
+    raise CommandLineError(program, f'Invalid command line arguments: {ex}') from ex
