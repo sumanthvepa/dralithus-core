@@ -119,7 +119,6 @@ def _parse_program(args: list[str]) -> tuple[str, int]:
     Parse the program name from the command line arguments.
 
     :param args: The command line arguments
-    :param index: The current index in the arguments list
     :return: A tuple containing the program name and the next index
     :raises: ValueError if the program name is not found
   """
