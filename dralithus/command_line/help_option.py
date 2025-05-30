@@ -11,7 +11,7 @@ class HelpOption(Option):
   """
     A class to represent a help option.
   """
-  def __init__(self, flag) -> None:
+  def __init__(self, flag: str) -> None:
     """
       Initialize the help option.
     """
@@ -115,5 +115,5 @@ class HelpOption(Option):
     assert cls.is_option(current_arg, next_arg)
     flag, value = cls._split_flag_value(current_arg)
     if value is not None:
-      raise ValueError(f"Help option does not accept a value: {current_arg}")
+      raise ValueError(f'Help option does not accept a value: {current_arg}')
     return HelpOption(flag), False
