@@ -68,7 +68,7 @@ class OptionTerminator(Option):
 
       :param dictionary: The dictionary to add the option terminator to
     """
-    raise NotImplementedError("PROGRAM ERROR: OptionTerminator.add_to() should never be called")
+    assert False, 'PROGRAM ERROR: OptionTerminator.add_to() should never be called'
 
   @classmethod
   def is_option(cls, arg: str, next_arg: str | None) -> bool:
