@@ -58,6 +58,19 @@ class DralithusError(RuntimeError):
     super().__init__(message)
     self._exit_code = exit_code
 
+  def __eq__(self, other: object) -> bool:
+    """
+      Check if two DralithusError instances are equal.
+
+      :param other: The other error to compare with
+      :return: True if the errors are equal, False otherwise
+    """
+    if not isinstance(other, DralithusError):
+      return NotImplemented
+    return (super().__eq__(other) and
+      self.exit_code == other.exit_code and
+      self.args == other.args)
+
   @property
   def exit_code(self) -> ExitCode:
     """
@@ -88,6 +101,17 @@ class CommandLineError(DralithusError):
     """
     super().__init__(message, exit_code=ExitCode.INVALID_COMMAND_LINE)
     self._program = program
+
+  def __eq__(self, other: object) -> bool:
+    """
+      Check if two command line errors are equal.
+
+      :param other: The other command line error to compare with
+      :return: True if the command line errors are equal, False otherwise
+    """
+    if not isinstance(other, CommandLineError):
+      return NotImplemented
+    return self.program == other.program and self.args == other.args
 
   @property
   def program(self) -> str:
