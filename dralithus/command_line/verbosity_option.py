@@ -141,5 +141,5 @@ class VerbosityOption(Option):
     flag, str_value, skip_next_arg = cls._extract_value(current_arg, next_arg)
     value: int = int(str_value) if str_value is not None else 1
     if value < 1:
-      raise ValueError(f"Verbosity must a positive number, not {value}")
+      raise ValueError(f'Verbosity must a positive number, not {value}')
     return VerbosityOption(flag, value), skip_next_arg
