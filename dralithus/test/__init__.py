@@ -42,7 +42,7 @@ class CaseData:
     """
     assert ((expected is not None) and (error is None)) \
            or ((expected is None) and (error is not None)), \
-      "If expected is set, then error must be none, and vice versa."
+      'If expected is set, then error must be none, and vice versa.'
     self._args = args
     self._expected = expected
     self._error = error
