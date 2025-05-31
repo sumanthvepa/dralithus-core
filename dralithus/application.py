@@ -94,6 +94,7 @@ class Application:
     # Simulate loading an application with a fixed description
     try:
       applications = {
+        'dralithus': Application('dralithus', 'The Dralithus application deployment system'),
         'sample': Application('sample', 'A sample application for demonstration purposes')
       }
       return applications[name]
