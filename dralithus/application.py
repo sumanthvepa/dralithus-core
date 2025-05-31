@@ -42,6 +42,25 @@ class Application:
     self._name = name
     self._description = description
 
+  def __hash__(self) -> int:
+    """
+    Return the hash of the application based on its name.
+
+    :return: The hash value of the application
+    """
+    return hash(self._name)
+
+  def __eq__(self, other: object) -> bool:
+    """
+    Check if two applications are equal based on their name and description.
+
+    :param other: The other application to compare with
+    :return: True if both applications have the same name and description, False otherwise
+    """
+    if not isinstance(other, Application):
+      return NotImplemented
+    return self._name == other._name
+
   def __str__(self) -> str:
     """
     Return a string representation of the application.

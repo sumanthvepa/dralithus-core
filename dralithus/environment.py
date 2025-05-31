@@ -43,6 +43,25 @@ class Environment:
     self._name = name
     self._description = description
 
+  def __hash__(self) -> int:
+    """
+    Return the hash of the environment based on its name.
+
+    :return: The hash value of the environment
+    """
+    return hash(self._name)
+
+  def __eq__(self, other):
+    """
+    Check if two environments are equal based on their name and description.
+
+    :param other: The other environment to compare with
+    :return: True if both environments have the same name and description, False otherwise
+    """
+    if not isinstance(other, Environment):
+      return NotImplemented
+    return self._name == other._name
+
   def __str__(self) -> str:
     """
     Return a string representation of the environment.
