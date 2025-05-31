@@ -52,6 +52,20 @@ class DeployCommand(Command):
     assert len(applications) > 0, 'Applications cannot be an empty set.'
     self._applications = applications
 
+  def __eq__(self, other: object) -> bool:
+    """
+      Check if two deploy commands are equal.
+
+      :param other: The other command to compare with
+      :return: True if the commands are equal, False otherwise
+    """
+    if not isinstance(other, DeployCommand):
+      return NotImplemented
+    return (super().__eq__(other)
+      and self.environments == other.environments
+      and self.applications == other.applications)
+
+
   @property
   def environments(self) -> set[Environment]:
     """
