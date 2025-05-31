@@ -78,9 +78,10 @@ class Environment:
       # Simulated data for demonstration purposes
       environments = {
         'local': Environment('local', 'Local development environment'),
-        'production': Environment('production', 'Production environment'),
-        'staging': Environment('staging', 'Staging environment'),
         'development': Environment('development', 'Development environment'),
+        'test': Environment('test', 'Test environment'),
+        'staging': Environment('staging', 'Staging environment'),
+        'production': Environment('production', 'Production environment'),
       }
       return environments[name]
     except KeyError as ex:
