@@ -84,7 +84,10 @@ class RequiresAsserts(Protocol):
 
   # pylint: disable=invalid-name
   # noinspection PyPep8Naming
-  def assertRaises(self, expected_exception:  type[BaseException] | tuple[type[BaseException], ...], *args: Any, **kwargs: Any) -> Any:
+  def assertRaises(self,
+    expected_exception:  type[BaseException] | tuple[type[BaseException], ...],
+    *args: Any,
+    **kwargs: Any) -> Any:
     """ Assert that an exception is raised. """
 
 
@@ -137,6 +140,11 @@ class CaseExecutor2(RequiresAsserts):
       if isinstance(case.expected, list) and len(case.expected) == 1 and case.expected[0] is None:
         expected = None
       actual = function(case.args)
+      # Store result of comparison in a variable to make debugging easier, and
+      # supress pylint and IntelliJ warnings about unused variables.
+      # noinspection PyUnusedLocal
+      # pylint: disable=unused-variable
+      result = expected == actual
       self.assertEqual(expected, actual, f'Expected {expected} but got {actual}')
     else:
       assert case.error is not None
