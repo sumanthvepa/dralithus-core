@@ -137,7 +137,13 @@ class EnvironmentOption(Option):
       :param environment: The environment name
       :return: True if the environment name is valid
     """
-    return environment in ('local', 'development', 'test', 'staging', 'production')
+    # return environment in ('local', 'development', 'test', 'staging', 'production')
+    # For now all non-empty environment names are valid, except for --,
+    # the option terminator. Note that we are not checking if an environment
+    # with that name exists, as this is not the responsibility of this class.
+    # That is the responsibility of the code that uses this option, such as
+    # the deploy_command module (see deploy_command.make_environments.)
+    return len(environment) > 0 and environment != '--'
 
   @classmethod
   def make(cls, current_arg: str, next_arg: str | None) -> tuple[EnvironmentOption, bool]:
