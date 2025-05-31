@@ -24,7 +24,7 @@
 # -------------------------------------------------------------------
 import sys
 
-from dralithus.command import Command
+from dralithus.command import make
 from dralithus.errors import DralithusError
 
 
@@ -37,8 +37,8 @@ def main(args: list[str]) -> int:
     :return: int: The exit code of the command
   """
   try:
-    command = Command.make(args)
-    return command.execute()
+    cmd = make(args)
+    return cmd.execute()
   except DralithusError as ex:
     print(ex, file=sys.stderr)
     return ex.exit_code
