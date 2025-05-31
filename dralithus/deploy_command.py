@@ -46,7 +46,7 @@ class DeployCommand(Command):
       :param applications: The applications to deploy
       :param verbosity: The verbosity level of the command
     """
-    super().__init__("deploy", verbosity)
+    super().__init__('deploy', verbosity)
     assert len(environments) > 0, 'Environments cannot be an empty set.'
     self._environments = environments
     assert len(applications) > 0, 'Applications cannot be an empty set.'
