@@ -70,8 +70,7 @@ class DralithusError(RuntimeError):
     if not isinstance(other, DralithusError):
       return NotImplemented
     return (super().__eq__(other) and
-      self.exit_code == other.exit_code and
-      self.args == other.args)
+      self.exit_code == other.exit_code)
 
   @property
   def exit_code(self) -> ExitCode:
@@ -93,16 +92,22 @@ class CommandLineError(DralithusError):
     that is executed. The help command when executed will print
     the error, and then provide an appropriate help message.
   """
-  def __init__(self, program: str, message: str) -> None:
+  def __init__(self, program: str, command: str | None, verbosity: int, message: str) -> None:
     """
       Initialize the InvalidCommandLineError with a message.
 
       The exit code is set to ExitCode.INVALID_COMMAND_LINE.
 
+      :param program: The name of the program that caused the error
+      :param command: The name of the command that caused the error or None
+        if it is a global error
+      :param verbosity: The verbosity level to use when printing the error
       :param message: The error message
     """
     super().__init__(message, exit_code=ExitCode.INVALID_COMMAND_LINE)
     self._program = program
+    self._command = command
+    self._verbosity = verbosity
 
   def __eq__(self, other: object) -> bool:
     """
@@ -113,7 +118,9 @@ class CommandLineError(DralithusError):
     """
     if not isinstance(other, CommandLineError):
       return NotImplemented
-    return self.program == other.program and self.args == other.args
+    return (super().__eq__(other)
+      and self.program == other.program
+      and self.command == other.command)
 
   @property
   def program(self) -> str:
@@ -123,6 +130,25 @@ class CommandLineError(DralithusError):
       :return: The name of the program
     """
     return self._program
+
+  @property
+  def command(self) -> str | None:
+    """
+      The name of the command that caused the error, or None if it is a
+      global error.
+
+      :return: The name of the command or None
+    """
+    return self._command
+
+  @property
+  def verbosity(self) -> int:
+    """
+      The verbosity level to use when printing the error.
+
+      :return: The verbosity level
+    """
+    return self._verbosity
 
 
 class DralithusEnvironmentError(DralithusError):
