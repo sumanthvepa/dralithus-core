@@ -44,7 +44,7 @@ class HelpCommand(Command):
       self,
       program_name: str,
       command_needing_help: str | None,
-      error: CommandLineError | None,
+      error_message: str | None,
       verbosity: int) -> None:
     """
       Initialize the help command with a verbosity level.
@@ -53,15 +53,15 @@ class HelpCommand(Command):
       :param command_needing_help: The name of the command that
         caused the help command to be invoked, or None if the help
         request was for global help.
-      :param error: The error that caused the help command to be
-      invoked, or None if the help command was invoked directly
-      via the help option.
+      :param error_message: The error message from the exception that
+        caused the help command to be invoked, or None if there was
+        no error.
       :param verbosity: The verbosity level of the command
     """
     super().__init__('help', verbosity)
     self._program_name = program_name
     self._command_needing_help = command_needing_help
-    self._error = error
+    self._error_message = error_message
 
   def __eq__(self, other: object) -> bool:
     """
@@ -82,7 +82,7 @@ class HelpCommand(Command):
     return (super().__eq__(other) and
       self.program_name == other.program_name and
       self.command_needing_help == other.command_needing_help and
-      self.error == other.error and
+      self.error_message == other._error_message and
       self.verbosity == other.verbosity)
 
   def __str__(self) -> str:
@@ -93,7 +93,7 @@ class HelpCommand(Command):
     """
     return f'HelpCommand(program_name={self.program_name}, ' \
       + f'command_needing_help={self.command_needing_help}, ' \
-      + f'error={self.error}, verbosity={self.verbosity})'
+      + f'error_message={self.error_message}, verbosity={self.verbosity})'
 
   @property
   def program_name(self) -> str:
@@ -105,13 +105,13 @@ class HelpCommand(Command):
     return self._program_name
 
   @property
-  def error(self) -> CommandLineError | None:
+  def error_message(self) -> str | None:
     """
       The error that caused the help command to be executed
 
       :return: The error that caused the help command to be executed
     """
-    return self._error
+    return self._error_message
 
   @property
   def command_needing_help(self) -> str | None:
@@ -133,8 +133,8 @@ class HelpCommand(Command):
       :return: The program exit code
     """
     # TODO: Implement this
-    if self.error is not None:
-      print(f'Error: {self.error}')
+    if self.error_message is not None:
+      print(f'Error: {self.error_message}')
     print (f'Help is not yet implemented for {self.program_name} '
       + f'at verbosity level {self.verbosity}.')
     return ExitCode.SUCCESS
@@ -151,7 +151,7 @@ def make_from_command_line(cmdln: CommandLine) -> HelpCommand:
   return HelpCommand(
       program_name=cmdln.program,
       command_needing_help=cmdln.command_name,
-      error=None,  # No error is passed to the help command
+      error_message=None,  # No error is passed to the help command
       verbosity=cmdln.verbosity)
 
 def make_from_error(ex: CommandLineError) -> HelpCommand:
@@ -164,5 +164,5 @@ def make_from_error(ex: CommandLineError) -> HelpCommand:
   return HelpCommand(
       program_name=ex.program,
       command_needing_help=ex.command,
-      error=ex,
+      error_message=str(ex),
       verbosity=ex.verbosity)

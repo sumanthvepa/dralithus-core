@@ -65,7 +65,7 @@ def make_error_cases() -> list[tuple[str, CaseData]]:
   """
   # pylint: disable=line-too-long
   return [
-    ('help_command_from_error', CaseData(args=CommandLineError(program='drl', command=None, verbosity=0, message='No command specified'), expected=HelpCommand('drl', None, CommandLineError('drl', None,0,'No command specified'), 0), error=None)),
+    ('help_command_from_error', CaseData(args=CommandLineError(program='drl', command=None, verbosity=0, message='No command specified'), expected=HelpCommand('drl', None, 'No command specified', 0), error=None)),
   ]
 
 class TestHelpCommand(unittest.TestCase, CaseExecutor2):
