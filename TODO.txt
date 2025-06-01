@@ -1,6 +1,6 @@
 [DONE]issue003-release0-gpl-copyleft-notice:
   Add GPL copyleft notice to all source files
-issue002-release0-print-command-line-parameters:
+[DONE]issue002-release0-print-command-line-parameters:
   Parse the command line and print the environment name and the
   application name
 [CANCELLED]issue001-release0-print-instructions:
