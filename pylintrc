@@ -67,7 +67,6 @@ ignored-modules=
 
 # Python code to execute, usually for sys.path manipulation such as
 # pygtk.require().
-#init-hook=
 
 # Use multiple processes to speed up Pylint. Specifying 0 will auto-detect the
 # number of processors available to use, and will cap the count on Windows to
@@ -88,7 +87,7 @@ persistent=yes
 
 # Minimum Python version to use for version dependent checks. Will default to
 # the version used to run pylint.
-py-version=3.11
+py-version=3.12
 
 # Discover python modules and packages in the file system subtree.
 recursive=no
@@ -632,3 +631,21 @@ init-import=no
 # List of qualified module names which can have objects that can redefine
 # builtins.
 redefining-builtins-modules=six.moves,past.builtins,future.builtins,builtins,io
+
+[MASTER]
+# Often, pylint when invoked from within an IDE like IntelliJ IDEA will fail
+# to find modules in the project. This is because pylint is invoked from a
+# different directory than the project root. The following init-hook will
+# add the project root to the path so that pylint can find the modules.
+
+# __file__ here points to the location of a file named config in the pylint
+# installation in the venv. (NOT this pylintrc file)
+# That is the reason, for the convoluted path calculation. The project root
+# several levels above the location of this config file.
+
+# If you are having trouble with imports in pylint uncomment the following line
+# to add the actual path directly. You can add print statements in the init hook
+# and run pylint form the command line to debug the path calculation.
+# init-hook='import sys; sys.path.append("/absolute/path/to/your/project")'
+
+init-hook='import os, sys; sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, os.pardir, os.pardir, os.pardir, os.pardir)))'
