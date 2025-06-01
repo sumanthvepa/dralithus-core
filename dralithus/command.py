@@ -109,7 +109,9 @@ def make(args: list[str]) -> Command:
   """
   # We import the command modules here to avoid circular imports.
   # pylint: disable=import-outside-toplevel
-  from dralithus.help_command import make as make_help, make_from_error as make_help_from_error
+  from dralithus.help_command import (
+    make_from_command_line as make_help_from_command_line,
+    make_from_error as make_help_from_error)
   from dralithus.deploy_command import make as make_deploy
 
   # The type ignore directives in the code below are to bypass
@@ -119,16 +121,13 @@ def make(args: list[str]) -> Command:
     cmdln = parse(args)
 
     if is_help_requested(cmdln.command_name, cmdln.global_options, cmdln.command_options):
-      return make_help(  # type: ignore[return-value]
-        cmdln.program, cmdln.command_name, cmdln.global_options, cmdln.command_options)
+      return make_help_from_command_line(cmdln)  # type  ignore[return-value]
 
     if cmdln.command_name == 'deploy':
-      return make_deploy(  # type: ignore[return-value]
-        cmdln.program, cmdln.global_options, cmdln.command_options, cmdln.parameters)
+      return make_deploy(cmdln)  # type: ignore[return-value]
 
-    if cmdln.command_name is None:
-      raise CommandLineError(cmdln.program,'No command specified')
-
-    raise CommandLineError(cmdln.program,f'Unknown command \'{cmdln.command_name}\' specified')
+    message = 'No command specified' if cmdln.command_name is None \
+      else f'Unknown command \'{cmdln.command_name}\' specified'
+    raise CommandLineError(cmdln.program, cmdln.command_name, cmdln.verbosity, message)
   except CommandLineError as ex:
     return make_help_from_error(ex)  # type: ignore[return-value]

@@ -24,6 +24,7 @@ from __future__ import annotations
 from typing_extensions import override
 
 
+from dralithus.command_line.command_line import CommandLine
 from dralithus.command import Command
 from dralithus.errors import ExitCode, CommandLineError
 
@@ -84,6 +85,16 @@ class HelpCommand(Command):
       self.error == other.error and
       self.verbosity == other.verbosity)
 
+  def __str__(self) -> str:
+    """
+      Return a string representation of the help command.
+
+      :return: A string representation of the help command
+    """
+    return f'HelpCommand(program_name={self.program_name}, ' \
+      + f'command_needing_help={self.command_needing_help}, ' \
+      + f'error={self.error}, verbosity={self.verbosity})'
+
   @property
   def program_name(self) -> str:
     """
@@ -122,36 +133,26 @@ class HelpCommand(Command):
       :return: The program exit code
     """
     # TODO: Implement this
-    print (f'Help is not yet implemented for {self.program_name}.')
+    if self.error is not None:
+      print(f'Error: {self.error}')
+    print (f'Help is not yet implemented for {self.program_name} '
+      + f'at verbosity level {self.verbosity}.')
     return ExitCode.SUCCESS
 
 
-def make(
-    program: str,
-    command_name: str | None,
-    global_options: Options,
-    command_options: Options) -> HelpCommand:
+def make_from_command_line(cmdln: CommandLine) -> HelpCommand:
   """
     Create a help command from the command line arguments.
 
-    :param program: The name of the program
-    :param command_name: The name of the command that caused the help
-      command to be invoked, or None if the help request was for global help.
-    :param global_options: The global options for the command line
-    :param command_options: The command options for the command line
+    :param cmdln: The command line arguments
     :return: The help command object
 
   """
-  global_verbosity = global_options.get('verbosity', 0)
-  assert isinstance(global_verbosity, int)
-  command_verbosity = command_options.get('verbosity', 0)
-  assert isinstance(command_verbosity, int)
-  verbosity = min(global_verbosity + command_verbosity, 3)
   return HelpCommand(
-      program_name=program,
-      command_needing_help=command_name,
+      program_name=cmdln.program,
+      command_needing_help=cmdln.command_name,
       error=None,  # No error is passed to the help command
-      verbosity=verbosity)
+      verbosity=cmdln.verbosity)
 
 def make_from_error(ex: CommandLineError) -> HelpCommand:
   """
@@ -162,6 +163,6 @@ def make_from_error(ex: CommandLineError) -> HelpCommand:
   """
   return HelpCommand(
       program_name=ex.program,
-      command_needing_help=None,
+      command_needing_help=ex.command,
       error=ex,
-      verbosity=0)
+      verbosity=ex.verbosity)

@@ -24,6 +24,7 @@ from __future__ import annotations
 from typing_extensions import override
 
 from dralithus.command import Command
+from dralithus.command_line.command_line import CommandLine
 from dralithus.command_line.options import Options
 from dralithus.environment import Environment
 from dralithus.application import Application
@@ -65,6 +66,17 @@ class DeployCommand(Command):
       and self.environments == other.environments
       and self.applications == other.applications)
 
+  def __str__(self) -> str:
+    """
+      Return a string representation of the deploy command.
+
+      :return: A string representation of the deploy command
+    """
+    return 'DeployCommand(' \
+      + f'environments={self.environments}, ' \
+      + f'applications={self.applications}, '\
+      + f'verbosity={self.verbosity})'
+
 
   @property
   def environments(self) -> set[Environment]:
@@ -101,13 +113,15 @@ class DeployCommand(Command):
 def make_environments(
     program: str,
     global_options: Options,
-    command_options: Options) -> set[Environment]:
+    command_options: Options,
+    verbosity: int) -> set[Environment]:
   """
     Create a set of environments from the global and command options.
 
     :param program: The name of the program
     :param global_options: The global options for the command line
     :param command_options: The command options for the command line
+    :param verbosity: The verbosity level of the command
     :return: A set of Environment objects
   """
   global_environment_names = global_options.get('environments', set())
@@ -119,55 +133,30 @@ def make_environments(
   environment_names = global_environment_names | command_environment_names
   environments = set(Environment.load(name) for name in environment_names)
   if len(environments) == 0:
-    raise CommandLineError(
-      program,
-      'No environments specified. ' \
-      + 'Please specify at least one environment.')
+    raise CommandLineError(program,'deploy',verbosity,
+      'No environments specified. Please specify at least one environment.')
   return environments
 
 
-def make_applications(parameters: set[str]) -> set[Application]:
+def make_applications(parameters: set[str], verbosity: int) -> set[Application]:
   """
     Create a set of applications from the command line parameters.
 
     :param parameters: The parameters for the command line
+    :param verbosity: The verbosity level of the command
     :return: A set of Application objects
   """
   applications = set(Application.load(name) for name in parameters)
   assert len(applications) > 0
   return applications
 
-
-def make_verbosity(global_options: Options, command_options: Options) -> int:
-  """
-    Determine the verbosity level from the global and command options.
-
-    :param global_options: The global options for the command line
-    :param command_options: The command options for the command line
-    :return: The verbosity level as an integer
-  """
-  global_verbosity = global_options.get('verbosity', 0)
-  assert isinstance(global_verbosity, int)
-  command_verbosity = command_options.get('verbosity', 0)
-  assert isinstance(command_verbosity, int)
-  return min(global_verbosity + command_verbosity, 3)
-
-
-def make(
-    program: str,
-    global_options: Options,
-    command_options: Options,
-    parameters: set[str]) -> DeployCommand:
+def make(cmdln: CommandLine) -> DeployCommand:
   """
     Create a help command from the command line arguments.
 
-    :param program: The name of the program
-    :param global_options: The global options for the command line
-    :param command_options: The command options for the command line
-    :param parameters: The parameters for the command line
+    :param cmdln: The command line object containing the parsed arguments
     :return: The help command object
   """
-  environments = make_environments(program, global_options, command_options)
-  applications = make_applications(parameters)
-  verbosity = make_verbosity(global_options, command_options)
-  return DeployCommand(environments, applications, verbosity)
+  environments = make_environments(cmdln.program, cmdln.global_options, cmdln.command_options, cmdln.verbosity)
+  applications = make_applications(cmdln.parameters, cmdln.verbosity)
+  return DeployCommand(environments, applications, cmdln.verbosity)

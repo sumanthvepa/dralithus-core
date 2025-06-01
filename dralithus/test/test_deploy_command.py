@@ -27,6 +27,7 @@ import unittest
 
 from parameterized import parameterized
 
+from dralithus.command_line.command_line import CommandLine
 from dralithus.deploy_command import DeployCommand, make
 from dralithus.environment import Environment
 from dralithus.application import Application
@@ -42,24 +43,24 @@ def make_cases() -> list[tuple[str, CaseData]]:
   """
   # pylint: disable=line-too-long
   return [
-    ('deploy_command_no_args', CaseData(args=('drl', Options([]), Options([]), set()), expected=None, error=CommandLineError)),
-    ('deploy_command_invalid_environment_invalid_application', CaseData(args=('drl', Options([]), Options(['--environment=invalid']), {'invalid'}), expected=None, error=DralithusEnvironmentError)),
-    ('deploy_command_invalid_environment2_invalid_application', CaseData(args=('drl', Options(['--environment=invalid']), Options([]), {'invalid'}), expected=None, error=DralithusEnvironmentError)),
-    ('deploy_command_invalid_environment3_invalid_application', CaseData(args=('drl', Options(['--environment=local,invalid']), Options([]), {'invalid'}), expected=None, error=DralithusEnvironmentError)),
-    ('deploy_command_invalid_environment4_invalid_application', CaseData(args=('drl', Options(['--environment=invalid,local']), Options([]), {'invalid'}), expected=None, error=DralithusEnvironmentError)),
-    ('deploy_command_valid_environment_invalid_application', CaseData(args=('drl', Options([]), Options(['--environment=local']), {'invalid'}), expected=None, error=DralithusApplicationError)),
-    ('deploy_command_valid_environment2_invalid_application', CaseData(args=('drl', Options(['--environment=local']), Options([]), {'invalid'}), expected=None, error=DralithusApplicationError)),
-    ('deploy_command_valid_environment3_invalid_application', CaseData(args=('drl', Options(['--environment=local,development']), Options([]), {'invalid'}), expected=None, error=DralithusApplicationError)),
-    ('deploy_command_invalid_environment_valid_application', CaseData(args=('drl', Options([]), Options(['--environment=invalid']), {'sample'}), expected=None, error=DralithusEnvironmentError)),
-    ('deploy_command_invalid_environment2_valid_application', CaseData(args=('drl', Options(['--environment=invalid']), Options([]), {'sample'}), expected=None, error=DralithusEnvironmentError)),
-    ('deploy_command_invalid_environment3_valid_application', CaseData(args=('drl', Options(['--environment=local,invalid']), Options([]), {'sample'}), expected=None, error=DralithusEnvironmentError)),
-    ('deploy_command_invalid_environment4_valid_application', CaseData(args=('drl', Options(['--environment=invalid,local']), Options([]), {'sample'}), expected=None, error=DralithusEnvironmentError)),
-    ('deploy_command_valid_environment_valid_application', CaseData(args=('drl', Options([]), Options(['--environment=local']), {'sample'}), expected=DeployCommand(environments={Environment.load('local')}, applications={Application.load('sample')}, verbosity=0), error=None)),
-    ('deploy_command_valid_environment2_valid_application', CaseData(args=('drl', Options(['--environment=local']), Options([]), {'sample'}), expected=DeployCommand(environments={Environment.load('local')}, applications={Application.load('sample')}, verbosity=0), error=None)),
-    ('deploy_command_valid_environment3_valid_application', CaseData(args=('drl', Options([]), Options(['--environment=local,development']), {'sample'}), expected=DeployCommand(environments={Environment.load('local'), Environment.load('development')}, applications={Application.load('sample')}, verbosity=0), error=None)),
-    ('deploy_command_valid_environment4_valid_application', CaseData(args=('drl', Options(['--environment=local,development']), Options([]), {'sample'}), expected=DeployCommand(environments={Environment.load('local'), Environment.load('development')}, applications={Application.load('sample')}, verbosity=0), error=None)),
-    ('deploy_command_valid_environment4_valid_application2', CaseData(args=('drl', Options(['--environment=local,development']), Options([]), {'sample', 'dralithus'}), expected=DeployCommand(environments={Environment.load('local'), Environment.load('development')}, applications={Application.load('sample'), Application.load('dralithus')}, verbosity=0), error=None)),
-    ('deploy_command_verbosity_valid_environment_valid_application', CaseData(args=('drl', Options(['-v']), Options(['--environment=local']), {'sample'}), expected=DeployCommand(environments={Environment.load('local')}, applications={Application.load('sample')}, verbosity=1), error=None)),
+    ('deploy_command_no_args', CaseData(args=CommandLine(program='drl', command_name='deploy', global_options=Options([]), command_options=Options([]), parameters=set()), expected=None, error=CommandLineError)),
+    ('deploy_command_invalid_environment_invalid_application', CaseData(args=CommandLine(program='drl', command_name='deploy', global_options=Options([]), command_options=Options(['--environment=invalid']), parameters={'invalid'}), expected=None, error=DralithusEnvironmentError)),
+    ('deploy_command_invalid_environment2_invalid_application', CaseData(args=CommandLine(program='drl', command_name='deploy', global_options=Options(['--environment=invalid']), command_options=Options([]), parameters={'invalid'}), expected=None, error=DralithusEnvironmentError)),
+    ('deploy_command_invalid_environment3_invalid_application', CaseData(args=CommandLine(program='drl', command_name='deploy', global_options=Options(['--environment=local,invalid']), command_options=Options([]), parameters={'invalid'}), expected=None, error=DralithusEnvironmentError)),
+    ('deploy_command_invalid_environment4_invalid_application', CaseData(args=CommandLine(program='drl', command_name='deploy', global_options=Options(['--environment=invalid,local']), command_options=Options([]), parameters={'invalid'}), expected=None, error=DralithusEnvironmentError)),
+    ('deploy_command_valid_environment_invalid_application', CaseData(args=CommandLine(program='drl', command_name='deploy', global_options=Options([]), command_options=Options(['--environment=local']), parameters={'invalid'}), expected=None, error=DralithusApplicationError)),
+    ('deploy_command_valid_environment2_invalid_application', CaseData(args=CommandLine(program='drl', command_name='deploy', global_options=Options(['--environment=local']), command_options=Options([]), parameters={'invalid'}), expected=None, error=DralithusApplicationError)),
+    ('deploy_command_valid_environment3_invalid_application', CaseData(args=CommandLine(program='drl', command_name='deploy', global_options=Options(['--environment=local,development']), command_options=Options([]), parameters={'invalid'}), expected=None, error=DralithusApplicationError)),
+    ('deploy_command_invalid_environment_valid_application', CaseData(args=CommandLine(program='drl', command_name='deploy', global_options=Options([]), command_options=Options(['--environment=invalid']), parameters={'sample'}), expected=None, error=DralithusEnvironmentError)),
+    ('deploy_command_invalid_environment2_valid_application', CaseData(args=CommandLine(program='drl', command_name='deploy', global_options=Options(['--environment=invalid']), command_options=Options([]), parameters={'sample'}), expected=None, error=DralithusEnvironmentError)),
+    ('deploy_command_invalid_environment3_valid_application', CaseData(args=CommandLine(program='drl', command_name='deploy', global_options=Options(['--environment=local,invalid']), command_options=Options([]), parameters={'sample'}), expected=None, error=DralithusEnvironmentError)),
+    ('deploy_command_invalid_environment4_valid_application', CaseData(args=CommandLine(program='drl', command_name='deploy', global_options=Options(['--environment=invalid,local']), command_options=Options([]), parameters={'sample'}), expected=None, error=DralithusEnvironmentError)),
+    ('deploy_command_valid_environment_valid_application', CaseData(args=CommandLine(program='drl', command_name='deploy', global_options=Options([]), command_options=Options(['--environment=local']), parameters={'sample'}), expected=DeployCommand(environments={Environment.load('local')}, applications={Application.load('sample')}, verbosity=0), error=None)),
+    ('deploy_command_valid_environment2_valid_application', CaseData(args=CommandLine(program='drl', command_name='deploy', global_options=Options(['--environment=local']), command_options=Options([]), parameters={'sample'}), expected=DeployCommand(environments={Environment.load('local')}, applications={Application.load('sample')}, verbosity=0), error=None)),
+    ('deploy_command_valid_environment3_valid_application', CaseData(args=CommandLine(program='drl', command_name='deploy', global_options=Options([]), command_options=Options(['--environment=local,development']), parameters={'sample'}), expected=DeployCommand(environments={Environment.load('local'), Environment.load('development')}, applications={Application.load('sample')}, verbosity=0), error=None)),
+    ('deploy_command_valid_environment4_valid_application', CaseData(args=CommandLine(program='drl', command_name='deploy', global_options=Options(['--environment=local,development']), command_options=Options([]), parameters={'sample'}), expected=DeployCommand(environments={Environment.load('local'), Environment.load('development')}, applications={Application.load('sample')}, verbosity=0), error=None)),
+    ('deploy_command_valid_environment4_valid_application2', CaseData(args=CommandLine(program='drl', command_name='deploy', global_options=Options(['--environment=local,development']), command_options=Options([]), parameters={'sample', 'dralithus'}), expected=DeployCommand(environments={Environment.load('local'), Environment.load('development')}, applications={Application.load('sample'), Application.load('dralithus')}, verbosity=0), error=None)),
+    ('deploy_command_verbosity_valid_environment_valid_application', CaseData(args=CommandLine(program='drl', command_name='deploy', global_options=Options(['-v']), command_options=Options(['--environment=local']), parameters={'sample'}), expected=DeployCommand(environments={Environment.load('local')}, applications={Application.load('sample')}, verbosity=1), error=None)),
   ]
 
 
@@ -74,4 +75,4 @@ class TestDeployCommand(unittest.TestCase, CaseExecutor2):
     """
     Test the make method of the deploy_command module.
     """
-    self.execute(lambda params: make(*params), case)
+    self.execute(make, case)
