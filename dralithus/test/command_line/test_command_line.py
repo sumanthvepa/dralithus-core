@@ -89,12 +89,26 @@ def parse_incorrect_cases() -> list[tuple[str, CaseData]]:
     ('parse_incorrect_case_0', CaseData(args=[], expected=None, error=AssertionError)),
   ]
 
+
+def parse_edge_cases() -> list[tuple[str, CaseData]]:
+  """
+    Edge cases for the CommandLine class
+    :return: A list of edge cases for the CommandLine class
+  """
+  # pylint: disable=line-too-long
+  return [
+    ('global_help_option_terminator_verbosity_option', CaseData(args=['drl', '--help', '--', '-v'], expected=CommandLine(program='drl', command_name=None, global_options=Options(['--help']), command_options=Options([]), parameters={'-v'}), error=None)),
+    ('global_help_option_deploy_command_terminator_verbosity_option_with_value', CaseData(args=['drl', '--help', 'deploy', '--', '-v'], expected=CommandLine(program='drl', command_name='deploy', global_options=Options(['--help']), command_options=Options([]), parameters={'-v'}), error=None)),
+    ('terminator_help_option_command_verbosity_option', CaseData(args=['drl', '--', 'deploy', '--help', '-v'], expected=CommandLine(program='drl', command_name=None, global_options=Options([]), command_options=Options([]), parameters={'deploy', '--help', '-v'}), error=None)),
+  ]
+
+
 def parse_cases() -> list[tuple[str, CaseData]]:
   """
     Combine the correct and incorrect cases for the parse function
     :return: A list of test cases for the parse function
   """
-  return parse_correct_cases() + parse_incorrect_cases()
+  return parse_correct_cases() + parse_incorrect_cases() + parse_edge_cases()
 
 
 class TestCommandLine(unittest.TestCase, CaseExecutor2):
