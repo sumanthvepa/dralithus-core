@@ -1,3 +1,6 @@
+issue004-release1-deployment-commands-for-sample-local:
+  Generate deployment commands, that if executed will create/update
+  the sample application in the local environment
 [DONE]issue003-release0-gpl-copyleft-notice:
   Add GPL copyleft notice to all source files
 [DONE]issue002-release0-print-command-line-parameters:
