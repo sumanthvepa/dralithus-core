@@ -20,9 +20,9 @@
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
 
-# Packages.sh is a shell script that should be run in a python
-# a fresh virtual environment to install the latest versions
-# of all packages required by dralithus-core.
+# Packages.sh is a shell script that should be run in a fresh python
+# virtual environment to install the latest versions of all packages
+# required by dralithus-core.
 
 # To run this script FIRST enable the virtual environment
 # into which you want to install the packages
