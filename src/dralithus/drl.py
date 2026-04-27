@@ -1,10 +1,9 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-  drl: Command line tool to deploy applications to various environments
+  drl.py: Command line tool to deploy applications to various environments
 """
 # -------------------------------------------------------------------
-# drl: Command line tool to deply applications to various environments
+# drl.py: Command line tool to deploy applications to various environments
 #
 # Copyright (C) 2023-25 Sumanth Vepa.
 #
@@ -28,15 +27,24 @@ from dralithus.command import make
 from dralithus.errors import DralithusError
 
 
-def main(args: list[str]) -> int:
+def main(args: list[str] | None = None) -> int:
   """
     Parse the command line and execute the command
 
+    The function takes an optional main, so that python's
+    packaging software can create a wrapper that calls main()
+    with no arguments. But when invoked direcly as a script,
+    the code in the if __name__ == '__main__' section will
+    pass the argument list.
+
     :param args: The command line arguments (usually sys.argv, except
-      in unit tests)
+      in unit tests). If not provided, the args are taken from sys.argv.
+
     :return: int: The exit code of the command
   """
   try:
+    if args is None:
+      args = sys.argv
     cmd = make(args)
     return cmd.execute()
   except DralithusError as ex:

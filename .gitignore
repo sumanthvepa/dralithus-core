@@ -1,10 +1,13 @@
-
-# Ignore OS artifacts
+# OS and editor artifacts
 .DS_Store
+*.swp
 
-# Ignore Python venv directory
+# PYthon specitic ignores
 venv
 __pycache__
+.mypy_cache
+*.egg-info/
 
-# Ignore the commit message file
+# Standard project artifacts
 msg
+related.txt

@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dralithus-core"
+version = "0.2.0"
+description = "A command line devops tool that does everything"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+]
+
+[project.scripts]
+drl = "dralithus.drl:main"
+
+[project.optional-dependencies]
+dev = [
+  "mypy",
+  "pylint",
+  "parameterized",
+]
+
+# dralithus is intended as a namespace package, so enable namespace discovery.
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["dralithus*"]
+namespaces = true
+

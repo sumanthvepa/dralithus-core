@@ -33,6 +33,7 @@ from dralithus.environment import Environment
 from dralithus.application import Application
 from dralithus.command_line.options import Options
 from dralithus.errors import CommandLineError, DralithusEnvironmentError, DralithusApplicationError
+
 from dralithus.test import CaseData, CaseExecutor2
 
 

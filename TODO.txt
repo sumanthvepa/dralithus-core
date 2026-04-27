@@ -1,14 +1,5 @@
-issue004-release1-deploy-sample:
-  Generate deployment commands, that if executed will create/update
-  the sample application in the local environment
-[DONE]issue003-release0-gpl-copyleft-notice:
-  Add GPL copyleft notice to all source files
-[DONE]issue002-release0-print-command-line-parameters:
-  Parse the command line and print the environment name and the
-  application name
-[CANCELLED]issue001-release0-print-instructions:
-  Read an YAML configuration file and print instructions needed to
-  create virtual machines specified in it.
-  Note: Upon revisiting the project, I felt it best to start it
-  differently based on what I know one year after I initiated the
-  project
+issue005-release1-new-project-python: Implement a new project command to create a new python project
+[CANCELLED]issue004-release1-deploy-sample: Generate deployment commands, that if executed will create/update the sample application in the local environment. Note: Learned even more about how I want to build the project. And I've changed te goals a little bit.
+[DONE]issue003-release0-gpl-copyleft-notice: Add GPL copyleft notice to all source files
+[DONE]issue002-release0-print-command-line-parameters: Parse the command line and print the environment name and the application name
+[CANCELLED]issue001-release0-print-instructions: Read an YAML configuration file and print instructions needed to create virtual machines specified in it. Note: Upon revisiting the project, I felt it best to start it differently based on what I know one year after I initiated the project

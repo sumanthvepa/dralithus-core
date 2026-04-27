@@ -31,6 +31,7 @@ from dralithus.command_line.command_line import CommandLine
 from dralithus.help_command import HelpCommand, make_from_command_line, make_from_error
 from dralithus.command_line.options import Options
 from dralithus.errors import CommandLineError
+
 from dralithus.test import CaseData, CaseExecutor2
 
 
