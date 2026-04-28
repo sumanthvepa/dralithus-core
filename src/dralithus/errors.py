@@ -38,6 +38,7 @@ class ExitCode(IntEnum):
   INVALID_COMMAND_LINE = 1 # Associated with CommandLineError
   ENVIRONMENT_ERROR = 2 # Associated with EnvironmentError
   APPLICATION_ERROR = 3 # Associated with ApplicationError
+  PROJECT_ERROR = 4 # Associated with DralithusProjectError
 
 
 class DralithusError(RuntimeError):
