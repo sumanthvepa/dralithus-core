@@ -97,6 +97,23 @@ class TestMkdirStep(unittest.TestCase):
 
       self.assertFalse((project_root / 'src').exists())
 
+  def test_rollback_removes_directory_after_multiple_runs(self) -> None:
+    """
+      Verify rollback removes a directory after multiple run calls.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      step = MkdirStep(Path('src'))
+
+      step.run(context)
+      step.run(context)
+      step.rollback(context)
+
+      self.assertFalse((project_root / 'src').exists())
+
   def test_rollback_removes_parent_directories_created_by_step(
     self
   ) -> None:

@@ -118,11 +118,10 @@ class MkdirStep(CreationStep):
       :return: None
       :raises DralithusProjectError: When directory creation fails
     """
-    self._created_directories.clear()
     missing = self._missing_directories(context.project_root)
     if not dry_run:
       self._create_directory(context.project_root)
-      self._created_directories = list(reversed(missing))
+      self._created_directories.extend(reversed(missing))
 
   def rollback(self, context: ProjectContext, dry_run: bool = False) -> None:
     """
