@@ -28,11 +28,11 @@ import subprocess
 from typing_extensions import override
 
 from dralithus.project.context import ProjectContext
-from dralithus.project.creation_step import CreationStep
+from dralithus.project.execution_step import ExecutionStep
 from dralithus.project.error import DralithusProjectError
 
 
-class CreateVenvStep(CreationStep):
+class CreateVenvStep(ExecutionStep):
   """
     Represent a project creation step that creates a Python venv.
   """

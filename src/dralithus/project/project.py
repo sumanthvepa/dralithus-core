@@ -20,7 +20,7 @@
 # along with this program.  If not, see
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
-from dralithus.project.creation_step import CreationStep
+from dralithus.project.execution_step import ExecutionStep
 from dralithus.project.context import ProjectContext
 from dralithus.project.error import DralithusProjectError
 
@@ -37,7 +37,7 @@ class Project:  # pylint: disable=too-few-public-methods
       :return: None
     """
     self._context = context
-    self._creation_steps: list[CreationStep] = []
+    self._creation_steps: list[ExecutionStep] = []
 
   def create(self, dry_run: bool = False) -> None:
     """
@@ -48,7 +48,7 @@ class Project:  # pylint: disable=too-few-public-methods
       :return: None
       :raises DralithusProjectError: If project creation fails.
     """
-    completed_steps: list[CreationStep] = []
+    completed_steps: list[ExecutionStep] = []
     try:
       for step in self._creation_steps:
         step.run(self._context, dry_run)

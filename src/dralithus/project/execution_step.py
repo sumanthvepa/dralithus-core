@@ -1,8 +1,8 @@
 """
-  creation_step.py: Define the CreationStep abstract base class.
+  execution_step.py: Define the ExecutionStep abstract base class.
 """
 # -------------------------------------------------------------------
-# creation_step.py: Define the CreationStep abstract base class.
+# execution_step.py: Define the ExecutionStep abstract base class.
 #
 # Copyright (C) 2026 Sumanth Vepa.
 #
@@ -25,9 +25,9 @@ from abc import ABC, abstractmethod
 from dralithus.project.context import ProjectContext
 
 
-class CreationStep(ABC):
+class ExecutionStep(ABC):
   """
-    Represent one idempotent project creation step.
+    Represent one idempotent execution step.
   """
   @abstractmethod
   def run(
@@ -36,7 +36,7 @@ class CreationStep(ABC):
     dry_run: bool = False
   ) -> None:
     """
-      Run the project creation step.
+      Run the execution step.
 
       :param context: The shared project creation context
       :param dry_run: True if the step should report what it would
@@ -52,7 +52,7 @@ class CreationStep(ABC):
     dry_run: bool = False
   ) -> None:
     """
-      Roll back the project creation step.
+      Roll back the execution step.
 
       :param context: The shared project creation context
       :param dry_run: True if the step should report what it would

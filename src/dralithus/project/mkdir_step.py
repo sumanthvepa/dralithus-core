@@ -23,11 +23,11 @@
 from pathlib import Path
 
 from dralithus.project.context import ProjectContext
-from dralithus.project.creation_step import CreationStep
+from dralithus.project.execution_step import ExecutionStep
 from dralithus.project.error import DralithusProjectError
 
 
-class MkdirStep(CreationStep):
+class MkdirStep(ExecutionStep):
   """
     Represent a project creation step that creates a directory.
   """
