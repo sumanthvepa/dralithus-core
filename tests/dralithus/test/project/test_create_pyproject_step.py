@@ -1,0 +1,619 @@
+"""
+  test_create_pyproject_step.py: Unit tests for create_pyproject_step.
+"""
+# -------------------------------------------------------------------
+# test_create_pyproject_step.py: Unit tests for create_pyproject_step.
+#
+# Copyright (C) 2026 Sumanth Vepa.
+#
+# This program is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License a
+# published by the Free Software Foundation, either version 3 of the
+# License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see
+# <https://www.gnu.org/licenses/>.
+# -------------------------------------------------------------------
+from pathlib import Path
+import subprocess
+import sys
+from tempfile import TemporaryDirectory
+import tomllib
+from typing import Any
+import unittest
+
+from dralithus.project.context import ProjectContext
+from dralithus.project.create_pyproject_step import CreatePyProjectStep
+from dralithus.project.error import DralithusProjectError
+
+
+class TestCreatePyProjectStep(unittest.TestCase):
+  """
+    Unit tests for the CreatePyProjectStep class.
+  """
+  @staticmethod
+  def _python_requirement() -> str:
+    """
+      Return the Python requirement for the test interpreter.
+
+      :return: The Python major/minor version requirement
+    """
+    return f'>={sys.version_info.major}.{sys.version_info.minor}'
+
+  def _venv_python_requirement(self, project_root: Path) -> str:
+    """
+      Return the Python requirement from the test project's venv.
+
+      :param project_root: The project root directory
+      :return: The Python major/minor version requirement
+    """
+    venv_path = project_root / 'venv'
+    pyvenv_cfg = venv_path / 'pyvenv.cfg'
+    if not venv_path.is_dir():
+      self.fail(f'Test venv does not exist: {venv_path}')
+    if not pyvenv_cfg.is_file():
+      self.fail(f'Test venv has no pyvenv.cfg: {pyvenv_cfg}')
+    values: dict[str, str] = {}
+    for line in pyvenv_cfg.read_text(encoding='utf-8').splitlines():
+      name, separator, value = line.partition('=')
+      if separator == '=':
+        values[name.strip()] = value.strip()
+    version = values.get('version')
+    if version is None:
+      self.fail(f'Test venv has no version entry: {pyvenv_cfg}')
+    version_parts = version.split('.')
+    if len(version_parts) < 2:
+      self.fail(f'Test venv version is not major.minor: {version}')
+    return f'>={version_parts[0]}.{version_parts[1]}'
+
+  @staticmethod
+  def _toml_list(values: list[str]) -> str:
+    """
+      Format a list of strings as an inline TOML array.
+
+      :param values: The string values to format
+      :return: The TOML array text
+    """
+    quoted = [f'"{value}"' for value in values]
+    return f'[{", ".join(quoted)}]'
+
+  @classmethod
+  # pylint: disable-next=too-many-arguments,too-many-positional-arguments
+  def _pyproject_text(
+    cls,
+    project_name: str = 'sample-project',
+    project_description: str = 'Sample project',
+    package_name: str = 'sample_project',
+    project_version: str = '0.1.0',
+    python_requirement: str | None = None,
+    dependencies: list[str] | None = None,
+    dev_dependencies: list[str] | None = None,
+    where: list[str] | None = None,
+    include: list[str] | None = None
+  ) -> str:
+    """
+      Return valid pyproject.toml text for tests.
+
+      :param project_name: The project distribution name
+      :param project_description: The project description
+      :param package_name: The Python package name
+      :param project_version: The project version
+      :param python_requirement: The requires-python value
+      :param dependencies: The project dependencies
+      :param dev_dependencies: The optional dev dependencies
+      :param where: The setuptools package search roots
+      :param include: The setuptools package include patterns
+      :return: pyproject.toml text
+    """
+    requirement = python_requirement or cls._python_requirement()
+    dependencies = dependencies or []
+    dev_dependencies = dev_dependencies or [
+      'mypy',
+      'pylint',
+      'parameterized']
+    where = where or ['src']
+    include = include or [f'{package_name}*']
+    return (
+      '[build-system]\n'
+      'requires = ["setuptools>=69", "wheel"]\n'
+      'build-backend = "setuptools.build_meta"\n'
+      '\n'
+      '[project]\n'
+      f'name = "{project_name}"\n'
+      f'version = "{project_version}"\n'
+      f'description = "{project_description}"\n'
+      'readme = "README.md"\n'
+      f'requires-python = "{requirement}"\n'
+      f'dependencies = {cls._toml_list(dependencies)}\n'
+      '\n'
+      '[project.optional-dependencies]\n'
+      f'dev = {cls._toml_list(dev_dependencies)}\n'
+      '\n'
+      '[tool.setuptools.packages.find]\n'
+      f'where = {cls._toml_list(where)}\n'
+      f'include = {cls._toml_list(include)}\n'
+      'namespaces = true\n')
+
+  @staticmethod
+  def _create_venv(project_root: Path, venv_name: str = 'venv') -> None:
+    """
+      Create a real Python virtual environment for tests.
+
+      :param project_root: The project root directory
+      :param venv_name: The venv directory name
+      :return: None
+    """
+    subprocess.run(
+      [sys.executable, '-m', 'venv', venv_name],
+      cwd=project_root,
+      check=True)
+
+  @staticmethod
+  def _read_pyproject(project_root: Path) -> dict[str, Any]:
+    """
+      Read pyproject.toml from a project root.
+
+      :param project_root: The project root directory
+      :return: The parsed pyproject.toml data
+    """
+    with (project_root / 'pyproject.toml').open('rb') as pyproject:
+      data: dict[str, Any] = tomllib.load(pyproject)
+    return data
+
+  # pylint: disable-next=too-many-arguments,too-many-positional-arguments
+  def _validate_pyproject(
+    self,
+    project_root: Path,
+    project_name: str = 'sample-project',
+    project_description: str = 'Sample project',
+    package_name: str = 'sample_project',
+    project_version: str = '0.1.0',
+    dependencies: list[str] | None = None
+  ) -> None:
+    """
+      Verify that pyproject.toml contains the expected project data.
+
+      :param project_root: The project root directory
+      :param project_name: The expected project distribution name
+      :param project_description: The expected project description
+      :param package_name: The expected Python package name
+      :param project_version: The expected project version
+      :param dependencies: The expected project dependencies
+      :return: None
+    """
+    data = self._read_pyproject(project_root)
+    self.assertEqual(project_name, data['project']['name'])
+    self.assertEqual(project_version, data['project']['version'])
+    self.assertEqual(project_description, data['project']['description'])
+    self.assertEqual('README.md', data['project']['readme'])
+    self.assertEqual(
+      self._venv_python_requirement(project_root),
+      data['project']['requires-python'])
+    self.assertEqual(dependencies or [], data['project']['dependencies'])
+    self.assertEqual(
+      ['mypy', 'pylint', 'parameterized'],
+      data['project']['optional-dependencies']['dev'])
+    self.assertEqual(
+      ['src'],
+      data['tool']['setuptools']['packages']['find']['where'])
+    self.assertEqual(
+      [f'{package_name}*'],
+      data['tool']['setuptools']['packages']['find']['include'])
+
+  def test_run_creates_pyproject_when_missing(self) -> None:
+    """
+      Verify run creates pyproject.toml when it is missing.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      self._create_venv(project_root)
+      step = CreatePyProjectStep(
+        project_name='sample-project',
+        project_description='Sample project',
+        package_name='sample_project')
+
+      step.run(context)
+
+      self._validate_pyproject(project_root)
+
+  def test_run_creates_pyproject_with_packages_txt_dependencies(self) -> None:
+    """
+      Verify run copies packages.txt names into dependencies.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      self._create_venv(project_root)
+      (project_root / 'packages.txt').write_text(
+        '# third-party packages\n'
+        '\n'
+        'requests\n'
+        'rich\n',
+        encoding='utf-8')
+      step = CreatePyProjectStep(
+        'sample-project',
+        'Sample project',
+        'sample_project')
+
+      step.run(context)
+
+      self._validate_pyproject(
+        project_root,
+        dependencies=['requests', 'rich'])
+
+  def test_run_dry_run_does_not_create_pyproject(self) -> None:
+    """
+      Verify dry-run mode does not create pyproject.toml.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      self._create_venv(project_root)
+      step = CreatePyProjectStep(
+        'sample-project',
+        'Sample project',
+        'sample_project')
+
+      step.run(context, dry_run=True)
+
+      self.assertFalse((project_root / 'pyproject.toml').exists())
+
+  def test_run_rejects_missing_venv(self) -> None:
+    """
+      Verify run rejects a project with no local venv.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      step = CreatePyProjectStep(
+        'sample-project',
+        'Sample project',
+        'sample_project')
+
+      with self.assertRaises(DralithusProjectError):
+        step.run(context)
+
+  def test_run_rejects_venv_without_pyvenv_cfg(self) -> None:
+    """
+      Verify run rejects a venv without pyvenv.cfg.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      (project_root / 'venv').mkdir()
+      step = CreatePyProjectStep(
+        'sample-project',
+        'Sample project',
+        'sample_project')
+
+      with self.assertRaises(DralithusProjectError):
+        step.run(context)
+
+  def test_run_rejects_venv_without_version(self) -> None:
+    """
+      Verify run rejects a venv with no version metadata.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      venv_path = project_root / 'venv'
+      venv_path.mkdir()
+      (venv_path / 'pyvenv.cfg').write_text(
+        'home = /usr/bin\n',
+        encoding='utf-8')
+      step = CreatePyProjectStep(
+        'sample-project',
+        'Sample project',
+        'sample_project')
+
+      with self.assertRaises(DralithusProjectError):
+        step.run(context)
+
+  def test_run_leaves_valid_existing_pyproject_unchanged(self) -> None:
+    """
+      Verify run leaves a valid existing pyproject.toml unchanged.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      self._create_venv(project_root)
+      pyproject = project_root / 'pyproject.toml'
+      text = self._pyproject_text()
+      pyproject.write_text(text, encoding='utf-8')
+      step = CreatePyProjectStep(
+        'sample-project',
+        'Sample project',
+        'sample_project')
+
+      step.run(context)
+
+      self.assertEqual(text, pyproject.read_text(encoding='utf-8'))
+
+  def test_run_rejects_pyproject_directory(self) -> None:
+    """
+      Verify run rejects pyproject.toml when it is not a file.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      self._create_venv(project_root)
+      (project_root / 'pyproject.toml').mkdir()
+      step = CreatePyProjectStep(
+        'sample-project',
+        'Sample project',
+        'sample_project')
+
+      with self.assertRaises(DralithusProjectError):
+        step.run(context)
+
+  def test_run_rejects_invalid_toml(self) -> None:
+    """
+      Verify run rejects pyproject.toml with invalid TOML syntax.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      self._create_venv(project_root)
+      (project_root / 'pyproject.toml').write_text(
+        '[project\n',
+        encoding='utf-8')
+      step = CreatePyProjectStep(
+        'sample-project',
+        'Sample project',
+        'sample_project')
+
+      with self.assertRaises(DralithusProjectError):
+        step.run(context)
+
+  def test_run_rejects_missing_required_project_name(self) -> None:
+    """
+      Verify run rejects pyproject.toml missing project.name.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      self._create_venv(project_root)
+      text = self._pyproject_text().replace(
+        'name = "sample-project"\n',
+        '')
+      (project_root / 'pyproject.toml').write_text(text, encoding='utf-8')
+      step = CreatePyProjectStep(
+        'sample-project',
+        'Sample project',
+        'sample_project')
+
+      with self.assertRaises(DralithusProjectError):
+        step.run(context)
+
+  def test_run_rejects_project_name_mismatch(self) -> None:
+    """
+      Verify run rejects pyproject.toml with the wrong project name.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      self._create_venv(project_root)
+      text = self._pyproject_text(project_name='other-project')
+      (project_root / 'pyproject.toml').write_text(text, encoding='utf-8')
+      step = CreatePyProjectStep(
+        'sample-project',
+        'Sample project',
+        'sample_project')
+
+      with self.assertRaises(DralithusProjectError):
+        step.run(context)
+
+  def test_run_rejects_python_version_mismatch(self) -> None:
+    """
+      Verify run rejects pyproject.toml with the wrong Python version.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      self._create_venv(project_root)
+      text = self._pyproject_text(python_requirement='>=2.7')
+      (project_root / 'pyproject.toml').write_text(text, encoding='utf-8')
+      step = CreatePyProjectStep(
+        'sample-project',
+        'Sample project',
+        'sample_project')
+
+      with self.assertRaises(DralithusProjectError):
+        step.run(context)
+
+  def test_run_rejects_missing_standard_dev_dependency(self) -> None:
+    """
+      Verify run rejects pyproject.toml missing standard dev packages.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      self._create_venv(project_root)
+      text = self._pyproject_text(dev_dependencies=['mypy', 'pylint'])
+      (project_root / 'pyproject.toml').write_text(text, encoding='utf-8')
+      step = CreatePyProjectStep(
+        'sample-project',
+        'Sample project',
+        'sample_project')
+
+      with self.assertRaises(DralithusProjectError):
+        step.run(context)
+
+  def test_run_rejects_packages_txt_dependency_mismatch(self) -> None:
+    """
+      Verify run rejects dependencies out of sync with packages.txt.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      self._create_venv(project_root)
+      (project_root / 'packages.txt').write_text(
+        'requests\n',
+        encoding='utf-8')
+      text = self._pyproject_text(dependencies=[])
+      (project_root / 'pyproject.toml').write_text(text, encoding='utf-8')
+      step = CreatePyProjectStep(
+        'sample-project',
+        'Sample project',
+        'sample_project')
+
+      with self.assertRaises(DralithusProjectError):
+        step.run(context)
+
+  def test_run_rejects_package_find_where_mismatch(self) -> None:
+    """
+      Verify run rejects package discovery not rooted at src.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      self._create_venv(project_root)
+      text = self._pyproject_text(where=['.'])
+      (project_root / 'pyproject.toml').write_text(text, encoding='utf-8')
+      step = CreatePyProjectStep(
+        'sample-project',
+        'Sample project',
+        'sample_project')
+
+      with self.assertRaises(DralithusProjectError):
+        step.run(context)
+
+  def test_run_rejects_package_find_include_mismatch(self) -> None:
+    """
+      Verify run rejects package discovery with the wrong include.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      self._create_venv(project_root)
+      text = self._pyproject_text(include=['other_package*'])
+      (project_root / 'pyproject.toml').write_text(text, encoding='utf-8')
+      step = CreatePyProjectStep(
+        'sample-project',
+        'Sample project',
+        'sample_project')
+
+      with self.assertRaises(DralithusProjectError):
+        step.run(context)
+
+  def test_rollback_removes_pyproject_created_by_step(self) -> None:
+    """
+      Verify rollback removes pyproject.toml created by this step.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      self._create_venv(project_root)
+      step = CreatePyProjectStep(
+        'sample-project',
+        'Sample project',
+        'sample_project')
+
+      step.run(context)
+      step.rollback(context)
+
+      self.assertFalse((project_root / 'pyproject.toml').exists())
+
+  def test_rollback_removes_pyproject_after_multiple_runs(self) -> None:
+    """
+      Verify rollback removes pyproject.toml after multiple run calls.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      self._create_venv(project_root)
+      step = CreatePyProjectStep(
+        'sample-project',
+        'Sample project',
+        'sample_project')
+
+      step.run(context)
+      step.run(context)
+      step.rollback(context)
+
+      self.assertFalse((project_root / 'pyproject.toml').exists())
+
+  def test_rollback_does_not_remove_preexisting_pyproject(self) -> None:
+    """
+      Verify rollback leaves preexisting pyproject.toml in place.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      self._create_venv(project_root)
+      pyproject = project_root / 'pyproject.toml'
+      pyproject.write_text(self._pyproject_text(), encoding='utf-8')
+      step = CreatePyProjectStep(
+        'sample-project',
+        'Sample project',
+        'sample_project')
+
+      step.run(context)
+      step.rollback(context)
+
+      self.assertTrue(pyproject.is_file())
+
+  def test_rollback_dry_run_does_not_remove_pyproject(self) -> None:
+    """
+      Verify rollback dry-run leaves created pyproject.toml in place.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      self._create_venv(project_root)
+      step = CreatePyProjectStep(
+        'sample-project',
+        'Sample project',
+        'sample_project')
+
+      step.run(context)
+      step.rollback(context, dry_run=True)
+
+      self.assertTrue((project_root / 'pyproject.toml').is_file())
