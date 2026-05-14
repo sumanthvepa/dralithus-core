@@ -2,7 +2,7 @@ For the rest of this session, DO NOT make changes to, create or delete
 any file without my explicit approval.
 
 When creating python code you MUST follow the guidelines contained in
-prompts/code-style.md
+prompts/python-code-style.md
 
 When running unit tests, *always* follow the instructions in
 prompts/unittests.md.

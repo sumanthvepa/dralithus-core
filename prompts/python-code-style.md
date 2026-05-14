@@ -1,4 +1,4 @@
-# Coding Style Guidelines
+# Python Coding Style Guidelines
 
 When creating python code follow these style guidelines:
 
