@@ -25,3 +25,5 @@ DESCRIPTION
 A more extensive desciption of the commit if the one line summary
 above is not sufficient.
 
+Co-Authored-By: Name of co-author <co-author's email>
+

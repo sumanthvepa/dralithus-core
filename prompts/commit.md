@@ -57,6 +57,21 @@ commits when you create the commit message. Use plain language. Avoid
 jargon. DO NOT exceed 70 characters per line. The only exceptions are for
 the first line, and, long path names to files.
 
+If you (the AI agent generating this commit message) also co-authored
+the code being committed -- that is, you wrote or substantially modified
+the code that is staged for commit -- then add a Co-Authored-By trailer
+at the very end of the commit message, after the DESCRIPTION section
+and separated from it by a single blank line. Include identifying
+details about yourself in the trailer. For example, if you are Claude
+Opus 4.7, the trailer is:
+
+Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>
+
+If you only generated the commit message itself (without authoring or
+modifying the code being committed), do NOT add a Co-Authored-By
+trailer. The trailer credits authorship of the code, not of the
+commit message.
+
 Note: You must ONLY document changes to files staged for commit. Nothing
 else. If there are NO FILES staged for commite, then stop and print out
 a message saying that there are no file staged for commit.

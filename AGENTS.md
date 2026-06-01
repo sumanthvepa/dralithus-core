@@ -162,8 +162,6 @@ DESCRIPTION
   the `FILE(s)` and `DESCRIPTION` blocks are always present.
 - Subject and `DESCRIPTION` can be the same short sentence for
   trivial commits.
-- Do **not** append a `Co-Authored-By: Claude` trailer or other
-  Claude-Code boilerplate to commits in this repo.
 - When a project has its own commit-message prompt or template
   (e.g. `prompts/commit.prompt`, `commit.template`), prefer the
   project's own template over this summary.
