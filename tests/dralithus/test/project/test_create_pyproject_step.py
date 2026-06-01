@@ -20,6 +20,7 @@
 # along with this program.  If not, see
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
+# pylint: disable=duplicate-code
 from pathlib import Path
 import subprocess
 import sys
