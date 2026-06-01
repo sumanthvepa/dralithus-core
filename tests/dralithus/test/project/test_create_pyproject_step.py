@@ -20,18 +20,17 @@
 # along with this program.  If not, see
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
-# pylint: disable=duplicate-code
 from pathlib import Path
 import subprocess
 import sys
 from tempfile import TemporaryDirectory
-import tomllib
-from typing import Any
 import unittest
 
 from dralithus.project.context import ProjectContext
 from dralithus.project.create_pyproject_step import CreatePyProjectStep
 from dralithus.project.error import DralithusProjectError
+from dralithus.project.packages import Packages
+from dralithus.project.pyproject_toml import PyProjectToml
 
 
 class TestCreatePyProjectStep(unittest.TestCase):
@@ -73,17 +72,6 @@ class TestCreatePyProjectStep(unittest.TestCase):
       self.fail(f'Test venv version is not major.minor: {version}')
     return f'>={version_parts[0]}.{version_parts[1]}'
 
-  @staticmethod
-  def _toml_list(values: list[str]) -> str:
-    """
-      Format a list of strings as an inline TOML array.
-
-      :param values: The string values to format
-      :return: The TOML array text
-    """
-    quoted = [f'"{value}"' for value in values]
-    return f'[{", ".join(quoted)}]'
-
   @classmethod
   # pylint: disable-next=too-many-arguments,too-many-positional-arguments
   def _pyproject_text(
@@ -94,12 +82,15 @@ class TestCreatePyProjectStep(unittest.TestCase):
     project_version: str = '0.1.0',
     python_requirement: str | None = None,
     dependencies: list[str] | None = None,
-    dev_dependencies: list[str] | None = None,
-    where: list[str] | None = None,
-    include: list[str] | None = None
+    dev_dependencies: list[str] | None = None
   ) -> str:
     """
-      Return valid pyproject.toml text for tests.
+      Return pyproject.toml text for tests.
+
+      Renders by constructing a PyProjectToml and calling to_toml.
+      Use string replacement on the returned text for the rare
+      cases (missing fields, non-M42 invariants) that PyProjectToml
+      cannot express directly.
 
       :param project_name: The project distribution name
       :param project_description: The project description
@@ -108,38 +99,21 @@ class TestCreatePyProjectStep(unittest.TestCase):
       :param python_requirement: The requires-python value
       :param dependencies: The project dependencies
       :param dev_dependencies: The optional dev dependencies
-      :param where: The setuptools package search roots
-      :param include: The setuptools package include patterns
       :return: pyproject.toml text
     """
     requirement = python_requirement or cls._python_requirement()
-    dependencies = dependencies or []
-    dev_dependencies = dev_dependencies or [
-      'mypy',
-      'pylint',
-      'parameterized']
-    where = where or ['src']
-    include = include or [f'{package_name}*']
-    return (
-      '[build-system]\n'
-      'requires = ["setuptools>=69", "wheel"]\n'
-      'build-backend = "setuptools.build_meta"\n'
-      '\n'
-      '[project]\n'
-      f'name = "{project_name}"\n'
-      f'version = "{project_version}"\n'
-      f'description = "{project_description}"\n'
-      'readme = "README.md"\n'
-      f'requires-python = "{requirement}"\n'
-      f'dependencies = {cls._toml_list(dependencies)}\n'
-      '\n'
-      '[project.optional-dependencies]\n'
-      f'dev = {cls._toml_list(dev_dependencies)}\n'
-      '\n'
-      '[tool.setuptools.packages.find]\n'
-      f'where = {cls._toml_list(where)}\n'
-      f'include = {cls._toml_list(include)}\n'
-      'namespaces = true\n')
+    if dependencies is None:
+      dependencies = []
+    if dev_dependencies is None:
+      dev_dependencies = ['mypy', 'pylint', 'parameterized']
+    pyproject = PyProjectToml(
+      name=project_name,
+      description=project_description,
+      package_name=package_name,
+      python_requirement=requirement,
+      packages=Packages(dependencies, dev_dependencies),
+      version=project_version)
+    return pyproject.to_toml()
 
   @staticmethod
   def _create_venv(project_root: Path, venv_name: str = 'venv') -> None:
@@ -155,18 +129,6 @@ class TestCreatePyProjectStep(unittest.TestCase):
       cwd=project_root,
       check=True)
 
-  @staticmethod
-  def _read_pyproject(project_root: Path) -> dict[str, Any]:
-    """
-      Read pyproject.toml from a project root.
-
-      :param project_root: The project root directory
-      :return: The parsed pyproject.toml data
-    """
-    with (project_root / 'pyproject.toml').open('rb') as pyproject:
-      data: dict[str, Any] = tomllib.load(pyproject)
-    return data
-
   # pylint: disable-next=too-many-arguments,too-many-positional-arguments
   def _validate_pyproject(
     self,
@@ -178,7 +140,10 @@ class TestCreatePyProjectStep(unittest.TestCase):
     dependencies: list[str] | None = None
   ) -> None:
     """
-      Verify that pyproject.toml contains the expected project data.
+      Verify that the on-disk pyproject.toml matches expectations.
+
+      Loads the file via PyProjectToml.from_file and delegates the
+      field comparison to PyProjectToml.matches.
 
       :param project_root: The project root directory
       :param project_name: The expected project distribution name
@@ -188,24 +153,16 @@ class TestCreatePyProjectStep(unittest.TestCase):
       :param dependencies: The expected project dependencies
       :return: None
     """
-    data = self._read_pyproject(project_root)
-    self.assertEqual(project_name, data['project']['name'])
-    self.assertEqual(project_version, data['project']['version'])
-    self.assertEqual(project_description, data['project']['description'])
-    self.assertEqual('README.md', data['project']['readme'])
-    self.assertEqual(
-      self._venv_python_requirement(project_root),
-      data['project']['requires-python'])
-    self.assertEqual(dependencies or [], data['project']['dependencies'])
-    self.assertEqual(
-      ['mypy', 'pylint', 'parameterized'],
-      data['project']['optional-dependencies']['dev'])
-    self.assertEqual(
-      ['src'],
-      data['tool']['setuptools']['packages']['find']['where'])
-    self.assertEqual(
-      [f'{package_name}*'],
-      data['tool']['setuptools']['packages']['find']['include'])
+    expected = PyProjectToml(
+      name=project_name,
+      description=project_description,
+      package_name=package_name,
+      python_requirement=self._venv_python_requirement(project_root),
+      packages=Packages(
+        dependencies or [], ['mypy', 'pylint', 'parameterized']),
+      version=project_version)
+    actual = PyProjectToml.from_file(project_root / 'pyproject.toml')
+    actual.matches(expected)
 
   def test_run_creates_pyproject_when_missing(self) -> None:
     """
@@ -506,7 +463,9 @@ class TestCreatePyProjectStep(unittest.TestCase):
       project_root = Path(temp_directory)
       context = ProjectContext(project_root=project_root)
       self._create_venv(project_root)
-      text = self._pyproject_text(where=['.'])
+      text = self._pyproject_text().replace(
+        'where = ["src"]',
+        'where = ["."]')
       (project_root / 'pyproject.toml').write_text(text, encoding='utf-8')
       step = CreatePyProjectStep(
         'sample-project',
@@ -526,7 +485,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
       project_root = Path(temp_directory)
       context = ProjectContext(project_root=project_root)
       self._create_venv(project_root)
-      text = self._pyproject_text(include=['other_package*'])
+      text = self._pyproject_text(package_name='other_package')
       (project_root / 'pyproject.toml').write_text(text, encoding='utf-8')
       step = CreatePyProjectStep(
         'sample-project',
