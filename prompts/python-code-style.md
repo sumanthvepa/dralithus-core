@@ -28,6 +28,45 @@ ALWAYS use type annotations for functions and  methods. Here is an example:
 Notice that in the code above, both the parameters to the function and
 the return value have types provided.
 
+## Return Statements
+
+Prefer a single return at the end of a function. Restructure with
+`if`/`elif`/`else` chains so the function falls through to one
+terminal return (or, for functions returning `None`, simply falls
+off the end) rather than using mid-function `return`s to
+short-circuit.
+
+Mid-function returns are acceptable only when restructuring would
+obscure the logic.
+
+For example, prefer:
+
+```python
+  def example(value: int, dry_run: bool) -> None:
+    """
+      Handle the value or record what would be done.
+    """
+    if value < 0:
+      handle_negative()
+    elif not dry_run:
+      handle_positive(value)
+```
+
+over:
+
+```python
+  def example(value: int, dry_run: bool) -> None:
+    """
+      Handle the value or record what would be done.
+    """
+    if value < 0:
+      handle_negative()
+      return
+    if dry_run:
+      return
+    handle_positive(value)
+```
+
 ## Docstrings
 
 ALWAYS add docstrings to every module class and function/method 

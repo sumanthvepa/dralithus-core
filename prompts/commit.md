@@ -46,7 +46,7 @@ projects/dralithus/src/dralithus/__init__.py
 
 
 As another example, if the prefix file is empty, then the FILE() section
-should conain the same output as status.txt. i.e:
+should conain the same output as git status i.e:
 
 TODO.txt
 src/dralithus/__init__.py
