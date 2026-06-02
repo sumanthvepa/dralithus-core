@@ -12,6 +12,11 @@ Sumanth's own development and operations processes** and let him
 **treat infrastructure as code**. It is not yet a generic devops tool
 aimed at a broad audience, although that is the ultimate aim.
 
+For the broader long-term vision, see `vision.md`. In short, dralithus
+is intended to become Milestone 42's "IT department in a box": a
+personal-first system for managing machines, VMs, containers, projects,
+workspaces, configuration, CI, deployment, and rollback.
+
 - Optimize design decisions for *his* workflow first, not generic
   best practices.
 - The existing code on `main` (Release 0 — print command-line
