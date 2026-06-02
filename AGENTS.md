@@ -53,14 +53,14 @@ Implications for an agent:
 
 ## Python baseline
 
-Milestone 42 has standardized on **Python 3.13** as the baseline.
+Milestone 42 has standardized on **Python 3.14** as the baseline.
 
-- In `pyproject.toml`, default to `requires-python = ">=3.13"` for
+- In `pyproject.toml`, default to `requires-python = ">=3.14"` for
   new projects without asking.
-- Use 3.13-only language features (PEP 695 generic syntax, improved
+- Use 3.14-only language features (PEP 695 generic syntax, improved
   `typing` features) without preemptively writing back-compat shims.
 - If a third-party dependency only supports older Python versions,
-  flag it as a problem rather than dropping the 3.13 floor.
+  flag it as a problem rather than dropping the 3.14 floor.
 - The floor may be raised over time but should not be lowered without
   an explicit instruction.
 
@@ -129,42 +129,6 @@ without re-asking.
   develop → main, main → develop — must produce a merge commit.
   Never fast-forward. Never propose rebasing a feature onto
   `develop` as a substitute for a merge.
-
-## Commit message style
-
-The user follows a structured format across **all** his projects.
-Match it.
-
-```
-<issue-slug-or-[none]>: <short subject>
-
-FEATURE(s):
-<issue-slug>:
-  <description, typically copied from TODO.txt, indented 2 spaces, wrapped>
-
-FILE(s)
-[<status>]<path>[: optional short note]
-[<status>]<path>
-...
-
-DESCRIPTION
-<longer prose description>
-```
-
-- `<issue-slug>` is the issue identifier used elsewhere in the
-  project (e.g. `issue002-release0-print-command-line-parameters`).
-  When the commit is not associated with an issue, use the literal
-  token `[none]` as the prefix.
-- `<status>` in the `FILE(s)` block is one of `new`, `modified`,
-  `deleted`, `renamed`, `typechange` (lowercase, in square brackets,
-  no space before the path).
-- The `FEATURE(s):` block can be omitted for `[none]` commits, but
-  the `FILE(s)` and `DESCRIPTION` blocks are always present.
-- Subject and `DESCRIPTION` can be the same short sentence for
-  trivial commits.
-- When a project has its own commit-message prompt or template
-  (e.g. `prompts/commit.md`, `commit.template`), prefer the
-  project's own template over this summary.
 
 ## Project-specific prompts
 
