@@ -64,6 +64,18 @@ Milestone 42 has standardized on **Python 3.14** as the baseline.
 - The floor may be raised over time but should not be lowered without
   an explicit instruction.
 
+## Development process
+
+Use test-driven development for feature implementation and behavior
+changes. Start by creating the smallest useful skeleton for the new
+behavior, with unimplemented methods raising `NotImplementedError`
+where appropriate. Then write and run red tests that fail for the
+expected reason, implement the behavior to make those tests pass,
+and refactor only after the tests are green.
+
+Follow `prompts/tdd.md` for the detailed process and
+`prompts/unittests.md` for the exact unit-test commands.
+
 ## Package management
 
 The user maintains a **global, standalone** Python package manager
@@ -142,6 +154,8 @@ specialize the guidance here. Read them when relevant:
   messages, including how to use `prefix.txt` and `commit.template`.
 - `prompts/todo.md` — rules for adding, activating, and
   completing entries in `TODO.txt`.
+- `prompts/tdd.md` — test-driven development process for feature
+  implementation and behavior changes.
 - `prompts/unittests.md` — how unit tests must be run.
 
 When a prompt file contradicts this AGENTS.md, the prompt file wins.
