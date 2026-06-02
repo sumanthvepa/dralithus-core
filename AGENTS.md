@@ -163,7 +163,7 @@ DESCRIPTION
 - Subject and `DESCRIPTION` can be the same short sentence for
   trivial commits.
 - When a project has its own commit-message prompt or template
-  (e.g. `prompts/commit.prompt`, `commit.template`), prefer the
+  (e.g. `prompts/commit.md`, `commit.template`), prefer the
   project's own template over this summary.
 
 ## Project-specific prompts
@@ -171,13 +171,13 @@ DESCRIPTION
 This repo contains prompt files under `prompts/` that override or
 specialize the guidance here. Read them when relevant:
 
-- `prompts/session.prompt` — session-level rules
+- `prompts/session.md` — session-level rules
   (e.g. no file changes without explicit approval; assistant has no
   authority to commit or stage).
-- `prompts/commit.prompt` — exact procedure for generating commit
+- `prompts/commit.md` — exact procedure for generating commit
   messages, including how to use `prefix.txt` and `commit.template`.
-- `prompts/todo.prompt` — rules for adding, activating, and
+- `prompts/todo.md` — rules for adding, activating, and
   completing entries in `TODO.txt`.
-- `prompts/unittests.prompt` — how unit tests must be run.
+- `prompts/unittests.md` — how unit tests must be run.
 
 When a prompt file contradicts this AGENTS.md, the prompt file wins.
