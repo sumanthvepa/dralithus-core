@@ -81,6 +81,7 @@ def parse_correct_cases() -> list[tuple[str, CaseData]]:
             case_number += 1
   return cases
 
+
 def parse_incorrect_cases() -> list[tuple[str, CaseData]]:
   """
     Test cases for the CommandLine class that are expected to fail

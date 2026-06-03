@@ -18,14 +18,12 @@ class TestOptionTerminator(unittest.TestCase):
     terminator = OptionTerminator()
     self.assertEqual(None, terminator.value)
 
-
   def test_is_option(self) -> None:
     """
       Test the is_option method.
     """
     self.assertTrue(OptionTerminator.is_option('--', None))
     self.assertFalse(OptionTerminator.is_option('-h', None))
-
 
   def test_make(self) -> None:
     """
