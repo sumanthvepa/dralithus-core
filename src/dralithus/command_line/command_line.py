@@ -32,13 +32,14 @@ class CommandLine:
     The CommandLine class takes a list of command line arguments,
     parses them, and provides methods to access the parsed arguments.
   """
-  # pylint: disable=too-many-arguments, too-many-positional-arguments
-  def __init__(self,
-      program: str,
-      command_name: str | None,
-      global_options: Options,
-      command_options: Options,
-      parameters: set[str]) -> None:
+  # pylint: disable-next=too-many-arguments, too-many-positional-arguments
+  def __init__(
+        self,
+        program: str,
+        command_name: str | None,
+        global_options: Options,
+        command_options: Options,
+        parameters: set[str]) -> None:
     """
       Initialize the command line with arguments
 
@@ -123,6 +124,7 @@ class CommandLine:
     """
     return _make_verbosity(self.global_options, self.command_options)
 
+
 def _parse_program(args: list[str]) -> tuple[str, int]:
   """
     Parse the program name from the command line arguments.
@@ -133,6 +135,7 @@ def _parse_program(args: list[str]) -> tuple[str, int]:
   """
   assert len(args) > 0, "args must contain at least one argument (the name of the program)"
   return args[0], 1
+
 
 def _parse_global_options(args: list[str], index: int) -> tuple[Options, int, bool]:
   """
@@ -187,6 +190,7 @@ def _parse_parameters(args: list[str], index: int) -> set[str]:
   """
   return set(args[index:]) if index < len(args) else set()
 
+
 def _make_verbosity(global_options: Options | None, command_options: Options | None) -> int:
   """
     Calculate the verbosity level from global and command options.
@@ -220,12 +224,12 @@ def parse(args: list[str]) -> CommandLine:
   try:
     global_options, index, found_terminator = _parse_global_options(args, index)
     command_name, index \
-      = _parse_command_name(args, index) if not found_terminator else (None, index)
+        = _parse_command_name(args, index) if not found_terminator else (None, index)
     command_options, index \
-      = _parse_command_options(args, index) if not found_terminator else (Options([]), index)
+        = _parse_command_options(args, index) if not found_terminator else (Options([]), index)
     parameters = _parse_parameters(args, index)
     return CommandLine(program, command_name, global_options, command_options, parameters)
   except ValueError as ex:
     verbosity = _make_verbosity(global_options, command_options)
     raise CommandLineError(program, command_name, verbosity,
-      f'Invalid command line arguments: {ex}') from ex
+          f'Invalid command line arguments: {ex}') from ex

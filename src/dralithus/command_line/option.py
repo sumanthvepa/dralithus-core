@@ -32,7 +32,7 @@ class Option(ABC):
     """
     # split the argument into flag and value parts
     flag_value: list[str] = arg.split('=', 1)
-    if len(flag_value) > 1: # there is a value specified with an equal
+    if len(flag_value) > 1:  # there is a value specified with an equal
       # Remove the leading '-' from the flag before returning it along
       # with the value.
       return flag_value[0].lstrip('-'), flag_value[1]
@@ -63,9 +63,11 @@ class Option(ABC):
 
       :param current_arg: The current argument string
       :param next_arg: The next argument string
-      :return: A tuple containing the flag string that was used to
-      create the option, the value of the option, if present (on None if
-        not) and a boolean indicating whether to skip the next argument
+      :return: A tuple containing the following:
+        1. The flag string that was used to create the option,
+        2. the value of the option, if present, or None if
+        not, and
+        3. a boolean indicating whether to skip the next argument
     """
     flag, str_value = Option._split_flag_value(current_arg)
     if str_value is not None:
@@ -105,7 +107,6 @@ class Option(ABC):
     """
     return ['h', 'v', 'e']
 
-
   @classmethod
   @abstractmethod
   def supported_long_flags(cls) -> list[str]:
@@ -144,9 +145,9 @@ class Option(ABC):
     """
     raise NotImplementedError('Option.flag is an abstract property')
 
-  # pylint: disable=line-too-long
   # Note that the order of the decorators is important. The @abstractmethod
   # must be the innermost decorator.
+  # pylint: disable-next=line-too-long
   # See: https://stackoverflow.com/questions/72736760/making-abstract-property-in-python-3-results-in-attributeerror
   @property
   @abstractmethod
@@ -188,11 +189,11 @@ class Option(ABC):
       :return: True if the argument can be represented by this class
     """
     return arg == '--' \
-      or (cls.flag_with_value.match(arg) is not None) \
-      or (cls.flag_with_equal_value.match(arg) is not None) \
-      or (cls.multi_option.match(arg) is not None) \
-      or cls.double_hyphen_option.match(arg) is not None \
-      or cls.double_hyphen_option_with_value.match(arg) is not None
+        or (cls.flag_with_value.match(arg) is not None) \
+        or (cls.flag_with_equal_value.match(arg) is not None) \
+        or (cls.multi_option.match(arg) is not None) \
+        or cls.double_hyphen_option.match(arg) is not None \
+        or cls.double_hyphen_option_with_value.match(arg) is not None
 
   @classmethod
   def is_valid_value_type(cls, str_value: str) -> bool:

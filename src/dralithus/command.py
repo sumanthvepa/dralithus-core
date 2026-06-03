@@ -108,7 +108,7 @@ def make(args: list[str]) -> Command:
     :return: The command object
   """
   # We import the command modules here to avoid circular imports.
-  # pylint: disable=import-outside-toplevel
+  # pylint: disable-next=import-outside-toplevel
   from dralithus.help_command import (
     make_from_command_line as make_help_from_command_line,
     make_from_error as make_help_from_error)
