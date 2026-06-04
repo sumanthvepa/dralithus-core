@@ -630,6 +630,6 @@ redefining-builtins-modules=six.moves,past.builtins,future.builtins,builtins,io
 
 [MASTER]
 # This init hook line was needed in earlier versions of pylint to specify
-# paths. This ha been superceeded by source-roots. 
+# paths. This ha been superseded by source-roots.
 #init-hook='import os, sys; sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, os.pardir, os.pardir, os.pardir, os.pardir, "src"))); sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, os.pardir, os.pardir, os.pardir, os.pardir, "tests")))'
 
