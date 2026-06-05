@@ -25,14 +25,16 @@ dralithus/test/__init__.py: Helper classes and functions for unit tests
 # -------------------------------------------------------------------
 from typing import Any, Callable, Protocol
 
+
 class CaseData:
   """
     A test case for dralithus
   """
-  def __init__(self,
-      args: Any,
-      expected: Any,
-      error: type[Exception] | None):
+  def __init__(
+        self,
+        args: Any,
+        expected: Any,
+        error: type[Exception] | None):
     """
       Initialize the test case.
 
@@ -40,9 +42,10 @@ class CaseData:
       :param expected: The expected output of the test case
       :param error: The expected error of the test case
     """
-    assert ((expected is not None) and (error is None)) \
-           or ((expected is None) and (error is not None)), \
-      'If expected is set, then error must be none, and vice versa.'
+    assert (
+      ((expected is not None) and (error is None)) or
+      ((expected is None) and (error is not None))
+    ), 'If expected is set, then error must be none, and vice versa.'
     self._args = args
     self._expected = expected
     self._error = error
@@ -84,7 +87,8 @@ class RequiresAsserts(Protocol):
 
   # pylint: disable=invalid-name
   # noinspection PyPep8Naming
-  def assertRaises(self,
+  def assertRaises(
+    self,
     expected_exception:  type[BaseException] | tuple[type[BaseException], ...],
     *args: Any,
     **kwargs: Any) -> Any:
@@ -112,6 +116,9 @@ class CaseExecutor(RequiresAsserts):
       self.assertEqual(case.expected, self.function(case.args))
     else:
       assert case.error is not None
+      # IntelliJ IDEA's type checker is not smart enough to
+      # figure out that case.error cannot be None at this point.
+      # noinspection PyTypeChecker
       with self.assertRaises(case.error):
         self.function(case.args)
 
@@ -148,5 +155,8 @@ class CaseExecutor2(RequiresAsserts):
       self.assertEqual(expected, actual, f'Expected {expected} but got {actual}')
     else:
       assert case.error is not None
+      # IntelliJ IDEA's type checker is not smart enough to figure out
+      # that case.error cannot be None at this point.
+      # noinspection PyTypeChecker
       with self.assertRaises(case.error):
         function(case.args)
