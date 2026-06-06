@@ -1,4 +1,5 @@
-*issue006-release1-fix-style-issue: Fix minor style isssues in some dralithus.command_line test suite files
+*issue007-dralithus-test-cleanup: Remove unused CaseExecutor class
+issue006-release1-fix-style-issue: Fix minor style isssues in some dralithus.command_line test suite files
 issue005-release1-new-project-python: Implement a new project command to create a new python project
 [CANCELLED]issue004-release1-deploy-sample: Generate deployment commands, that if executed will create/update the sample application in the local environment. Note: Learned even more about how I want to build the project. And I've changed te goals a little bit.
 [DONE]issue003-release0-gpl-copyleft-notice: Add GPL copyleft notice to all source files
