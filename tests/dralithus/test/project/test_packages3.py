@@ -22,264 +22,229 @@
 # -------------------------------------------------------------------
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from typing import NamedTuple
 import unittest
+
+from parameterized import parameterized
 
 from dralithus.project.error import DralithusProjectError
 from dralithus.project.packages3 import Packages3
+from dralithus.test import CaseData, CaseExecutor
 
 
-class TestPackages3(unittest.TestCase):
+class Packages3CaseArgs(NamedTuple):
+  """
+    Hold packages3 artifact contents for a test case.
+  """
+  packages_txt: str | None
+  local_packages_txt: str | None
+
+
+class Packages3Expected(NamedTuple):
+  """
+    Hold the expected Packages3 dependency lists.
+  """
+  production_dependencies: list[str]
+  dev_dependencies: list[str]
+  local_dependencies: list[str]
+
+
+def error_cases() -> list[tuple[str, CaseData]]:
+  """
+    Return packages3 error cases.
+
+    :return: The error cases
+  """
+  return [
+    (
+      'missing_packages_txt',
+      CaseData(
+        args=Packages3CaseArgs(
+          packages_txt=None,
+          local_packages_txt=None),
+        expected=None,
+        error=DralithusProjectError)),
+  ]
+
+
+def basic_cases() -> list[tuple[str, CaseData]]:
+  """
+    Return basic packages3 artifact cases.
+
+    :return: The basic packages3 cases
+  """
+  return [
+    (
+      'empty_packages_no_local_packages',
+      CaseData(
+        args=Packages3CaseArgs(
+          packages_txt='',
+          local_packages_txt=None),
+        expected=Packages3Expected(
+          production_dependencies=[],
+          dev_dependencies=['mypy', 'pylint', 'parameterized'],
+          local_dependencies=[]),
+        error=None)),
+    (
+      'production_and_local_dependencies',
+      CaseData(
+        args=Packages3CaseArgs(
+          packages_txt='requests\nrich\n',
+          local_packages_txt='../common-lib\n../tools-lib\n'),
+        expected=Packages3Expected(
+          production_dependencies=['requests', 'rich'],
+          dev_dependencies=['mypy', 'pylint', 'parameterized'],
+          local_dependencies=['../common-lib', '../tools-lib']),
+        error=None)),
+  ]
+
+
+def comment_and_whitespace_cases() -> list[tuple[str, CaseData]]:
+  """
+    Return packages3 comment and whitespace cases.
+
+    :return: The comment and whitespace cases
+  """
+  return [
+    (
+      'packages_txt_comments_and_whitespace',
+      CaseData(
+        args=Packages3CaseArgs(
+          packages_txt='# third-party packages\n'
+          '\n'
+          'requests  # HTTP client\n'
+          '  rich  \n'
+          '  # display library\n',
+          local_packages_txt=None),
+        expected=Packages3Expected(
+          production_dependencies=['requests', 'rich'],
+          dev_dependencies=['mypy', 'pylint', 'parameterized'],
+          local_dependencies=[]),
+        error=None)),
+    (
+      'local_packages_txt_comments_and_whitespace',
+      CaseData(
+        args=Packages3CaseArgs(
+          packages_txt='',
+          local_packages_txt='# local packages\n'
+          '\n'
+          '../common-lib  # shared library\n'
+          '  ../tools-lib  \n'),
+        expected=Packages3Expected(
+          production_dependencies=[],
+          dev_dependencies=['mypy', 'pylint', 'parameterized'],
+          local_dependencies=['../common-lib', '../tools-lib']),
+        error=None)),
+  ]
+
+
+def dev_marker_cases() -> list[tuple[str, CaseData]]:
+  """
+    Return packages3 development marker cases.
+
+    :return: The development marker cases
+  """
+  return [
+    (
+      'packages_txt_dev_marker',
+      CaseData(
+        args=Packages3CaseArgs(
+          packages_txt='requests\npytest [dev]\nrich\n',
+          local_packages_txt=None),
+        expected=Packages3Expected(
+          production_dependencies=['requests', 'rich'],
+          dev_dependencies=[
+            'mypy', 'pylint', 'parameterized', 'pytest'],
+          local_dependencies=[]),
+        error=None)),
+    (
+      'local_packages_txt_dev_marker',
+      CaseData(
+        args=Packages3CaseArgs(
+          packages_txt='',
+          local_packages_txt=(
+            '../common-lib\n../test-lib [dev]\n../tools-lib\n')),
+        expected=Packages3Expected(
+          production_dependencies=[],
+          dev_dependencies=[
+            'mypy', 'pylint', 'parameterized', '../test-lib'],
+          local_dependencies=['../common-lib', '../tools-lib']),
+        error=None)),
+  ]
+
+
+def execute_packages3_case(args: Packages3CaseArgs) -> Packages3Expected:
+  """
+    Execute a packages3 artifact case.
+
+    :param args: The packages3 artifact contents
+    :return: The dependency lists read from the artifacts
+  """
+  with TemporaryDirectory() as temp_directory:
+    project_root = Path(temp_directory)
+    if args.packages_txt is not None:
+      (project_root / 'packages.txt').write_text(
+        args.packages_txt, encoding='utf-8')
+    if args.local_packages_txt is not None:
+      (project_root / 'local-packages.txt').write_text(
+        args.local_packages_txt, encoding='utf-8')
+    packages = Packages3.from_project_root(project_root)
+    result = Packages3Expected(
+      packages.production_dependencies,
+      packages.dev_dependencies,
+      packages.local_dependencies)
+  return result
+
+
+class TestPackages3(unittest.TestCase, CaseExecutor):
   """
     Unit tests for the Packages3 class.
   """
 
-  @staticmethod
-  def _write_packages_txt(project_root: Path, text: str) -> None:
+  @parameterized.expand(error_cases())
+  def test_error_cases(self, _name: str, case: CaseData) -> None:
     """
-      Write packages.txt in the test project root.
+      Verify packages3 raises on malformed or missing artifacts.
 
-      :param project_root: The test project root directory
-      :param text: The file text
+      :param _name: The test case name
+      :param case: The test case
       :return: None
     """
-    (project_root / 'packages.txt').write_text(
-      text, encoding='utf-8')
+    self.execute(execute_packages3_case, case)
 
-  @staticmethod
-  def _write_local_packages_txt(project_root: Path, text: str) -> None:
+  @parameterized.expand(basic_cases())
+  def test_basic_cases(self, _name: str, case: CaseData) -> None:
     """
-      Write local-packages.txt in the test project root.
+      Verify basic packages3 artifact behavior.
 
-      :param project_root: The test project root directory
-      :param text: The file text
+      :param _name: The test case name
+      :param case: The test case
       :return: None
     """
-    (project_root / 'local-packages.txt').write_text(
-      text, encoding='utf-8')
+    self.execute(execute_packages3_case, case)
 
-  def test_empty_project_root_raises_error(self) -> None:
-    """
-      Verify from_project_root raises if packages.txt is missing.
-
-      :return: None
-    """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-
-      with self.assertRaises(DralithusProjectError) as context:
-        Packages3.from_project_root(project_root)
-
-      self.assertEqual(
-        str(context.exception),
-        'No packages.txt file found in project root')
-
-  def test_project_root_returns_packages3(self) -> None:
-    """
-      Verify from_project_root reads the packages3 artifacts.
-
-      :return: None
-    """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      self._write_packages_txt(
-        project_root,
-        'requests\n'
-        'rich\n')
-      self._write_local_packages_txt(
-        project_root,
-        '../common-lib\n'
-        '../tools-lib\n')
-
-      packages = Packages3.from_project_root(project_root)
-
-      self.assertEqual(
-        packages.production_dependencies,
-        ['requests', 'rich'])
-      self.assertEqual(
-        packages.dev_dependencies,
-        ['mypy', 'pylint', 'parameterized'])
-      self.assertEqual(
-        packages.local_dependencies,
-        ['../common-lib', '../tools-lib'])
-
-  def test_production_dependencies_reads_packages_txt(self) -> None:
-    """
-      Verify production_dependencies reads packages.txt.
-
-      :return: None
-    """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      self._write_packages_txt(
-        project_root,
-        '# third-party packages\n'
-        '\n'
-        'requests\n'
-        'rich\n')
-
-      packages = Packages3.from_project_root(project_root)
-
-      self.assertEqual(
-        packages.production_dependencies,
-        ['requests', 'rich'])
-
-  def test_production_dependencies_ignores_comments(self) -> None:
-    """
-      Verify production_dependencies ignores blank and comment text.
-
-      :return: None
-    """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      self._write_packages_txt(
-        project_root,
-        '# third-party packages\n'
-        '\n'
-        'requests  # HTTP client\n'
-        '  rich  \n'
-        '  # display library\n')
-
-      packages = Packages3.from_project_root(project_root)
-
-      self.assertEqual(
-        packages.production_dependencies,
-        ['requests', 'rich'])
-
-  def test_local_dependencies_reads_local_packages_txt(self) -> None:
-    """
-      Verify local_dependencies reads local-packages.txt.
-
-      :return: None
-    """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      self._write_packages_txt(project_root, '')
-      self._write_local_packages_txt(
-        project_root,
-        '../common-lib\n'
-        '../tools-lib\n')
-
-      packages = Packages3.from_project_root(project_root)
-
-      self.assertEqual(
-        packages.local_dependencies,
-        ['../common-lib', '../tools-lib'])
-
-  def test_local_dependencies_ignores_comments(self) -> None:
-    """
-      Verify local_dependencies ignores blank and comment text.
-
-      :return: None
-    """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      self._write_packages_txt(project_root, '')
-      self._write_local_packages_txt(
-        project_root,
-        '# local packages\n'
-        '\n'
-        '../common-lib  # shared library\n'
-        '  ../tools-lib  \n')
-
-      packages = Packages3.from_project_root(project_root)
-
-      self.assertEqual(
-        packages.local_dependencies,
-        ['../common-lib', '../tools-lib'])
-
-  def test_local_dependencies_missing_file_is_empty(self) -> None:
-    """
-      Verify missing local-packages.txt means no local dependencies.
-
-      :return: None
-    """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      self._write_packages_txt(project_root, '')
-
-      packages = Packages3.from_project_root(project_root)
-
-      self.assertEqual(packages.local_dependencies, [])
-
-  def test_empty_packages_txt_and_no_local_packages_txt(self) -> None:
-    """
-      Verify an empty packages.txt and no local-packages.txt.
-
-      :return: None
-    """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      self._write_packages_txt(project_root, '')
-
-      packages = Packages3.from_project_root(project_root)
-
-      self.assertEqual(packages.production_dependencies, [])
-      self.assertEqual(
-        packages.dev_dependencies,
-        ['mypy', 'pylint', 'parameterized'])
-      self.assertEqual(packages.local_dependencies, [])
-
-  def test_packages_txt_dev_marker_adds_dev_dependencies(self) -> None:
-    """
-      Verify packages.txt dependencies marked [dev] are dev deps.
-
-      :return: None
-    """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      self._write_packages_txt(
-        project_root,
-        'requests\n'
-        'pytest [dev]\n'
-        'rich\n')
-
-      packages = Packages3.from_project_root(project_root)
-
-      self.assertEqual(
-        packages.production_dependencies,
-        ['requests', 'rich'])
-      self.assertEqual(
-        packages.dev_dependencies,
-        ['mypy', 'pylint', 'parameterized', 'pytest'])
-
-  def test_local_packages_txt_dev_marker_adds_dev_dependencies(
-    self
+  @parameterized.expand(comment_and_whitespace_cases())
+  def test_comment_and_whitespace_cases(
+    self,
+    _name: str,
+    case: CaseData
   ) -> None:
     """
-      Verify local-packages.txt dependencies marked [dev] are dev deps.
+      Verify comments and whitespace are ignored.
 
+      :param _name: The test case name
+      :param case: The test case
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      self._write_packages_txt(project_root, '')
-      self._write_local_packages_txt(
-        project_root,
-        '../common-lib\n'
-        '../test-lib [dev]\n'
-        '../tools-lib\n')
+    self.execute(execute_packages3_case, case)
 
-      packages = Packages3.from_project_root(project_root)
-
-      self.assertEqual(
-        packages.local_dependencies,
-        ['../common-lib', '../tools-lib'])
-      self.assertEqual(
-        packages.dev_dependencies,
-        ['mypy', 'pylint', 'parameterized', '../test-lib'])
-
-  def test_dev_dependencies_returns_implicit_dependencies(self) -> None:
+  @parameterized.expand(dev_marker_cases())
+  def test_dev_marker_cases(self, _name: str, case: CaseData) -> None:
     """
-      Verify dev_dependencies returns the packages3 implicit baseline.
+      Verify dependencies marked [dev] become dev dependencies.
 
+      :param _name: The test case name
+      :param case: The test case
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      self._write_packages_txt(project_root, '')
-
-      packages = Packages3.from_project_root(project_root)
-
-      self.assertEqual(
-        packages.dev_dependencies,
-        ['mypy', 'pylint', 'parameterized'])
+    self.execute(execute_packages3_case, case)
