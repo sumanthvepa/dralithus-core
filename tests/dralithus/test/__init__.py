@@ -79,7 +79,7 @@ class CaseData:
 
 
 class RequiresAsserts(Protocol):
-  """ Protocol for objects requiring assert methods used by CaseExecutor2. """
+  """ Protocol for objects requiring assert methods used by CaseExecutor. """
   # pylint: disable=invalid-name
   # noinspection PyPep8Naming
   def assertEqual(self, first: Any, second: Any, msg: str | None = None) -> None:
