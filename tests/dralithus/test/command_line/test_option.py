@@ -78,8 +78,8 @@ def type_of_cases() -> list[tuple[str, CaseData]]:
   """
   # Note that Option.type_of() is expected to return None if the
   # argument is not an option. However, expected=None indicates to the
-  # CaseExecutor framework that an error (i.e. an exception) is expected.
-  # To overcome this, the CaseExecutor framework will interpret a list
+  # CaseExecutor2 framework that an error (i.e. an exception) is expected.
+  # To overcome this, the CaseExecutor2 framework will interpret a list
   # with a single None element as an expected value of None.
   # So when a None value is expected, the test case should pass a list
   # with a single None element, i.e. [None].
