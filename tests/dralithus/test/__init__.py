@@ -95,7 +95,7 @@ class RequiresAsserts(Protocol):
     """ Assert that an exception is raised. """
 
 
-class CaseExecutor2(RequiresAsserts):
+class CaseExecutor(RequiresAsserts):
   """
     A class to execute test cases.
   """

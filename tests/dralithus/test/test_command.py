@@ -28,7 +28,7 @@ from parameterized import parameterized
 from dralithus.command import make
 from dralithus.help_command import HelpCommand
 
-from dralithus.test import CaseData, CaseExecutor2
+from dralithus.test import CaseData, CaseExecutor
 
 
 def command_make_cases() -> list[tuple[str, CaseData]]:
@@ -51,7 +51,7 @@ def command_make_cases() -> list[tuple[str, CaseData]]:
   ]
 
 
-class TestCommand(unittest.TestCase, CaseExecutor2):
+class TestCommand(unittest.TestCase, CaseExecutor):
   """
     Unit tests for class Command
   """

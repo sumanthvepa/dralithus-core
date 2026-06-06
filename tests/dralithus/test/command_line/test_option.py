@@ -14,7 +14,7 @@ from dralithus.command_line.verbosity_option import VerbosityOption
 from dralithus.command_line.environment_option import EnvironmentOption
 from dralithus.command_line.multi_option import MultiOption
 
-from dralithus.test import CaseData, CaseExecutor2
+from dralithus.test import CaseData, CaseExecutor
 
 
 def is_option_cases() -> list[tuple[str, CaseData]]:
@@ -229,7 +229,7 @@ def make_cases() -> list[tuple[str, CaseData]]:
   ]
 
 
-class TestOption(unittest.TestCase, CaseExecutor2):
+class TestOption(unittest.TestCase, CaseExecutor):
   """
     Unit tests for the Option.make() method
   """
@@ -238,7 +238,7 @@ class TestOption(unittest.TestCase, CaseExecutor2):
       Initialize the test case.
     """
     unittest.TestCase.__init__(self, *args, **kwargs)
-    CaseExecutor2.__init__(self)
+    CaseExecutor.__init__(self)
 
   # noinspection PyUnusedLocal
   # pylint: disable=unused-argument

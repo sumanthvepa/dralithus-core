@@ -32,7 +32,7 @@ from dralithus.help_command import HelpCommand, make_from_command_line, make_fro
 from dralithus.command_line.options import Options
 from dralithus.errors import CommandLineError
 
-from dralithus.test import CaseData, CaseExecutor2
+from dralithus.test import CaseData, CaseExecutor
 
 
 def make_cases() -> list[tuple[str, CaseData]]:
@@ -69,7 +69,7 @@ def make_error_cases() -> list[tuple[str, CaseData]]:
     ('help_command_from_error', CaseData(args=CommandLineError(program='drl', command=None, verbosity=0, message='No command specified'), expected=HelpCommand('drl', None, 'No command specified', 0), error=None)),
   ]
 
-class TestHelpCommand(unittest.TestCase, CaseExecutor2):
+class TestHelpCommand(unittest.TestCase, CaseExecutor):
   """
   Unit tests for the HelpCommand class.
   """

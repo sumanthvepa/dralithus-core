@@ -8,7 +8,7 @@ from typing import Any
 from parameterized import parameterized
 
 from dralithus.command_line.verbosity_option import VerbosityOption
-from dralithus.test import CaseData, CaseExecutor2
+from dralithus.test import CaseData, CaseExecutor
 
 
 def is_option_cases() -> list[tuple[str, CaseData]]:
@@ -99,7 +99,7 @@ def make_cases() -> list[tuple[str, CaseData]]:
     ('wrong_no_option', CaseData(args=['parameter', None], expected=None, error=AssertionError))
   ]
 
-class TestVerbosityOption(unittest.TestCase, CaseExecutor2):
+class TestVerbosityOption(unittest.TestCase, CaseExecutor):
   """
     Unit tests for class VerbosityOption
   """

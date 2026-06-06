@@ -8,7 +8,7 @@ from typing import Any
 from parameterized import parameterized
 
 from dralithus.command_line.environment_option import EnvironmentOption
-from dralithus.test import CaseData, CaseExecutor2
+from dralithus.test import CaseData, CaseExecutor
 
 
 def is_option_cases() -> list[tuple[str, CaseData]]:
@@ -119,7 +119,7 @@ def make_cases() -> list[tuple[str, CaseData]]:
   ]
 
 
-class TestEnvironmentOption(unittest.TestCase, CaseExecutor2):
+class TestEnvironmentOption(unittest.TestCase, CaseExecutor):
   """
     Unit tests for class EnvironmentOption
   """

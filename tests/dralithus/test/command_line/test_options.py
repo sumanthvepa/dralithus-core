@@ -6,7 +6,7 @@ import unittest
 from parameterized import parameterized
 
 from dralithus.command_line.options import Options
-from dralithus.test import CaseData, CaseExecutor2
+from dralithus.test import CaseData, CaseExecutor
 
 
 def empty_case() -> list[tuple[str, CaseData]]:
@@ -266,7 +266,7 @@ def all_cases() -> list[tuple[str, CaseData]]:
   return correct_cases() + incorrect_cases()
 
 
-class TestOptions(unittest.TestCase, CaseExecutor2):
+class TestOptions(unittest.TestCase, CaseExecutor):
   """
     Unit tests for the Options class.
   """
@@ -275,7 +275,7 @@ class TestOptions(unittest.TestCase, CaseExecutor2):
       Initialize the test case.
     """
     unittest.TestCase.__init__(self, *args, **kwargs)
-    CaseExecutor2.__init__(self)
+    CaseExecutor.__init__(self)
 
   # noinspection PyUnusedLocal
   # pylint: disable=unused-argument

@@ -34,7 +34,7 @@ from dralithus.application import Application
 from dralithus.command_line.options import Options
 from dralithus.errors import CommandLineError, DralithusEnvironmentError, DralithusApplicationError
 
-from dralithus.test import CaseData, CaseExecutor2
+from dralithus.test import CaseData, CaseExecutor
 
 
 def make_cases() -> list[tuple[str, CaseData]]:
@@ -65,7 +65,7 @@ def make_cases() -> list[tuple[str, CaseData]]:
   ]
 
 
-class TestDeployCommand(unittest.TestCase, CaseExecutor2):
+class TestDeployCommand(unittest.TestCase, CaseExecutor):
   """
   Unit tests for the HelpCommand class.
   """
