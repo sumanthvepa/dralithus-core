@@ -112,15 +112,33 @@ How to apply:
 - When suggesting that a new third-party dependency be added, propose
   adding it to `packages.txt`, not editing `requirements.txt`
   directly.
-- **Two-source-of-truth caveat (transitional):** when a project also
-  has a `pyproject.toml` with `[project.optional-dependencies].dev`
-  (as dralithus-core does — `mypy`, `pylint`, `parameterized`),
-  packages3's hardcoded baseline overlaps with it. The duplication is
-  intentional for now. **Do not propose deleting one to "fix" the
-  duplication.**
-- A future `packages4` will read dependencies directly from
-  `pyproject.toml`, eliminating the duplication. Until it ships, the
-  duplication stays.
+- **Source of truth:** `packages.txt`, `local-packages.txt`, and the
+  implicit dev dependencies (`mypy`, `pylint`, `parameterized`) are
+  **always** the authoritative source of top-level dependencies for
+  Milestone 42 projects. `pyproject.toml` is downstream of them, never
+  the source of truth.
+- **`pyproject.toml` overlap:** when a project also has a
+  `pyproject.toml` with `[project.optional-dependencies].dev` (as
+  dralithus-core does — `mypy`, `pylint`, `parameterized`),
+  packages3's baseline overlaps with it. This overlap is intentional;
+  `pyproject.toml` simply mirrors the authoritative lists. **Do not
+  propose deleting the `packages.txt`/`local-packages.txt` side to
+  "fix" the overlap** — they are the source of truth.
+- **`packages4` has begun as the `Packages3` class inside dralithus**
+  (`src/dralithus/project/packages3.py`), not as another standalone
+  script. It still reads `packages.txt`/`local-packages.txt` but
+  **intentionally deviates** from `packages3.sh` in three ways (treat
+  these as deliberate design, not drift): (1) a ` [dev]` line-suffix
+  marker routes a dependency into dev dependencies; (2) parsing is
+  line-based (one dependency per line, internal whitespace preserved)
+  rather than whitespace token-splitting; (3) `local-packages.txt` is
+  optional rather than required. The implicit baseline (`mypy`,
+  `pylint`, `parameterized`) is retained.
+- **packages4 will not read dependencies from `pyproject.toml`.** For
+  Milestone 42 projects, `packages.txt`/`local-packages.txt` plus the
+  implicit dev dependencies remain the permanent source of truth.
+  `pyproject.toml` is generated/maintained from them, not the other
+  way around. Do not propose making `pyproject.toml` authoritative.
 
 ## Git workflow
 
