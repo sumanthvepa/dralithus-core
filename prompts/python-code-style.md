@@ -67,6 +67,26 @@ over:
     handle_positive(value)
 ```
 
+## Method Order in Classes
+
+When defining methods try to define methods in the order desceribed below:
+
+ 1. Private methods and those starting with _. Whithin this group adhere to
+    the following order:
+    a. Private Instance methods
+    b. Private class method 
+    c. Private static methods
+ 2. __init__()
+ 3. Other dunder methods that take self (i.e. instance methods)
+ 4. Public instance methods
+ 5. Dunder class methods
+ 6. Public class methods
+ 7. Public static methods
+
+ Within this order, try as far as possible to keep methods that are smilar
+ or have closly related purposes together. E.g. push() and pop() should be
+ close together, and pop() and popAll() should also be close together.
+
 ## Docstrings
 
 ALWAYS add docstrings to every module class and function/method 
