@@ -14,8 +14,7 @@ the current directory.
 
 Use commit.template as the format of the commit message. If in doubt,
 look at the format of the previous commit (or even the previous 2-3
-commits,) to get an idea of how
-to format the commit message.
+commits,) to get an idea of how to format the commit message.
 
 Look in the file TODO.txt for features markeed with an asterisk. These are
 the features being worked on for this commit. They should be placed under

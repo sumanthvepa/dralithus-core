@@ -1,4 +1,4 @@
-issueNNN-issue-name or issueNNN,NNN+k... for multiple issues: Summary of the commit
+issueNNN-issue-name or issueNNN,NNN+k... for multiple issues or none for no issue marked: Summary of the commit
 
 FEATURE(s)
 issueNNN-issue-name:
