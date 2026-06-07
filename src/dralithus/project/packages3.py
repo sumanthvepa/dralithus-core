@@ -35,6 +35,24 @@ class Packages3:
   """
   _implicit_dev_dependencies = ('mypy', 'pylint', 'parameterized')
 
+  @staticmethod
+  def _read_dependencies(path: Path) -> tuple[list[str], list[str]]:
+    """
+      Read production and development dependencies from a file.
+
+      :param path: The dependency file to read
+      :return: The production and development dependency lists
+    """
+    production: list[str] = []
+    development: list[str] = []
+    for line in path.read_text(encoding='utf-8').splitlines():
+      dependency = line.split('#', maxsplit=1)[0].strip()
+      if dependency.endswith(' [dev]'):
+        development.append(dependency.removesuffix(' [dev]').strip())
+      elif dependency:
+        production.append(dependency)
+    return production, development
+
   def __init__(self, project_root: Path) -> None:
     """
       Initialize the packages3 proxy.
@@ -55,21 +73,6 @@ class Packages3:
       *production_dev,
       *local_dev]
     self._local_dependencies = local
-
-  @classmethod
-  def from_project_root(cls, project_root: Path) -> 'Packages3':
-    """
-      Create a packages3 proxy for a Python project root.
-
-      :param project_root: The root directory of the Python project
-      :return: The packages3 proxy
-      :raises DralithusProjectError: When packages.txt is missing
-    """
-    packages_txt = project_root / 'packages.txt'
-    if not packages_txt.exists():
-      raise DralithusProjectError(
-        'No packages.txt file found in project root')
-    return cls(project_root)
 
   @property
   def production_dependencies(self) -> list[str]:
@@ -98,20 +101,17 @@ class Packages3:
     """
     return list(self._local_dependencies)
 
-  @staticmethod
-  def _read_dependencies(path: Path) -> tuple[list[str], list[str]]:
+  @classmethod
+  def from_project_root(cls, project_root: Path) -> 'Packages3':
     """
-      Read production and development dependencies from a file.
+      Create a packages3 proxy for a Python project root.
 
-      :param path: The dependency file to read
-      :return: The production and development dependency lists
+      :param project_root: The root directory of the Python project
+      :return: The packages3 proxy
+      :raises DralithusProjectError: When packages.txt is missing
     """
-    production: list[str] = []
-    development: list[str] = []
-    for line in path.read_text(encoding='utf-8').splitlines():
-      dependency = line.split('#', maxsplit=1)[0].strip()
-      if dependency.endswith(' [dev]'):
-        development.append(dependency.removesuffix(' [dev]').strip())
-      elif dependency:
-        production.append(dependency)
-    return production, development
+    packages_txt = project_root / 'packages.txt'
+    if not packages_txt.exists():
+      raise DralithusProjectError(
+        'No packages.txt file found in project root')
+    return cls(project_root)
