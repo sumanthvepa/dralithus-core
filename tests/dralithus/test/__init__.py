@@ -34,21 +34,26 @@ class CaseData:
         self,
         args: Any,
         expected: Any,
-        error: type[Exception] | None):
+        error: type[Exception] | None,
+        error_message: str | None = None):
     """
       Initialize the test case.
 
       :param args: The input to the test case
       :param expected: The expected output of the test case
       :param error: The expected error of the test case
+      :param error_message: The expected error message
     """
     assert (
       ((expected is not None) and (error is None)) or
       ((expected is None) and (error is not None))
     ), 'If expected is set, then error must be none, and vice versa.'
+    assert error_message is None or error is not None, (
+      'An error message can only be specified when an error is expected.')
     self._args = args
     self._expected = expected
     self._error = error
+    self._error_message = error_message
 
   @property
   def args(self) -> Any:
@@ -76,6 +81,15 @@ class CaseData:
       :return: The expected error of the test case
     """
     return self._error
+
+  @property
+  def error_message(self) -> str | None:
+    """
+      Get the expected error message of the test case.
+
+      :return: The expected error message
+    """
+    return self._error_message
 
 
 class RequiresAsserts(Protocol):
@@ -130,5 +144,9 @@ class CaseExecutor(RequiresAsserts):
       # IntelliJ IDEA's type checker is not smart enough to figure out
       # that case.error cannot be None at this point.
       # noinspection PyTypeChecker
-      with self.assertRaises(case.error):
+      with self.assertRaises(case.error) as context:
         function(case.args)
+      if case.error_message is not None:
+        self.assertEqual(
+          case.error_message,
+          str(context.exception))
