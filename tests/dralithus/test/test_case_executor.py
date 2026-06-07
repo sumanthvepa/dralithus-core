@@ -141,3 +141,17 @@ class TestCaseExecutor(unittest.TestCase, CaseExecutor):
 
     with self.assertRaises(AssertionError):
       self.execute(raise_value_error, case)
+
+  def test_matching_non_dralithus_error_message_passes(self) -> None:
+    """
+      Verify a matching message passes for a non-Dralithus error.
+
+      :return: None
+    """
+    case = CaseData(
+      args='Expected message',
+      expected=None,
+      error=ValueError,
+      error_message='Expected message')
+
+    self.execute(raise_value_error, case)
