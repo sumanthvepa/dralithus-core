@@ -22,6 +22,8 @@
 # -------------------------------------------------------------------
 from pathlib import Path
 
+from dralithus.project.error import DralithusProjectError
+
 
 class Packages3:
   """
@@ -40,7 +42,19 @@ class Packages3:
       :param project_root: The root directory of the Python project
       :return: None
     """
-    raise NotImplementedError
+    packages_txt = project_root / 'packages.txt'
+    local_packages_txt = project_root / 'local-packages.txt'
+    production, production_dev = self._read_dependencies(packages_txt)
+    local: list[str] = []
+    local_dev: list[str] = []
+    if local_packages_txt.exists():
+      local, local_dev = self._read_dependencies(local_packages_txt)
+    self._production_dependencies = production
+    self._dev_dependencies = [
+      *self._implicit_dev_dependencies,
+      *production_dev,
+      *local_dev]
+    self._local_dependencies = local
 
   @classmethod
   def from_project_root(cls, project_root: Path) -> 'Packages3':
@@ -49,8 +63,13 @@ class Packages3:
 
       :param project_root: The root directory of the Python project
       :return: The packages3 proxy
+      :raises DralithusProjectError: When packages.txt is missing
     """
-    raise NotImplementedError
+    packages_txt = project_root / 'packages.txt'
+    if not packages_txt.exists():
+      raise DralithusProjectError(
+        'No packages.txt file found in project root')
+    return cls(project_root)
 
   @property
   def production_dependencies(self) -> list[str]:
@@ -59,7 +78,7 @@ class Packages3:
 
       :return: The production dependency list
     """
-    raise NotImplementedError
+    return list(self._production_dependencies)
 
   @property
   def dev_dependencies(self) -> list[str]:
@@ -68,7 +87,7 @@ class Packages3:
 
       :return: The implicit development dependency list
     """
-    raise NotImplementedError
+    return list(self._dev_dependencies)
 
   @property
   def local_dependencies(self) -> list[str]:
@@ -77,4 +96,22 @@ class Packages3:
 
       :return: The local dependency list
     """
-    raise NotImplementedError
+    return list(self._local_dependencies)
+
+  @staticmethod
+  def _read_dependencies(path: Path) -> tuple[list[str], list[str]]:
+    """
+      Read production and development dependencies from a file.
+
+      :param path: The dependency file to read
+      :return: The production and development dependency lists
+    """
+    production: list[str] = []
+    development: list[str] = []
+    for line in path.read_text(encoding='utf-8').splitlines():
+      dependency = line.split('#', maxsplit=1)[0].strip()
+      if dependency.endswith(' [dev]'):
+        development.append(dependency.removesuffix(' [dev]').strip())
+      elif dependency:
+        production.append(dependency)
+    return production, development
