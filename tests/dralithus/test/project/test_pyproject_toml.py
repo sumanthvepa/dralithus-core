@@ -27,7 +27,7 @@ import tomllib
 import unittest
 
 from dralithus.project.error import DralithusProjectError
-from dralithus.project.packages import Packages
+from dralithus.project.packages3 import Packages3
 from dralithus.project.pyproject_toml import PyProjectToml
 
 
@@ -36,10 +36,60 @@ class TestPyProjectToml(unittest.TestCase):
   """
     Unit tests for the PyProjectToml class.
   """
+  _implicit_dev_dependencies = ['mypy', 'pylint', 'parameterized']
 
-  @staticmethod
+  @classmethod
+  def _packages(
+    cls,
+    production_dependencies: list[str] | None = None,
+    dev_dependencies: list[str] | None = None,
+    local_dependencies: list[str] | None = None,
+    local_dev_dependencies: list[str] | None = None
+  ) -> Packages3:
+    """
+      Construct a Packages3 fixture from package artifact contents.
+
+      :param production_dependencies: The packages.txt dependencies
+      :param dev_dependencies: The expected full dev dependency list
+      :param local_dependencies: The local-packages.txt dependencies
+      :param local_dev_dependencies: The local dev dependencies
+      :return: The Packages3 fixture
+    """
+    if production_dependencies is None:
+      production_dependencies = []
+    if dev_dependencies is None:
+      dev_dependencies = cls._implicit_dev_dependencies
+    if local_dependencies is None:
+      local_dependencies = []
+    if local_dev_dependencies is None:
+      local_dev_dependencies = []
+    extra_dev_dependencies = [
+      dependency for dependency in dev_dependencies
+      if dependency not in cls._implicit_dev_dependencies]
+    with TemporaryDirectory() as tmpdir:
+      project_root = Path(tmpdir)
+      package_lines = [
+        *production_dependencies,
+        *[f'{dependency} [dev]'
+          for dependency in extra_dev_dependencies]]
+      local_lines = [
+        *local_dependencies,
+        *[f'{dependency} [dev]'
+          for dependency in local_dev_dependencies]]
+      (project_root / 'packages.txt').write_text(
+        '\n'.join(package_lines),
+        encoding='utf-8')
+      if local_lines:
+        (project_root / 'local-packages.txt').write_text(
+          '\n'.join(local_lines),
+          encoding='utf-8')
+      packages = Packages3.from_project_root(project_root)
+    return packages
+
+  @classmethod
   # pylint: disable-next=too-many-arguments,too-many-positional-arguments
   def _make(
+    cls,
     name: str = 'example-project',
     description: str = 'An example project',
     package_name: str = 'example',
@@ -50,23 +100,34 @@ class TestPyProjectToml(unittest.TestCase):
   ) -> PyProjectToml:
     """
       Construct a PyProjectToml with sensible defaults.
+
+      :param name: The project distribution name
+      :param description: The project description
+      :param package_name: The Python package name
+      :param python_requirement: The Python version requirement
+      :param dependencies: The production dependencies
+      :param dev_dependencies: The full dev dependency list
+      :param version: The project version
+      :return: The pyproject model
     """
     if dependencies is None:
       dependencies = []
     if dev_dependencies is None:
-      dev_dependencies = ['mypy', 'pylint', 'parameterized']
+      dev_dependencies = cls._implicit_dev_dependencies
     return PyProjectToml(
       name=name,
       description=description,
       package_name=package_name,
       python_requirement=python_requirement,
-      packages=Packages(dependencies, dev_dependencies),
+      packages=cls._packages(dependencies, dev_dependencies),
       version=version)
 
   @staticmethod
   def _well_formed_toml() -> str:
     """
       Return well-formed pyproject.toml text for from_file tests.
+
+      :return: The pyproject.toml text
     """
     return (
       '[build-system]\n'
@@ -95,6 +156,8 @@ class TestPyProjectToml(unittest.TestCase):
     """
       Verify the constructor stores every field and the properties
       return them.
+
+      :return: None
     """
     pp = self._make(
       name='my-project',
@@ -108,7 +171,9 @@ class TestPyProjectToml(unittest.TestCase):
     self.assertEqual(pp.description, 'My project')
     self.assertEqual(pp.package_name, 'my_pkg')
     self.assertEqual(pp.python_requirement, '>=3.14')
-    self.assertEqual(pp.packages.dependencies, ['requests', 'click'])
+    self.assertEqual(
+      pp.packages.production_dependencies,
+      ['requests', 'click'])
     self.assertEqual(
       pp.packages.dev_dependencies,
       ['mypy', 'pylint', 'parameterized'])
@@ -117,13 +182,15 @@ class TestPyProjectToml(unittest.TestCase):
   def test_default_version_is_0_1_0(self) -> None:
     """
       Verify version defaults to '0.1.0' when omitted.
+
+      :return: None
     """
     pp = PyProjectToml(
       name='x',
       description='y',
       package_name='z',
       python_requirement='>=3.13',
-      packages=Packages([], ['mypy', 'pylint', 'parameterized']))
+      packages=self._packages())
     self.assertEqual(pp.version, '0.1.0')
 
   # -------------------- to_toml --------------------
@@ -131,6 +198,8 @@ class TestPyProjectToml(unittest.TestCase):
   def test_to_toml_output_parses_as_toml(self) -> None:
     """
       Verify to_toml output parses successfully with tomllib.
+
+      :return: None
     """
     pp = self._make()
     parsed = tomllib.loads(pp.to_toml())
@@ -139,6 +208,8 @@ class TestPyProjectToml(unittest.TestCase):
   def test_to_toml_renders_build_system_block(self) -> None:
     """
       Verify the build-system block matches M42 invariants.
+
+      :return: None
     """
     pp = self._make()
     parsed = tomllib.loads(pp.to_toml())
@@ -152,6 +223,8 @@ class TestPyProjectToml(unittest.TestCase):
   def test_to_toml_renders_project_metadata(self) -> None:
     """
       Verify the project block contains all variable metadata.
+
+      :return: None
     """
     pp = self._make(
       name='foo',
@@ -172,17 +245,22 @@ class TestPyProjectToml(unittest.TestCase):
     """
       Verify dev dependencies are written under
       [project.optional-dependencies].
+
+      :return: None
     """
     pp = self._make(
-      dev_dependencies=['mypy', 'pylint', 'parameterized'])
+      dev_dependencies=[
+        'mypy', 'pylint', 'parameterized', 'pytest'])
     parsed = tomllib.loads(pp.to_toml())
     self.assertEqual(
       parsed['project']['optional-dependencies']['dev'],
-      ['mypy', 'pylint', 'parameterized'])
+      ['mypy', 'pylint', 'parameterized', 'pytest'])
 
   def test_to_toml_renders_tool_setuptools_block(self) -> None:
     """
       Verify the [tool.setuptools.packages.find] block.
+
+      :return: None
     """
     pp = self._make(package_name='example')
     parsed = tomllib.loads(pp.to_toml())
@@ -195,11 +273,28 @@ class TestPyProjectToml(unittest.TestCase):
     """
       Verify double quotes in string values are escaped so the
       output still parses as valid TOML.
+
+      :return: None
     """
     pp = self._make(description='He said "hi"')
     parsed = tomllib.loads(pp.to_toml())
     self.assertEqual(
       parsed['project']['description'], 'He said "hi"')
+
+  def test_to_toml_ignores_unmarked_local_dependencies(self) -> None:
+    """
+      Verify unmarked local dependencies are not rendered in pyproject.
+
+      :return: None
+    """
+    pp = PyProjectToml(
+      name='example-project',
+      description='An example project',
+      package_name='example',
+      python_requirement='>=3.13',
+      packages=self._packages(local_dependencies=['../common-lib']))
+    parsed = tomllib.loads(pp.to_toml())
+    self.assertEqual(parsed['project']['dependencies'], [])
 
   # -------------------- from_file --------------------
 
@@ -207,17 +302,19 @@ class TestPyProjectToml(unittest.TestCase):
     """
       Verify from_file extracts every variable field from a
       well-formed pyproject.toml.
+
+      :return: None
     """
     with TemporaryDirectory() as tmpdir:
       path = Path(tmpdir) / 'pyproject.toml'
       path.write_text(self._well_formed_toml(), encoding='utf-8')
-      pp = PyProjectToml.from_file(path)
+      pp = PyProjectToml.from_file(path, self._packages())
     self.assertEqual(pp.name, 'example-project')
     self.assertEqual(pp.version, '0.1.0')
     self.assertEqual(pp.description, 'An example project')
     self.assertEqual(pp.package_name, 'example')
     self.assertEqual(pp.python_requirement, '>=3.13')
-    self.assertEqual(pp.packages.dependencies, [])
+    self.assertEqual(pp.packages.production_dependencies, [])
     self.assertEqual(
       pp.packages.dev_dependencies,
       ['mypy', 'pylint', 'parameterized'])
@@ -225,26 +322,32 @@ class TestPyProjectToml(unittest.TestCase):
   def test_from_file_rejects_invalid_toml(self) -> None:
     """
       Verify from_file raises on malformed TOML.
+
+      :return: None
     """
     with TemporaryDirectory() as tmpdir:
       path = Path(tmpdir) / 'pyproject.toml'
       path.write_text('not = valid = toml', encoding='utf-8')
       with self.assertRaises(DralithusProjectError):
-        PyProjectToml.from_file(path)
+        PyProjectToml.from_file(path, self._packages())
 
   def test_from_file_rejects_directory_path(self) -> None:
     """
       Verify from_file raises when path is a directory.
+
+      :return: None
     """
     with TemporaryDirectory() as tmpdir:
       path = Path(tmpdir) / 'pyproject.toml'
       path.mkdir()
       with self.assertRaises(DralithusProjectError):
-        PyProjectToml.from_file(path)
+        PyProjectToml.from_file(path, self._packages())
 
   def test_from_file_rejects_wrong_build_requires(self) -> None:
     """
       Verify from_file rejects a mismatched build-system.requires.
+
+      :return: None
     """
     text = self._well_formed_toml().replace(
       '["setuptools>=69", "wheel"]',
@@ -253,11 +356,13 @@ class TestPyProjectToml(unittest.TestCase):
       path = Path(tmpdir) / 'pyproject.toml'
       path.write_text(text, encoding='utf-8')
       with self.assertRaises(DralithusProjectError):
-        PyProjectToml.from_file(path)
+        PyProjectToml.from_file(path, self._packages())
 
   def test_from_file_rejects_wrong_build_backend(self) -> None:
     """
       Verify from_file rejects a mismatched build-backend.
+
+      :return: None
     """
     text = self._well_formed_toml().replace(
       'build-backend = "setuptools.build_meta"',
@@ -266,11 +371,13 @@ class TestPyProjectToml(unittest.TestCase):
       path = Path(tmpdir) / 'pyproject.toml'
       path.write_text(text, encoding='utf-8')
       with self.assertRaises(DralithusProjectError):
-        PyProjectToml.from_file(path)
+        PyProjectToml.from_file(path, self._packages())
 
   def test_from_file_rejects_wrong_readme(self) -> None:
     """
       Verify from_file rejects readme != "README.md".
+
+      :return: None
     """
     text = self._well_formed_toml().replace(
       'readme = "README.md"',
@@ -279,11 +386,13 @@ class TestPyProjectToml(unittest.TestCase):
       path = Path(tmpdir) / 'pyproject.toml'
       path.write_text(text, encoding='utf-8')
       with self.assertRaises(DralithusProjectError):
-        PyProjectToml.from_file(path)
+        PyProjectToml.from_file(path, self._packages())
 
   def test_from_file_rejects_wrong_packages_where(self) -> None:
     """
       Verify from_file rejects packages.find.where != ["src"].
+
+      :return: None
     """
     text = self._well_formed_toml().replace(
       'where = ["src"]',
@@ -292,11 +401,13 @@ class TestPyProjectToml(unittest.TestCase):
       path = Path(tmpdir) / 'pyproject.toml'
       path.write_text(text, encoding='utf-8')
       with self.assertRaises(DralithusProjectError):
-        PyProjectToml.from_file(path)
+        PyProjectToml.from_file(path, self._packages())
 
   def test_from_file_rejects_namespaces_false(self) -> None:
     """
       Verify from_file rejects namespaces = false.
+
+      :return: None
     """
     text = self._well_formed_toml().replace(
       'namespaces = true',
@@ -305,11 +416,13 @@ class TestPyProjectToml(unittest.TestCase):
       path = Path(tmpdir) / 'pyproject.toml'
       path.write_text(text, encoding='utf-8')
       with self.assertRaises(DralithusProjectError):
-        PyProjectToml.from_file(path)
+        PyProjectToml.from_file(path, self._packages())
 
   def test_from_file_rejects_missing_project_name(self) -> None:
     """
       Verify from_file raises when project.name is missing.
+
+      :return: None
     """
     text = self._well_formed_toml().replace(
       'name = "example-project"\n', '')
@@ -317,14 +430,16 @@ class TestPyProjectToml(unittest.TestCase):
       path = Path(tmpdir) / 'pyproject.toml'
       path.write_text(text, encoding='utf-8')
       with self.assertRaises(DralithusProjectError):
-        PyProjectToml.from_file(path)
+        PyProjectToml.from_file(path, self._packages())
 
   def test_from_file_rejects_missing_baseline_dev_dependency(
     self,
   ) -> None:
     """
       Verify from_file raises when an M42 baseline dev dependency
-      (mypy, pylint, or parameterized) is missing from the file.
+      is missing from the file.
+
+      :return: None
     """
     text = self._well_formed_toml().replace(
       '["mypy", "pylint", "parameterized"]',
@@ -333,12 +448,14 @@ class TestPyProjectToml(unittest.TestCase):
       path = Path(tmpdir) / 'pyproject.toml'
       path.write_text(text, encoding='utf-8')
       with self.assertRaises(DralithusProjectError):
-        PyProjectToml.from_file(path)
+        PyProjectToml.from_file(path, self._packages())
 
   def test_from_file_rejects_malformed_include_pattern(self) -> None:
     """
       Verify from_file rejects an include without the trailing
       wildcard.
+
+      :return: None
     """
     text = self._well_formed_toml().replace(
       'include = ["example*"]',
@@ -347,12 +464,13 @@ class TestPyProjectToml(unittest.TestCase):
       path = Path(tmpdir) / 'pyproject.toml'
       path.write_text(text, encoding='utf-8')
       with self.assertRaises(DralithusProjectError):
-        PyProjectToml.from_file(path)
+        PyProjectToml.from_file(path, self._packages())
 
   def test_from_file_accepts_extra_dev_dependencies(self) -> None:
     """
-      Verify from_file accepts dev dependencies beyond the M42
-      baseline.
+      Verify from_file accepts dev dependencies beyond Packages3.
+
+      :return: None
     """
     text = self._well_formed_toml().replace(
       '["mypy", "pylint", "parameterized"]',
@@ -360,14 +478,44 @@ class TestPyProjectToml(unittest.TestCase):
     with TemporaryDirectory() as tmpdir:
       path = Path(tmpdir) / 'pyproject.toml'
       path.write_text(text, encoding='utf-8')
-      pp = PyProjectToml.from_file(path)
-    self.assertIn('pytest', pp.packages.dev_dependencies)
+      pp = PyProjectToml.from_file(path, self._packages())
+    self.assertEqual(pp.name, 'example-project')
+
+  def test_from_file_rejects_dependency_mismatch(self) -> None:
+    """
+      Verify from_file rejects dependencies that differ from Packages3.
+
+      :return: None
+    """
+    with TemporaryDirectory() as tmpdir:
+      path = Path(tmpdir) / 'pyproject.toml'
+      path.write_text(self._well_formed_toml(), encoding='utf-8')
+      with self.assertRaises(DralithusProjectError):
+        PyProjectToml.from_file(
+          path,
+          self._packages(production_dependencies=['requests']))
+
+  def test_from_file_ignores_unmarked_local_dependencies(self) -> None:
+    """
+      Verify from_file ignores unmarked local dependencies.
+
+      :return: None
+    """
+    with TemporaryDirectory() as tmpdir:
+      path = Path(tmpdir) / 'pyproject.toml'
+      path.write_text(self._well_formed_toml(), encoding='utf-8')
+      pp = PyProjectToml.from_file(
+        path,
+        self._packages(local_dependencies=['../common-lib']))
+    self.assertEqual(pp.packages.local_dependencies, ['../common-lib'])
 
   # -------------------- matches --------------------
 
   def test_matches_passes_when_all_fields_equal(self) -> None:
     """
       Verify matches() returns None when all fields are equal.
+
+      :return: None
     """
     expected = self._make()
     actual = self._make()
@@ -376,6 +524,8 @@ class TestPyProjectToml(unittest.TestCase):
   def test_matches_rejects_name_mismatch(self) -> None:
     """
       Verify matches() raises when names differ.
+
+      :return: None
     """
     expected = self._make(name='foo')
     actual = self._make(name='bar')
@@ -385,6 +535,8 @@ class TestPyProjectToml(unittest.TestCase):
   def test_matches_rejects_version_mismatch(self) -> None:
     """
       Verify matches() raises when versions differ.
+
+      :return: None
     """
     expected = self._make(version='1.0.0')
     actual = self._make(version='2.0.0')
@@ -394,6 +546,8 @@ class TestPyProjectToml(unittest.TestCase):
   def test_matches_rejects_description_mismatch(self) -> None:
     """
       Verify matches() raises when descriptions differ.
+
+      :return: None
     """
     expected = self._make(description='foo')
     actual = self._make(description='bar')
@@ -403,6 +557,8 @@ class TestPyProjectToml(unittest.TestCase):
   def test_matches_rejects_package_name_mismatch(self) -> None:
     """
       Verify matches() raises when package names differ.
+
+      :return: None
     """
     expected = self._make(package_name='foo')
     actual = self._make(package_name='bar')
@@ -412,6 +568,8 @@ class TestPyProjectToml(unittest.TestCase):
   def test_matches_rejects_python_requirement_mismatch(self) -> None:
     """
       Verify matches() raises when python_requirement differs.
+
+      :return: None
     """
     expected = self._make(python_requirement='>=3.13')
     actual = self._make(python_requirement='>=3.14')
@@ -421,6 +579,8 @@ class TestPyProjectToml(unittest.TestCase):
   def test_matches_rejects_dependencies_mismatch(self) -> None:
     """
       Verify matches() raises when dependencies differ.
+
+      :return: None
     """
     expected = self._make(dependencies=['requests'])
     actual = self._make(dependencies=['urllib3'])
@@ -430,23 +590,27 @@ class TestPyProjectToml(unittest.TestCase):
   def test_matches_passes_with_dev_dependencies_superset(self) -> None:
     """
       Verify matches() accepts actual having extra dev deps.
+
+      :return: None
     """
     expected = self._make(
       dev_dependencies=['mypy', 'pylint', 'parameterized'])
     actual = self._make(
-      dev_dependencies=['mypy', 'pylint', 'parameterized', 'pytest'])
+      dev_dependencies=[
+        'mypy', 'pylint', 'parameterized', 'pytest'])
     actual.matches(expected)
 
-  def test_matches_rejects_missing_baseline_dev_dependency(
-    self,
-  ) -> None:
+  def test_matches_rejects_missing_dev_dependency(self) -> None:
     """
       Verify matches() raises when actual is missing a dev
       dependency that expected requires.
+
+      :return: None
     """
     expected = self._make(
-      dev_dependencies=['mypy', 'pylint', 'parameterized'])
+      dev_dependencies=[
+        'mypy', 'pylint', 'parameterized', 'pytest'])
     actual = self._make(
-      dev_dependencies=['mypy', 'pylint'])
+      dev_dependencies=['mypy', 'pylint', 'parameterized'])
     with self.assertRaises(DralithusProjectError):
       actual.matches(expected)

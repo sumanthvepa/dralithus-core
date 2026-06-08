@@ -25,7 +25,7 @@ import tomllib
 from typing import Any
 
 from dralithus.project.error import DralithusProjectError
-from dralithus.project.packages import Packages
+from dralithus.project.packages3 import Packages3
 
 
 class PyProjectToml:
@@ -43,7 +43,6 @@ class PyProjectToml:
   _README = 'README.md'
   _PACKAGES_WHERE = ['src']
   _NAMESPACES = True
-  _DEV_DEPENDENCIES_REQUIRED = ['mypy', 'pylint', 'parameterized']
 
   # pylint: disable-next=too-many-arguments,too-many-positional-arguments
   def __init__(
@@ -52,7 +51,7 @@ class PyProjectToml:
     description: str,
     package_name: str,
     python_requirement: str,
-    packages: Packages,
+    packages: Packages3,
     version: str = '0.1.0'
   ) -> None:
     """
@@ -63,7 +62,7 @@ class PyProjectToml:
       :param package_name: The Python package name
       :param python_requirement: The Python version requirement
         (e.g. '>=3.13')
-      :param packages: The project's dependency lists
+      :param packages: The project's packages3 dependency model
       :param version: The project version
       :return: None
     """
@@ -111,11 +110,11 @@ class PyProjectToml:
     return self._python_requirement
 
   @property
-  def packages(self) -> Packages:
+  def packages(self) -> Packages3:
     """
-      Return the project's dependency lists.
+      Return the project's packages3 dependency model.
 
-      :return: The project's dependency lists
+      :return: The project's packages3 dependency model
     """
     return self._packages
 
@@ -177,7 +176,8 @@ class PyProjectToml:
       f'description = {self._toml_string(self._description)}\n'
       f'readme = {self._toml_string(self._README)}\n'
       f'requires-python = {self._toml_string(self._python_requirement)}\n'
-      f'dependencies = {self._toml_list(self._packages.dependencies)}\n'
+      'dependencies = '
+      f'{self._toml_list(self._packages.production_dependencies)}\n'
       '\n'
       '[project.optional-dependencies]\n'
       f'dev = {self._toml_list(self._packages.dev_dependencies)}\n'
@@ -289,20 +289,21 @@ class PyProjectToml:
     for field_path, expected in checks:
       cls._require_field(data, field_path, expected)
 
-  @classmethod
-  def _validate_dev_baseline(
-    cls,
-    dev_dependencies: list[str]
+  @staticmethod
+  def _validate_dev_dependencies(
+    actual: list[str],
+    expected: list[str]
   ) -> None:
     """
-      Validate that the M42 dev dependency baseline is present.
+      Validate that the required dev dependencies are present.
 
-      :param dev_dependencies: The dev dependencies from the file
+      :param actual: The dev dependencies from pyproject.toml
+      :param expected: The required dev dependencies
       :return: None
-      :raises DralithusProjectError: When a baseline dep is missing
+      :raises DralithusProjectError: When a dev dependency is missing
     """
-    for dependency in cls._DEV_DEPENDENCIES_REQUIRED:
-      if dependency not in dev_dependencies:
+    for dependency in expected:
+      if dependency not in actual:
         raise DralithusProjectError(
           f'Missing pyproject dev dependency: {dependency}')
 
@@ -331,17 +332,20 @@ class PyProjectToml:
     return pattern[:-1]
 
   @classmethod
-  def from_file(cls, path: Path) -> 'PyProjectToml':
+  def from_file(cls, path: Path, packages: Packages3) -> 'PyProjectToml':
     """
       Load a pyproject.toml from disk.
 
       Reads the file at the given path, parses it, and validates
       that it conforms to the Milestone 42 schema (build-system
-      block, readme, packages.find.where, namespaces, and the
-      M42 dev dependency baseline). Variable fields are extracted
-      from the file and stored on the returned instance.
+      block, readme, packages.find.where, namespaces, and dependency
+      fields). Variable fields are extracted from the file and stored
+      on the returned instance. Dependency fields are validated
+      against packages3 artifacts and are not treated as a source of
+      truth.
 
       :param path: The path to the pyproject.toml file
+      :param packages: The authoritative packages3 dependency model
       :return: A PyProjectToml instance matching the file
       :raises DralithusProjectError: When the file cannot be read,
         contains invalid TOML, or does not conform to the
@@ -357,14 +361,20 @@ class PyProjectToml:
     dependencies = cls._required(data, ['project', 'dependencies'])
     dev_dependencies = cls._required(
       data, ['project', 'optional-dependencies', 'dev'])
-    cls._validate_dev_baseline(dev_dependencies)
+    cls._require_equal(
+      dependencies,
+      packages.production_dependencies,
+      'project.dependencies')
+    cls._validate_dev_dependencies(
+      dev_dependencies,
+      packages.dev_dependencies)
     package_name = cls._extract_package_name(data)
     return cls(
       name=name,
       description=description,
       package_name=package_name,
       python_requirement=python_requirement,
-      packages=Packages(dependencies, dev_dependencies),
+      packages=packages,
       version=version)
 
   def matches(self, expected: 'PyProjectToml') -> None:
@@ -389,7 +399,8 @@ class PyProjectToml:
       ('python_requirement',
        self.python_requirement, expected.python_requirement),
       ('dependencies',
-       self.packages.dependencies, expected.packages.dependencies),
+       self.packages.production_dependencies,
+       expected.packages.production_dependencies),
     ]
     for field, actual, expect in pairs:
       if actual != expect:

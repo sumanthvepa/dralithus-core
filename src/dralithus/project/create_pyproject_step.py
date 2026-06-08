@@ -21,13 +21,12 @@
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
 from pathlib import Path
-
-from typing_extensions import override
+from typing import override
 
 from dralithus.project.context import ProjectContext
 from dralithus.project.execution_step import ExecutionStep
 from dralithus.project.error import DralithusProjectError
-from dralithus.project.packages import Packages
+from dralithus.project.packages3 import Packages3
 from dralithus.project.pyproject_toml import PyProjectToml
 
 
@@ -99,25 +98,18 @@ class CreatePyProjectStep(ExecutionStep):
     return f'>={parts[0]}.{parts[1]}'
 
   @staticmethod
-  def _packages(project_root: Path) -> Packages:
+  def _packages(project_root: Path) -> Packages3:
     """
-      Return the project's dependency and dev dependency lists.
+      Return the project's packages3 dependency model.
 
-      Reads runtime dependencies from packages.txt. The dev
-      dependencies are those that packages3.sh always installs.
+      Reads production, development, and editable local dependencies
+      from the packages3 project artifacts.
 
       :param project_root: The project root directory
-      :return: The project's dependencies and dev dependencies
+      :return: The project's packages3 dependency model
+      :raises DralithusProjectError: When packages.txt is missing
     """
-    dependencies: list[str] = []
-    packages_txt = project_root / 'packages.txt'
-    if packages_txt.exists():
-      for line in packages_txt.read_text(encoding='utf-8').splitlines():
-        package = line.split('#', maxsplit=1)[0].strip()
-        if package != '':
-          dependencies.append(package)
-    dev_dependencies = ['mypy', 'pylint', 'parameterized']
-    return Packages(dependencies, dev_dependencies)
+    return Packages3.from_project_root(project_root)
 
   def _expected_pyproject(
     self,
@@ -172,7 +164,7 @@ class CreatePyProjectStep(ExecutionStep):
     expected = self._expected_pyproject(context)
     path = context.project_root / 'pyproject.toml'
     if path.exists():
-      actual = PyProjectToml.from_file(path)
+      actual = PyProjectToml.from_file(path, expected.packages)
       actual.matches(expected)
     elif not dry_run:
       self._create_pyproject(expected, path)

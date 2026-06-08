@@ -29,14 +29,65 @@ import unittest
 from dralithus.project.context import ProjectContext
 from dralithus.project.create_pyproject_step import CreatePyProjectStep
 from dralithus.project.error import DralithusProjectError
-from dralithus.project.packages import Packages
+from dralithus.project.packages3 import Packages3
 from dralithus.project.pyproject_toml import PyProjectToml
 
 
+# pylint: disable-next=too-many-public-methods,too-many-lines
 class TestCreatePyProjectStep(unittest.TestCase):
   """
     Unit tests for the CreatePyProjectStep class.
   """
+  _implicit_dev_dependencies = ['mypy', 'pylint', 'parameterized']
+
+  @classmethod
+  # pylint: disable-next=too-many-arguments,too-many-positional-arguments
+  def _packages(
+    cls,
+    project_root: Path,
+    dependencies: list[str] | None = None,
+    dev_dependencies: list[str] | None = None,
+    local_dependencies: list[str] | None = None,
+    local_dev_dependencies: list[str] | None = None
+  ) -> Packages3:
+    """
+      Write package artifacts and return their Packages3 model.
+
+      :param project_root: The project root directory
+      :param dependencies: The packages.txt dependencies
+      :param dev_dependencies: The full expected dev dependency list
+      :param local_dependencies: The local-packages.txt dependencies
+      :param local_dev_dependencies: The local dev dependencies
+      :return: The Packages3 model
+    """
+    if dependencies is None:
+      dependencies = []
+    if dev_dependencies is None:
+      dev_dependencies = cls._implicit_dev_dependencies
+    if local_dependencies is None:
+      local_dependencies = []
+    if local_dev_dependencies is None:
+      local_dev_dependencies = []
+    extra_dev_dependencies = [
+      dependency for dependency in dev_dependencies
+      if dependency not in cls._implicit_dev_dependencies]
+    package_lines = [
+      *dependencies,
+      *[f'{dependency} [dev]'
+        for dependency in extra_dev_dependencies]]
+    local_lines = [
+      *local_dependencies,
+      *[f'{dependency} [dev]'
+        for dependency in local_dev_dependencies]]
+    (project_root / 'packages.txt').write_text(
+      '\n'.join(package_lines),
+      encoding='utf-8')
+    if local_lines:
+      (project_root / 'local-packages.txt').write_text(
+        '\n'.join(local_lines),
+        encoding='utf-8')
+    return Packages3.from_project_root(project_root)
+
   @staticmethod
   def _python_requirement() -> str:
     """
@@ -105,29 +156,42 @@ class TestCreatePyProjectStep(unittest.TestCase):
     if dependencies is None:
       dependencies = []
     if dev_dependencies is None:
-      dev_dependencies = ['mypy', 'pylint', 'parameterized']
+      dev_dependencies = cls._implicit_dev_dependencies
+    with TemporaryDirectory() as temp_directory:
+      packages = cls._packages(
+        Path(temp_directory),
+        dependencies,
+        dev_dependencies)
     pyproject = PyProjectToml(
       name=project_name,
       description=project_description,
       package_name=package_name,
       python_requirement=requirement,
-      packages=Packages(dependencies, dev_dependencies),
+      packages=packages,
       version=project_version)
     return pyproject.to_toml()
 
   @staticmethod
-  def _create_venv(project_root: Path, venv_name: str = 'venv') -> None:
+  def _create_venv(
+    project_root: Path,
+    venv_name: str = 'venv',
+    create_packages_txt: bool = True
+  ) -> None:
     """
       Create a real Python virtual environment for tests.
 
       :param project_root: The project root directory
       :param venv_name: The venv directory name
+      :param create_packages_txt: True if packages.txt should be
+        seeded
       :return: None
     """
     subprocess.run(
       [sys.executable, '-m', 'venv', venv_name],
       cwd=project_root,
       check=True)
+    if create_packages_txt:
+      (project_root / 'packages.txt').write_text('', encoding='utf-8')
 
   # pylint: disable-next=too-many-arguments,too-many-positional-arguments
   def _validate_pyproject(
@@ -153,15 +217,19 @@ class TestCreatePyProjectStep(unittest.TestCase):
       :param dependencies: The expected project dependencies
       :return: None
     """
+    expected_packages = self._packages(
+      project_root,
+      dependencies or [])
     expected = PyProjectToml(
       name=project_name,
       description=project_description,
       package_name=package_name,
       python_requirement=self._venv_python_requirement(project_root),
-      packages=Packages(
-        dependencies or [], ['mypy', 'pylint', 'parameterized']),
+      packages=expected_packages,
       version=project_version)
-    actual = PyProjectToml.from_file(project_root / 'pyproject.toml')
+    actual = PyProjectToml.from_file(
+      project_root / 'pyproject.toml',
+      expected_packages)
     actual.matches(expected)
 
   def test_run_creates_pyproject_when_missing(self) -> None:
@@ -210,6 +278,70 @@ class TestCreatePyProjectStep(unittest.TestCase):
         project_root,
         dependencies=['requests', 'rich'])
 
+  def test_run_creates_pyproject_with_dev_marked_dependencies(self) -> None:
+    """
+      Verify run copies [dev] marked dependencies into dev metadata.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      self._create_venv(project_root)
+      (project_root / 'packages.txt').write_text(
+        'requests\n'
+        'pytest [dev]\n',
+        encoding='utf-8')
+      (project_root / 'local-packages.txt').write_text(
+        '../common-lib\n'
+        '../test-lib [dev]\n',
+        encoding='utf-8')
+      step = CreatePyProjectStep(
+        'sample-project',
+        'Sample project',
+        'sample_project')
+
+      step.run(context)
+
+      pyproject = PyProjectToml.from_file(
+        project_root / 'pyproject.toml',
+        Packages3.from_project_root(project_root))
+      self.assertEqual(
+        pyproject.packages.production_dependencies,
+        ['requests'])
+      self.assertEqual(
+        pyproject.packages.dev_dependencies,
+        ['mypy', 'pylint', 'parameterized', 'pytest', '../test-lib'])
+      self.assertEqual(
+        pyproject.packages.local_dependencies,
+        ['../common-lib'])
+
+  def test_run_does_not_add_unmarked_local_dependencies(self) -> None:
+    """
+      Verify unmarked local packages are not pyproject dependencies.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      self._create_venv(project_root)
+      (project_root / 'local-packages.txt').write_text(
+        '../common-lib\n',
+        encoding='utf-8')
+      step = CreatePyProjectStep(
+        'sample-project',
+        'Sample project',
+        'sample_project')
+
+      step.run(context)
+
+      parsed = PyProjectToml.from_file(
+        project_root / 'pyproject.toml',
+        Packages3.from_project_root(project_root))
+      self.assertEqual(parsed.packages.production_dependencies, [])
+      self.assertEqual(parsed.packages.local_dependencies, ['../common-lib'])
+
   def test_run_dry_run_does_not_create_pyproject(self) -> None:
     """
       Verify dry-run mode does not create pyproject.toml.
@@ -228,6 +360,24 @@ class TestCreatePyProjectStep(unittest.TestCase):
       step.run(context, dry_run=True)
 
       self.assertFalse((project_root / 'pyproject.toml').exists())
+
+  def test_run_rejects_missing_packages_txt(self) -> None:
+    """
+      Verify run rejects a project with no packages.txt.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      self._create_venv(project_root, create_packages_txt=False)
+      step = CreatePyProjectStep(
+        'sample-project',
+        'Sample project',
+        'sample_project')
+
+      with self.assertRaises(DralithusProjectError):
+        step.run(context)
 
   def test_run_rejects_missing_venv(self) -> None:
     """
@@ -420,7 +570,9 @@ class TestCreatePyProjectStep(unittest.TestCase):
       project_root = Path(temp_directory)
       context = ProjectContext(project_root=project_root)
       self._create_venv(project_root)
-      text = self._pyproject_text(dev_dependencies=['mypy', 'pylint'])
+      text = self._pyproject_text().replace(
+        '["mypy", "pylint", "parameterized"]',
+        '["mypy", "pylint"]')
       (project_root / 'pyproject.toml').write_text(text, encoding='utf-8')
       step = CreatePyProjectStep(
         'sample-project',
