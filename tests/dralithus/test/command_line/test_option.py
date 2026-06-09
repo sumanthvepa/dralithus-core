@@ -233,17 +233,10 @@ class TestOption(unittest.TestCase, CaseExecutor):
   """
     Unit tests for the Option.make() method
   """
-  def __init__(self, *args, **kwargs):
-    """
-      Initialize the test case.
-    """
-    unittest.TestCase.__init__(self, *args, **kwargs)
-    CaseExecutor.__init__(self)
-
   # noinspection PyUnusedLocal
   # pylint: disable=unused-argument
   @parameterized.expand(is_option_cases())
-  def test_is_option(self, name: str, case: CaseData):
+  def test_is_option(self, name: str, case: CaseData) -> None:
     """
       Test the make method of the Option class.
       :return: None
@@ -253,7 +246,7 @@ class TestOption(unittest.TestCase, CaseExecutor):
   # noinspection PyUnusedLocal
   # pylint: disable=unused-argument
   @parameterized.expand(type_of_cases())
-  def test_type_of(self, name: str, case: CaseData):
+  def test_type_of(self, name: str, case: CaseData) -> None:
     """
       Test the type_of method of the Option class.
       :return: None
@@ -263,7 +256,7 @@ class TestOption(unittest.TestCase, CaseExecutor):
   # noinspection PyUnusedLocal
   # pylint: disable=unused-argument
   @parameterized.expand(make_cases())
-  def test_make(self, name: str, case: CaseData):
+  def test_make(self, name: str, case: CaseData) -> None:
     """
       Test the make method of the Option class.
       :return: None

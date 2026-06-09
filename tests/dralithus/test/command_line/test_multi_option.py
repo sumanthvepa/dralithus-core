@@ -26,28 +26,29 @@ def make_correct_cases() \
     ('multi-option4', '-vhv', None, [VerbosityOption('v', 1), HelpOption('h'), VerbosityOption('v', 1)]),
     ('multi-option5', '-hvh', None, [HelpOption('h'), VerbosityOption('v', 1), HelpOption('h')])]
 
-def make_incorrect_cases():
+def make_incorrect_cases() \
+    -> list[tuple[str, str, str | None, type[Exception]]]:
   """
     Generate test cases for the MultiOption class with bad values.
     :return: A list of test cases
   """
   return [
-    ('multi-option1', '-v', None, ValueError),
-    ('multi-option2', '-h', None, ValueError),
-    ('multi-option3', '-e=local', None, ValueError),
-    ('multi-option4', '-eh', None, ValueError),
-    ('multi-option5', '--help', None, ValueError),
-    ('multi-option6', '--verbosity=1', None, ValueError),
-    ('multi-option7', '-vhe=local', None, ValueError),
-    ('multi-option8', '-x', None, ValueError),
-    ('multi-option9', '-v', 'parameter', ValueError),
-    ('multi-option10', '-h', 'parameter', ValueError),
-    ('multi-option11', '-e=local', 'parameter', ValueError),
-    ('multi-option12', '-eh', 'parameter', ValueError),
-    ('multi-option13', '--help', 'parameter', ValueError),
-    ('multi-option14', '--verbosity=1', 'parameter', ValueError),
-    ('multi-option15', '-vhe=local', 'parameter', ValueError),
-    ('multi-option16', '-x', 'parameter', ValueError)]
+    ('multi-option1', '-v', None, AssertionError),
+    ('multi-option2', '-h', None, AssertionError),
+    ('multi-option3', '-e=local', None, AssertionError),
+    ('multi-option4', '-eh', None, AssertionError),
+    ('multi-option5', '--help', None, AssertionError),
+    ('multi-option6', '--verbosity=1', None, AssertionError),
+    ('multi-option7', '-vhe=local', None, AssertionError),
+    ('multi-option8', '-x', None, AssertionError),
+    ('multi-option9', '-v', 'parameter', AssertionError),
+    ('multi-option10', '-h', 'parameter', AssertionError),
+    ('multi-option11', '-e=local', 'parameter', AssertionError),
+    ('multi-option12', '-eh', 'parameter', AssertionError),
+    ('multi-option13', '--help', 'parameter', AssertionError),
+    ('multi-option14', '--verbosity=1', 'parameter', AssertionError),
+    ('multi-option15', '-vhe=local', 'parameter', AssertionError),
+    ('multi-option16', '-x', 'parameter', AssertionError)]
 
 
 class TestMultiOption(unittest.TestCase):
@@ -110,7 +111,6 @@ class TestMultiOption(unittest.TestCase):
     ('vhe_value_equal', '-vhe=local', None, False),
     ('vhe', '-vhe', None, False)
   ])
-
   def test_is_option(self,
     name: str,  # pylint: disable=unused-argument
     arg: str,
@@ -140,12 +140,13 @@ class TestMultiOption(unittest.TestCase):
 
   # noinspection PyUnusedLocal
   @parameterized.expand(make_incorrect_cases())
-  def text_make_incorrect_cases(self,
-    name,  # pylint: disable=unused-argument
+  def test_make_incorrect_cases(self,
+    name: str,  # pylint: disable=unused-argument
     current_arg: str,
-    next_arg: str) -> None:
+    next_arg: str | None,
+    expected_error: type[Exception]) -> None:
     """
       Test the make method of the MultiOption class incorrect cases.
     """
-    with self.assertRaises(ValueError):
+    with self.assertRaises(expected_error):
       MultiOption.make(current_arg, next_arg)

@@ -270,13 +270,6 @@ class TestOptions(unittest.TestCase, CaseExecutor):
   """
     Unit tests for the Options class.
   """
-  def __init__(self, *args, **kwargs):
-    """
-      Initialize the test case.
-    """
-    unittest.TestCase.__init__(self, *args, **kwargs)
-    CaseExecutor.__init__(self)
-
   # noinspection PyUnusedLocal
   # pylint: disable=unused-argument
   @parameterized.expand(all_cases())

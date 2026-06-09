@@ -3,7 +3,7 @@
 """
 import copy
 import unittest
-from typing import Any
+from typing import Any, cast
 
 from parameterized import parameterized
 
@@ -159,9 +159,9 @@ class TestEnvironmentOption(unittest.TestCase, CaseExecutor):
         to match its signature with that wichh the execute method
         is expecting.
       """
-      dct= copy.deepcopy(params[1])
+      dct = copy.deepcopy(params[1])
       params[0].add_to(dct)
-      return dct
+      return cast(dict[str, None | bool | int | str | set[str]], dct)
     self.execute(wrapper, case)
 
   # noinspection PyUnusedLocal

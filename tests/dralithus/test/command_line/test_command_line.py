@@ -116,13 +116,6 @@ class TestCommandLine(unittest.TestCase, CaseExecutor):
   """
     Unit tests for the CommandLine class and the parse function
   """
-  def __init__(self, *args, **kwargs):
-    """
-      Initialize the test case.
-    """
-    unittest.TestCase.__init__(self, *args, **kwargs)
-    CaseExecutor.__init__(self)
-
   # pylint: disable=unused-argument
   # noinspection PyUnusedLocal
   @parameterized.expand(parse_cases())
