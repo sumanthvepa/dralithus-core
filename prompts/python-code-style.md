@@ -145,3 +145,22 @@ should be the first thing in the file after any of those things.
 Always run pylint and mypy after generating code and report the 
 warnings to the user. Follow their instructions on how to fix the
 warnings.
+
+
+### Running Mypy
+
+To run mypy on the entire code base run:
+```bash
+mypy src tests
+```
+
+To just run mypy on the source, run:
+```bash
+  mypy src
+```
+
+To just run mypy on the source, run:
+```bash
+  mypy tests
+```
+
