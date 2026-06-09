@@ -82,10 +82,11 @@ class Command(ABC):
     """
     raise NotImplementedError('execute() must be implemented in derived class')
 
+
 def is_help_requested(
-    command_name: str | None,
-    global_options: Options,
-    command_options: Options) -> bool:
+      command_name: str | None,
+      global_options: Options,
+      command_options: Options) -> bool:
   """
     Check if help is requested for the command.
 
@@ -95,7 +96,7 @@ def is_help_requested(
     :return: True if help is requested, False otherwise
   """
   help_requested = global_options.get('requires_help', False) \
-                  or command_options.get('requires_help', False)
+      or command_options.get('requires_help', False)
   assert isinstance(help_requested, bool)
   return command_name == 'help' or help_requested
 
@@ -112,22 +113,20 @@ def make(args: list[str]) -> Command:
   from dralithus.help_command import (
     make_from_command_line as make_help_from_command_line,
     make_from_error as make_help_from_error)
+  # pylint: disable-next=import-outside-toplevel
   from dralithus.deploy_command import make as make_deploy
 
-  # The type ignore directives in the code below are to bypass
-  # a bug in how mypy runs within IntelliJ IDEA. The error does
-  # not occur when running mypy from the command line.
   try:
     cmdln = parse(args)
 
     if is_help_requested(cmdln.command_name, cmdln.global_options, cmdln.command_options):
-      return make_help_from_command_line(cmdln)  # type  ignore[return-value]
+      return make_help_from_command_line(cmdln)
 
     if cmdln.command_name == 'deploy':
-      return make_deploy(cmdln)  # type: ignore[return-value]
+      return make_deploy(cmdln)
 
     message = 'No command specified' if cmdln.command_name is None \
-      else f'Unknown command \'{cmdln.command_name}\' specified'
+        else f'Unknown command \'{cmdln.command_name}\' specified'
     raise CommandLineError(cmdln.program, cmdln.command_name, cmdln.verbosity, message)
   except CommandLineError as ex:
-    return make_help_from_error(ex)  # type: ignore[return-value]
+    return make_help_from_error(ex)
