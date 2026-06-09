@@ -12,8 +12,9 @@ from dralithus.command_line.help_option import HelpOption
 from dralithus.command_line.verbosity_option import VerbosityOption
 from dralithus.command_line.multi_option import MultiOption
 
+
 def make_correct_cases() \
-    -> list[tuple[str, str, str | None, list[Option]]]:
+      -> list[tuple[str, str, str | None, list[Option]]]:
   """
     Generate test cases for the MultiOption class.
     :return: A list of test cases
@@ -26,8 +27,9 @@ def make_correct_cases() \
     ('multi-option4', '-vhv', None, [VerbosityOption('v', 1), HelpOption('h'), VerbosityOption('v', 1)]),
     ('multi-option5', '-hvh', None, [HelpOption('h'), VerbosityOption('v', 1), HelpOption('h')])]
 
+
 def make_incorrect_cases() \
-    -> list[tuple[str, str, str | None, type[Exception]]]:
+      -> list[tuple[str, str, str | None, type[Exception]]]:
   """
     Generate test cases for the MultiOption class with bad values.
     :return: A list of test cases
@@ -111,7 +113,8 @@ class TestMultiOption(unittest.TestCase):
     ('vhe_value_equal', '-vhe=local', None, False),
     ('vhe', '-vhe', None, False)
   ])
-  def test_is_option(self,
+  def test_is_option(
+    self,
     name: str,  # pylint: disable=unused-argument
     arg: str,
     next_arg: str | None,
@@ -123,7 +126,8 @@ class TestMultiOption(unittest.TestCase):
 
   # noinspection PyUnusedLocal
   @parameterized.expand(make_correct_cases())
-  def test_make(self,
+  def test_make(
+    self,
     name: str,  # pylint: disable=unused-argument
     current_arg: str, next_arg: str | None,
     expected_options: list[Option]) -> None:
@@ -140,7 +144,8 @@ class TestMultiOption(unittest.TestCase):
 
   # noinspection PyUnusedLocal
   @parameterized.expand(make_incorrect_cases())
-  def test_make_incorrect_cases(self,
+  def test_make_incorrect_cases(
+    self,
     name: str,  # pylint: disable=unused-argument
     current_arg: str,
     next_arg: str | None,

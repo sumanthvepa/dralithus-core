@@ -96,11 +96,39 @@ def parse_edge_cases() -> list[tuple[str, CaseData]]:
     Edge cases for the CommandLine class
     :return: A list of edge cases for the CommandLine class
   """
-  # pylint: disable=line-too-long
   return [
-    ('global_help_option_terminator_verbosity_option', CaseData(args=['drl', '--help', '--', '-v'], expected=CommandLine(program='drl', command_name=None, global_options=Options(['--help']), command_options=Options([]), parameters={'-v'}), error=None)),
-    ('global_help_option_deploy_command_terminator_verbosity_option_with_value', CaseData(args=['drl', '--help', 'deploy', '--', '-v'], expected=CommandLine(program='drl', command_name='deploy', global_options=Options(['--help']), command_options=Options([]), parameters={'-v'}), error=None)),
-    ('terminator_help_option_command_verbosity_option', CaseData(args=['drl', '--', 'deploy', '--help', '-v'], expected=CommandLine(program='drl', command_name=None, global_options=Options([]), command_options=Options([]), parameters={'deploy', '--help', '-v'}), error=None)),
+    ('global_help_option_terminator_verbosity_option',
+     CaseData(
+       args=['drl', '--help', '--', '-v'],
+       expected=CommandLine(
+         program='drl',
+         command_name=None,
+         global_options=Options(['--help']),
+         command_options=Options([]),
+         parameters={'-v'}),
+       error=None)),
+    # pylint: disable-next=line-too-long
+    ('global_help_option_deploy_command_terminator_verbosity_option_with_value',
+     CaseData(
+       args=['drl', '--help', 'deploy', '--', '-v'],
+       expected=CommandLine(
+         program='drl',
+         command_name='deploy',
+         global_options=Options(['--help']),
+         command_options=Options([]),
+         parameters={'-v'}),
+       error=None)),
+    # pylint: disable-next=line-too-long
+    ('terminator_help_option_command_verbosity_option',
+     CaseData(
+       args=['drl', '--', 'deploy', '--help', '-v'],
+       expected=CommandLine(
+         program='drl',
+         command_name=None,
+         global_options=Options([]),
+         command_options=Options([]),
+         parameters={'deploy', '--help', '-v'}),
+       error=None)),
   ]
 
 

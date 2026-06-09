@@ -1,3 +1,4 @@
+*issue009-fix-intellij-idea-warnings: Fix warnings generated in IntelliJ IDEA
 [DONE]issue008-fix-mypy-errors: Fix errors reported by mypy
 [DONE]issue007-dralithus-test-cleanup: Remove unused CaseExecutor class
 [DONE]issue006-release1-fix-style-issue: Fix minor style isssues in some dralithus.command_line test suite files
