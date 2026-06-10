@@ -37,7 +37,7 @@ def command_make_cases() -> list[tuple[str, CaseData]]:
   """
   # pylint: disable=line-too-long
   return [
-    ('no_arguments', CaseData(args=[], expected=None, error=AssertionError)),
+    ('no_arguments', CaseData(args=[], error=AssertionError)),
     ('program_name_only', CaseData(args=['drl'], expected=HelpCommand('drl', None, 'No command specified', 0), error=None)),
     ('program_name_and_help_command', CaseData(args=['drl', 'help'], expected=HelpCommand('drl', 'help', None, 0), error=None)),
     ('program_name_and_help_command_with_verbosity', CaseData(args=['drl', 'help', '-v'], expected=HelpCommand('drl', 'help', None, 1), error=None)),

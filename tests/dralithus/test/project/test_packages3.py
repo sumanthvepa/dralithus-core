@@ -62,7 +62,6 @@ def error_cases() -> list[tuple[str, CaseData]]:
         args=Packages3CaseArgs(
           packages_txt=None,
           local_packages_txt=None),
-        expected=None,
         error=DralithusProjectError,
         error_message='No packages.txt file found in project root')),
   ]

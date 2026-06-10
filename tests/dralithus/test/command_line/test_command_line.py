@@ -54,7 +54,7 @@ def parse_correct_cases() -> list[tuple[str, CaseData]]:
   """
   # pylint: disable=too-many-locals
   cases = [
-    ('parse_case_0', CaseData(args=[], expected=None, error=AssertionError))
+    ('parse_case_0', CaseData(args=[], error=AssertionError))
   ]
   programs = [['drl']]
   global_opts = all_options()
@@ -87,7 +87,7 @@ def parse_incorrect_cases() -> list[tuple[str, CaseData]]:
     Test cases for the CommandLine class that are expected to fail
   """
   return [
-    ('parse_incorrect_case_0', CaseData(args=[], expected=None, error=AssertionError)),
+    ('parse_incorrect_case_0', CaseData(args=[], error=AssertionError)),
   ]
 
 

@@ -230,16 +230,16 @@ def incorrect_cases() -> list[tuple[str, CaseData]]:
   """
   # pylint: disable=line-too-long
   return [
-    ('error-short-help-value-equal', CaseData(args=['-h=True'], expected=None, error=ValueError)),
-    ('error-short-help-value-equal2', CaseData(args=['-h=2'], expected=None, error=ValueError)),
-    ('error-long-help-value-equal', CaseData(args=['--help=True'], expected=None, error=ValueError)),
-    ('error-long-help-value-equal2', CaseData(args=['--help=2'], expected=None, error=ValueError)),
-    ('error-short-version-bad-value', CaseData(args=['-v=bad-value'], expected=None, error=ValueError)),
-    ('error-short-version-bad-value2', CaseData(args=['-v=True'], expected=None, error=ValueError)),
-    ('error-long-version-bad-value', CaseData(args=['--verbose=bad-value'], expected=None, error=ValueError)),
-    ('error-long-version-bad-value2', CaseData(args=['--verbose=True'], expected=None, error=ValueError)),
-    ('error-long-version2-bad-value', CaseData(args=['--verbosity=bad-value'], expected=None, error=ValueError)),
-    ('error-long-version2-bad-value2', CaseData(args=['--verbosity=True'], expected=None, error=ValueError)),
+    ('error-short-help-value-equal', CaseData(args=['-h=True'], error=ValueError)),
+    ('error-short-help-value-equal2', CaseData(args=['-h=2'], error=ValueError)),
+    ('error-long-help-value-equal', CaseData(args=['--help=True'], error=ValueError)),
+    ('error-long-help-value-equal2', CaseData(args=['--help=2'], error=ValueError)),
+    ('error-short-version-bad-value', CaseData(args=['-v=bad-value'], error=ValueError)),
+    ('error-short-version-bad-value2', CaseData(args=['-v=True'], error=ValueError)),
+    ('error-long-version-bad-value', CaseData(args=['--verbose=bad-value'], error=ValueError)),
+    ('error-long-version-bad-value2', CaseData(args=['--verbose=True'], error=ValueError)),
+    ('error-long-version2-bad-value', CaseData(args=['--verbosity=bad-value'], error=ValueError)),
+    ('error-long-version2-bad-value2', CaseData(args=['--verbosity=True'], error=ValueError)),
     ('error-short-environment-bad-value', CaseData(args=['-e=bad-value'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'bad-value'}}, 1), error=None)),
     ('error-short-environment-bad-value2', CaseData(args=['-e=True'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'True'}}, 1), error=None)),
     ('error-short-environment-bad-value-multiple', CaseData(args=['-e=bad-value,local'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'bad-value', 'local'}}, 1), error=None)),
@@ -252,9 +252,9 @@ def incorrect_cases() -> list[tuple[str, CaseData]]:
     ('error-long-environment2-bad-value2', CaseData(args=['--environment=True'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'True'}}, 1), error=None)),
     ('error-long-environment2-bad-value-multiple', CaseData(args=['--environment=bad-value,local'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'bad-value', 'local'}}, 1), error=None)),
     ('error-long-environment2-bad-value-multiple2', CaseData(args=['--environment=local,bad-value'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'local', 'bad-value'}}, 1), error=None)),
-    ('error-short-help-value-correct-verbosity', CaseData(args=['-h=1', '-v'], expected=None, error=ValueError)),
-    ('error-short-help-value-correct-verbosity', CaseData(args=['-v', '-h=1'], expected=None, error=ValueError)),
-    ('error-terminator-before-environment-value', CaseData(args=['--environment', '--', 'local,test'], expected=None, error=ValueError))
+    ('error-short-help-value-correct-verbosity', CaseData(args=['-h=1', '-v'], error=ValueError)),
+    ('error-short-help-value-correct-verbosity', CaseData(args=['-v', '-h=1'], error=ValueError)),
+    ('error-terminator-before-environment-value', CaseData(args=['--environment', '--', 'local,test'], error=ValueError))
   ]
 
 def all_cases() -> list[tuple[str, CaseData]]:

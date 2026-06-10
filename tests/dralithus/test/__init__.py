@@ -26,6 +26,12 @@ dralithus/test/__init__.py: Helper classes and functions for unit tests
 from typing import Any, Callable, Protocol
 
 
+# Private sentinel used to detect whether a caller supplied an
+# expected value. It lets a literal None be a valid expected result,
+# distinct from "no expected value was given".
+_UNSET: Any = object()
+
+
 class CaseData:
   """
     A test case for dralithus
@@ -33,21 +39,25 @@ class CaseData:
   def __init__(
         self,
         args: Any,
-        expected: Any,
-        error: type[Exception] | None,
+        expected: Any = _UNSET,
+        error: type[Exception] | None = None,
         error_message: str | None = None):
     """
       Initialize the test case.
+
+      Exactly one outcome must be supplied: either an expected value
+      (a normal-result case, including a literal None) or an error
+      type (an exception case). An error message may accompany an
+      error.
 
       :param args: The input to the test case
       :param expected: The expected output of the test case
       :param error: The expected error of the test case
       :param error_message: The expected error message
     """
-    assert (
-      ((expected is not None) and (error is None)) or
-      ((expected is None) and (error is not None))
-    ), 'If expected is set, then error must be none, and vice versa.'
+    expected_supplied = expected is not _UNSET
+    assert expected_supplied != (error is not None), (
+      'Exactly one of expected or error must be supplied.')
     assert error_message is None or error is not None, (
       'An error message can only be specified when an error is expected.')
     self._args = args
@@ -65,12 +75,23 @@ class CaseData:
     return self._args
 
   @property
+  def expects_error(self) -> bool:
+    """
+      Return whether this case expects an exception.
+
+      :return: True for an exception case, False for a normal case
+    """
+    return self._expected is _UNSET
+
+  @property
   def expected(self) -> Any:
     """
       Get the expected output of the test case.
 
       :return: The expected output of the test case
     """
+    assert not self.expects_error, (
+      'expected is not defined for an exception case.')
     return self._expected
 
   @property
@@ -120,26 +141,7 @@ class CaseExecutor(RequiresAsserts):
       :param function: The function to execute
       :param case: The test case to execute
     """
-    if case.expected is not None:
-      expected = case.expected
-      # Since we use None to indicate that an error is expected, we cannot
-      # use None as an expected value when the function under test returns None.
-      # To overcome this, test cases that expect None as the output of the
-      # function, should pass a list with a single None element. This code
-      # checks for that, and sets expected to None if the expected value is a
-      # list with a single None element. Of course, one hopes that the function
-      # under test does not return a list with a single None element. This
-      # framework will not work for such situations.
-      if isinstance(case.expected, list) and len(case.expected) == 1 and case.expected[0] is None:
-        expected = None
-      actual = function(case.args)
-      # Store result of comparison in a variable to make debugging easier, and
-      # supress pylint and IntelliJ warnings about unused variables.
-      # noinspection PyUnusedLocal
-      # pylint: disable=unused-variable
-      # result = expected == actual
-      self.assertEqual(expected, actual, f'Expected {expected} but got {actual}')
-    else:
+    if case.expects_error:
       assert case.error is not None
       # IntelliJ IDEA's type checker is not smart enough to figure out
       # that case.error cannot be None at this point.
@@ -150,3 +152,8 @@ class CaseExecutor(RequiresAsserts):
         self.assertEqual(
           case.error_message,
           str(context.exception))
+    else:
+      expected = case.expected
+      actual = function(case.args)
+      self.assertEqual(
+        expected, actual, f'Expected {expected} but got {actual}')
