@@ -137,7 +137,7 @@ class CaseExecutor(RequiresAsserts):
       # supress pylint and IntelliJ warnings about unused variables.
       # noinspection PyUnusedLocal
       # pylint: disable=unused-variable
-      result = expected == actual
+      # result = expected == actual
       self.assertEqual(expected, actual, f'Expected {expected} but got {actual}')
     else:
       assert case.error is not None
