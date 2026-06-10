@@ -38,16 +38,16 @@ def command_make_cases() -> list[tuple[str, CaseData]]:
   # pylint: disable=line-too-long
   return [
     ('no_arguments', CaseData(args=[], error=AssertionError)),
-    ('program_name_only', CaseData(args=['drl'], expected=HelpCommand('drl', None, 'No command specified', 0), error=None)),
-    ('program_name_and_help_command', CaseData(args=['drl', 'help'], expected=HelpCommand('drl', 'help', None, 0), error=None)),
-    ('program_name_and_help_command_with_verbosity', CaseData(args=['drl', 'help', '-v'], expected=HelpCommand('drl', 'help', None, 1), error=None)),
-    ('program_name_and_help_command_with_terminator', CaseData(args=['drl', 'help', '--', '-v'], expected=HelpCommand('drl', 'help', None, 0), error=None)),
-    ('program_name_and_help_option', CaseData(args=['drl', '--help'], expected=HelpCommand('drl', None, None, 0), error=None)),
-    ('program_name_and_help_option_with_verbosity', CaseData(args=['drl', '--help', '-v'], expected=HelpCommand('drl', None, None, 1), error=None)),
-    ('program_name_and_help_option_with_terminator', CaseData(args=['drl', '--help', '--', '-v'], expected=HelpCommand('drl', None, None, 0), error=None)),
-    ('program_name_and_help_option_with_command_and_terminator_with_verbosity', CaseData(args=['drl', '--help', 'deploy', '--', '-v'], expected=HelpCommand('drl', 'deploy',None, 0), error=None)),
-    ('program_name_and_command_and_terminator_with_verbosity', CaseData(args=['drl', 'deploy', '--', '-v'], expected=HelpCommand('drl', 'deploy','No environments specified. Please specify at least one environment.', 0), error=None)),
-    ('program_name_and_command_with_verbosity', CaseData(args=['drl', 'deploy', '-v'], expected=HelpCommand('drl', 'deploy','No environments specified. Please specify at least one environment.', 1), error=None)),
+    ('program_name_only', CaseData(args=['drl'], expected=HelpCommand('drl', None, 'No command specified', 0))),
+    ('program_name_and_help_command', CaseData(args=['drl', 'help'], expected=HelpCommand('drl', 'help', None, 0))),
+    ('program_name_and_help_command_with_verbosity', CaseData(args=['drl', 'help', '-v'], expected=HelpCommand('drl', 'help', None, 1))),
+    ('program_name_and_help_command_with_terminator', CaseData(args=['drl', 'help', '--', '-v'], expected=HelpCommand('drl', 'help', None, 0))),
+    ('program_name_and_help_option', CaseData(args=['drl', '--help'], expected=HelpCommand('drl', None, None, 0))),
+    ('program_name_and_help_option_with_verbosity', CaseData(args=['drl', '--help', '-v'], expected=HelpCommand('drl', None, None, 1))),
+    ('program_name_and_help_option_with_terminator', CaseData(args=['drl', '--help', '--', '-v'], expected=HelpCommand('drl', None, None, 0))),
+    ('program_name_and_help_option_with_command_and_terminator_with_verbosity', CaseData(args=['drl', '--help', 'deploy', '--', '-v'], expected=HelpCommand('drl', 'deploy',None, 0))),
+    ('program_name_and_command_and_terminator_with_verbosity', CaseData(args=['drl', 'deploy', '--', '-v'], expected=HelpCommand('drl', 'deploy','No environments specified. Please specify at least one environment.', 0))),
+    ('program_name_and_command_with_verbosity', CaseData(args=['drl', 'deploy', '-v'], expected=HelpCommand('drl', 'deploy','No environments specified. Please specify at least one environment.', 1))),
   ]
 
 

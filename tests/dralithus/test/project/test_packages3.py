@@ -83,8 +83,7 @@ def basic_cases() -> list[tuple[str, CaseData]]:
         expected=Packages3Expected(
           production_dependencies=[],
           dev_dependencies=['mypy', 'pylint', 'parameterized'],
-          local_dependencies=[]),
-        error=None)),
+          local_dependencies=[]))),
     (
       'production_and_local_dependencies',
       CaseData(
@@ -94,8 +93,7 @@ def basic_cases() -> list[tuple[str, CaseData]]:
         expected=Packages3Expected(
           production_dependencies=['requests', 'rich'],
           dev_dependencies=['mypy', 'pylint', 'parameterized'],
-          local_dependencies=['../common-lib', '../tools-lib']),
-        error=None)),
+          local_dependencies=['../common-lib', '../tools-lib']))),
   ]
 
 
@@ -119,8 +117,7 @@ def comment_and_whitespace_cases() -> list[tuple[str, CaseData]]:
         expected=Packages3Expected(
           production_dependencies=['requests', 'rich'],
           dev_dependencies=['mypy', 'pylint', 'parameterized'],
-          local_dependencies=[]),
-        error=None)),
+          local_dependencies=[]))),
     (
       'local_packages_txt_comments_and_whitespace',
       CaseData(
@@ -133,8 +130,7 @@ def comment_and_whitespace_cases() -> list[tuple[str, CaseData]]:
         expected=Packages3Expected(
           production_dependencies=[],
           dev_dependencies=['mypy', 'pylint', 'parameterized'],
-          local_dependencies=['../common-lib', '../tools-lib']),
-        error=None)),
+          local_dependencies=['../common-lib', '../tools-lib']))),
   ]
 
 
@@ -155,8 +151,7 @@ def dev_marker_cases() -> list[tuple[str, CaseData]]:
           production_dependencies=['requests', 'rich'],
           dev_dependencies=[
             'mypy', 'pylint', 'parameterized', 'pytest'],
-          local_dependencies=[]),
-        error=None)),
+          local_dependencies=[]))),
     (
       'local_packages_txt_dev_marker',
       CaseData(
@@ -168,8 +163,7 @@ def dev_marker_cases() -> list[tuple[str, CaseData]]:
           production_dependencies=[],
           dev_dependencies=[
             'mypy', 'pylint', 'parameterized', '../test-lib'],
-          local_dependencies=['../common-lib', '../tools-lib']),
-        error=None)),
+          local_dependencies=['../common-lib', '../tools-lib']))),
   ]
 
 

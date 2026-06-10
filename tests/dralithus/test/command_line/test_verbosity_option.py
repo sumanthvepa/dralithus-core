@@ -18,19 +18,19 @@ def is_option_cases() -> list[tuple[str, CaseData]]:
   """
   # pylint: disable=line-too-long
   return [
-    ('short_no_value', CaseData(args=['-v', None], expected=True, error=None)),
-    ('long_no_value', CaseData(args=['--verbose', None], expected=True, error=None)),
-    ('long2_no_value', CaseData(args=['--verbosity', None], expected=True, error=None)),
-    ('short_value', CaseData(args=['-v=1', None], expected=True, error=None)),
-    ('long_value', CaseData(args=['--verbose=1', None], expected=True, error=None)),
-    ('long2_value', CaseData(args=['--verbosity=1', None], expected=True, error=None)),
-    ('short_bad_value', CaseData(args=['-v=True', None], expected=False, error=None)),
-    ('long_bad_value', CaseData(args=['--verbosity=True', None], expected=False, error=None)),
-    ('short_wrong_option_no_value', CaseData(args=['-h', None], expected=False, error=None)),
-    ('short_wrong_option_value', CaseData(args=['-h=True', None], expected=False, error=None)),
-    ('long_wrong_option_no_value', CaseData(args=['--help', None], expected=False, error=None)),
-    ('long_wrong_option_value', CaseData(args=['--environment=local,test', None], expected=False, error=None)),
-    ('not_option', CaseData(args=['parameter', None], expected=False, error=None))
+    ('short_no_value', CaseData(args=['-v', None], expected=True)),
+    ('long_no_value', CaseData(args=['--verbose', None], expected=True)),
+    ('long2_no_value', CaseData(args=['--verbosity', None], expected=True)),
+    ('short_value', CaseData(args=['-v=1', None], expected=True)),
+    ('long_value', CaseData(args=['--verbose=1', None], expected=True)),
+    ('long2_value', CaseData(args=['--verbosity=1', None], expected=True)),
+    ('short_bad_value', CaseData(args=['-v=True', None], expected=False)),
+    ('long_bad_value', CaseData(args=['--verbosity=True', None], expected=False)),
+    ('short_wrong_option_no_value', CaseData(args=['-h', None], expected=False)),
+    ('short_wrong_option_value', CaseData(args=['-h=True', None], expected=False)),
+    ('long_wrong_option_no_value', CaseData(args=['--help', None], expected=False)),
+    ('long_wrong_option_value', CaseData(args=['--environment=local,test', None], expected=False)),
+    ('not_option', CaseData(args=['parameter', None], expected=False))
   ]
 
 
@@ -41,10 +41,10 @@ def add_to_cases() -> list[tuple[str, CaseData]]:
   """
   # pylint: disable=line-too-long
   return [
-    ('add_2_to_empty_dict', CaseData(args=[VerbosityOption('v', 2), {}], expected={'verbosity': 2}, error=None)),
-    ('add_3_to_dict_1', CaseData(args=[VerbosityOption('v', 3), {'verbosity': 1}], expected={'verbosity': 4}, error=None)),
-    ('add_1_to_none_dict', CaseData(args=[VerbosityOption('v', 1), {'verbosity': None}], expected={'verbosity': 1}, error=None)),
-    ('and_1_to_dict_0', CaseData(args=[VerbosityOption('v', 1), {'verbosity': 0}], expected={'verbosity': 1}, error=None))
+    ('add_2_to_empty_dict', CaseData(args=[VerbosityOption('v', 2), {}], expected={'verbosity': 2})),
+    ('add_3_to_dict_1', CaseData(args=[VerbosityOption('v', 3), {'verbosity': 1}], expected={'verbosity': 4})),
+    ('add_1_to_none_dict', CaseData(args=[VerbosityOption('v', 1), {'verbosity': None}], expected={'verbosity': 1})),
+    ('and_1_to_dict_0', CaseData(args=[VerbosityOption('v', 1), {'verbosity': 0}], expected={'verbosity': 1}))
   ]
 
 
@@ -55,30 +55,30 @@ def make_cases() -> list[tuple[str, CaseData]]:
   """
   # pylint: disable=line-too-long
   return [
-    ('short_no_value_no_next_arg', CaseData(args=['-v', None], expected=(VerbosityOption('v', 1), False), error=None)),
-    ('short_no_value_next_arg_option', CaseData(args=['-v', '-h'], expected=(VerbosityOption('v', 1), False), error=None)),
-    ('short_no_value_next_arg_parameter', CaseData(args=['-v', 'parameter'], expected=(VerbosityOption('v', 1), False), error=None)),
-    ('long_no_value_no_next_arg', CaseData(args=['--verbosity', None], expected=(VerbosityOption('verbosity', 1), False), error=None)),
-    ('long_no_value_next_arg_option', CaseData(args=['--verbosity', '-h'], expected=(VerbosityOption('verbosity', 1), False), error=None)),
-    ('long_no_value_next_arg_parameter', CaseData(args=['--verbosity', 'parameter'], expected=(VerbosityOption('verbosity', 1), False), error=None)),
-    ('short_value_no_next_arg', CaseData(args=['-v2', None], expected=(VerbosityOption('v', 2), False), error=None)),
-    ('short_value_next_arg_option', CaseData(args=['-v2', '-h'], expected=(VerbosityOption('v', 2), False), error=None)),
-    ('short_value_next_arg_parameter', CaseData(args=['-v2', 'parameter'], expected=(VerbosityOption('v', 2), False), error=None)),
-    ('short_value_equal_no_next_arg', CaseData(args=['-v=2', None], expected=(VerbosityOption('v', 2), False), error=None)),
-    ('short_value_equal_next_arg_option', CaseData(args=['-v=2', '-h'], expected=(VerbosityOption('v', 2), False), error=None)),
-    ('short_value_equal_next_arg_parameter', CaseData(args=['-v=2', 'parameter'], expected=(VerbosityOption('v', 2), False), error=None)),
-    ('long_value_equal_no_next_arg', CaseData(args=['--verbosity=2', None], expected=(VerbosityOption('verbosity', 2), False), error=None)),
-    ('long_value_equal_next_arg_option', CaseData(args=['--verbosity=2', '-h'], expected=(VerbosityOption('verbosity', 2), False), error=None)),
-    ('long_value_equal_next_arg_parameter', CaseData(args=['--verbosity=2', 'parameter'], expected=(VerbosityOption('verbosity', 2), False), error=None)),
-    ('short_no_value_next_arg_bad_value', CaseData(args=['-v', 'bad_value'], expected=(VerbosityOption('v', 1), False), error=None)),
-    ('short_no_value_next_arg_bad_value2', CaseData(args=['-v', 'True'], expected=(VerbosityOption('v', 1), False), error=None)),
-    ('long_no_value_next_arg_bad_value', CaseData(args=['--verbosity', 'bad_value'], expected=(VerbosityOption('verbosity', 1), False), error=None)),
-    ('long_no_value_next_arg_bad_value2', CaseData(args=['--verbosity', 'True'], expected=(VerbosityOption('verbosity', 1), False), error=None)),
-    ('short_no_value_next_arg', CaseData(args=['-v', '2'], expected=(VerbosityOption('v', 2), True), error=None)),
-    ('long_no_value_next_arg', CaseData(args=['--verbosity', '2'], expected=(VerbosityOption('verbosity', 2), True), error=None)),
-    ('long2_no_value_next_arg', CaseData(args=['--verbose', '2'], expected=(VerbosityOption('verbose', 2), True), error=None)),
-    ('short_bad_value_next_arg_true', CaseData(args=['-v', 'True'], expected=(VerbosityOption('v', 1), False), error=None)),
-    ('long_bad_value_next_arg_true', CaseData(args=['--verbosity', 'True'], expected=(VerbosityOption('verbosity', 1), False), error=None)),
+    ('short_no_value_no_next_arg', CaseData(args=['-v', None], expected=(VerbosityOption('v', 1), False))),
+    ('short_no_value_next_arg_option', CaseData(args=['-v', '-h'], expected=(VerbosityOption('v', 1), False))),
+    ('short_no_value_next_arg_parameter', CaseData(args=['-v', 'parameter'], expected=(VerbosityOption('v', 1), False))),
+    ('long_no_value_no_next_arg', CaseData(args=['--verbosity', None], expected=(VerbosityOption('verbosity', 1), False))),
+    ('long_no_value_next_arg_option', CaseData(args=['--verbosity', '-h'], expected=(VerbosityOption('verbosity', 1), False))),
+    ('long_no_value_next_arg_parameter', CaseData(args=['--verbosity', 'parameter'], expected=(VerbosityOption('verbosity', 1), False))),
+    ('short_value_no_next_arg', CaseData(args=['-v2', None], expected=(VerbosityOption('v', 2), False))),
+    ('short_value_next_arg_option', CaseData(args=['-v2', '-h'], expected=(VerbosityOption('v', 2), False))),
+    ('short_value_next_arg_parameter', CaseData(args=['-v2', 'parameter'], expected=(VerbosityOption('v', 2), False))),
+    ('short_value_equal_no_next_arg', CaseData(args=['-v=2', None], expected=(VerbosityOption('v', 2), False))),
+    ('short_value_equal_next_arg_option', CaseData(args=['-v=2', '-h'], expected=(VerbosityOption('v', 2), False))),
+    ('short_value_equal_next_arg_parameter', CaseData(args=['-v=2', 'parameter'], expected=(VerbosityOption('v', 2), False))),
+    ('long_value_equal_no_next_arg', CaseData(args=['--verbosity=2', None], expected=(VerbosityOption('verbosity', 2), False))),
+    ('long_value_equal_next_arg_option', CaseData(args=['--verbosity=2', '-h'], expected=(VerbosityOption('verbosity', 2), False))),
+    ('long_value_equal_next_arg_parameter', CaseData(args=['--verbosity=2', 'parameter'], expected=(VerbosityOption('verbosity', 2), False))),
+    ('short_no_value_next_arg_bad_value', CaseData(args=['-v', 'bad_value'], expected=(VerbosityOption('v', 1), False))),
+    ('short_no_value_next_arg_bad_value2', CaseData(args=['-v', 'True'], expected=(VerbosityOption('v', 1), False))),
+    ('long_no_value_next_arg_bad_value', CaseData(args=['--verbosity', 'bad_value'], expected=(VerbosityOption('verbosity', 1), False))),
+    ('long_no_value_next_arg_bad_value2', CaseData(args=['--verbosity', 'True'], expected=(VerbosityOption('verbosity', 1), False))),
+    ('short_no_value_next_arg', CaseData(args=['-v', '2'], expected=(VerbosityOption('v', 2), True))),
+    ('long_no_value_next_arg', CaseData(args=['--verbosity', '2'], expected=(VerbosityOption('verbosity', 2), True))),
+    ('long2_no_value_next_arg', CaseData(args=['--verbose', '2'], expected=(VerbosityOption('verbose', 2), True))),
+    ('short_bad_value_next_arg_true', CaseData(args=['-v', 'True'], expected=(VerbosityOption('v', 1), False))),
+    ('long_bad_value_next_arg_true', CaseData(args=['--verbosity', 'True'], expected=(VerbosityOption('verbosity', 1), False))),
     ('short_bad_value_equal', CaseData(args=['-v=bad_value', None], error=AssertionError)),
     ('short_bad_value2_equal', CaseData(args=['-v=True', None], error=AssertionError)),
     ('short_bad_value3_equal', CaseData(args=['-v=-2', None], error=AssertionError)),

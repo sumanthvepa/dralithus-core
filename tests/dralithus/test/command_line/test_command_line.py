@@ -76,7 +76,7 @@ def parse_correct_cases() -> list[tuple[str, CaseData]]:
               Options(global_opt),
               Options(command_opt),
               parameter)
-            case = (name, CaseData(args, expected=cmdline, error=None))
+            case = (name, CaseData(args, expected=cmdline))
             cases.append(case)
             case_number += 1
   return cases
@@ -105,8 +105,7 @@ def parse_edge_cases() -> list[tuple[str, CaseData]]:
          command_name=None,
          global_options=Options(['--help']),
          command_options=Options([]),
-         parameters={'-v'}),
-       error=None)),
+         parameters={'-v'}))),
     # pylint: disable-next=line-too-long
     ('global_help_option_deploy_command_terminator_verbosity_option_with_value',
      CaseData(
@@ -116,8 +115,7 @@ def parse_edge_cases() -> list[tuple[str, CaseData]]:
          command_name='deploy',
          global_options=Options(['--help']),
          command_options=Options([]),
-         parameters={'-v'}),
-       error=None)),
+         parameters={'-v'}))),
     # pylint: disable-next=line-too-long
     ('terminator_help_option_command_verbosity_option',
      CaseData(
@@ -127,8 +125,7 @@ def parse_edge_cases() -> list[tuple[str, CaseData]]:
          command_name=None,
          global_options=Options([]),
          command_options=Options([]),
-         parameters={'deploy', '--help', '-v'}),
-       error=None)),
+         parameters={'deploy', '--help', '-v'}))),
   ]
 
 

@@ -16,7 +16,7 @@ def empty_case() -> list[tuple[str, CaseData]]:
   """
   # pylint: disable=line-too-long
   return [
-    ('empty', CaseData(args=[], expected=({'requires_help': False, 'verbosity': 0, 'environments': set()}, 0), error=None))
+    ('empty', CaseData(args=[], expected=({'requires_help': False, 'verbosity': 0, 'environments': set()}, 0)))
   ]
 
 
@@ -28,39 +28,39 @@ def single_option_cases() -> list[tuple[str, CaseData]]:
   """
   # pylint: disable=line-too-long
   return [
-    ('help-short', CaseData(args=['-h'], expected=({'requires_help': True, 'verbosity': 0, 'environments': set()}, 1), error=None)),
-    ('help-long', CaseData(args=['--help'], expected=({'requires_help': True, 'verbosity': 0, 'environments': set()}, 1), error=None)),
-    ('verbosity-short', CaseData(args=['-v'], expected=({'requires_help': False, 'verbosity': 1, 'environments': set()}, 1), error=None)),
-    ('verbosity-long', CaseData(args=['--verbose'], expected=({'requires_help': False, 'verbosity': 1, 'environments': set()}, 1), error=None)),
-    ('verbosity-long-value-equal', CaseData(args=['--verbose=2'], expected=({'requires_help': False, 'verbosity': 2, 'environments': set()}, 1), error=None)),
-    ('verbosity-long-value-space', CaseData(args=['--verbose', '2'], expected=({'requires_help': False, 'verbosity': 2, 'environments': set()}, 2), error=None)),
-    ('verbosity-long2', CaseData(args=['--verbosity'], expected=({'requires_help': False, 'verbosity': 1, 'environments': set()}, 1), error=None)),
-    ('verbosity-long2-value-equal', CaseData(args=['--verbosity=2'], expected=({'requires_help': False, 'verbosity': 2, 'environments': set()}, 1), error=None)),
-    ('verbosity-long2-value-space', CaseData(args=['--verbosity', '2'], expected=({'requires_help': False, 'verbosity': 2, 'environments': set()}, 2), error=None)),
-    ('environment-short', CaseData(args=['-e=local'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'local'}}, 1), error=None)),
-    ('environment-short2', CaseData(args=['-e=development'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'development'}}, 1), error=None)),
-    ('environment-short-space', CaseData(args=['-e', 'local'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'local'}}, 2), error=None)),
-    ('environment-short-space2', CaseData(args=['-e', 'development'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'development'}}, 2), error=None)),
-    ('environment-short-multiple', CaseData(args=['-e=local,test'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'local', 'test'}}, 1), error=None)),
-    ('environment-short-multiple2', CaseData(args=['-e=development,staging'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'development', 'staging'}}, 1), error=None)),
-    ('environment-short-multiple-space', CaseData(args=['-e', 'local,test'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'local', 'test'}}, 2), error=None)),
-    ('environment-short-multiple-space2', CaseData(args=['-e', 'development,staging'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'development', 'staging'}}, 2), error=None)),
-    ('environment-long', CaseData(args=['--env=local'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'local'}}, 1), error=None)),
-    ('environment-long2', CaseData(args=['--env=development'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'development'}}, 1), error=None)),
-    ('environment-long-space', CaseData(args=['--env', 'local'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'local'}}, 2), error=None)),
-    ('environment-long-space2', CaseData(args=['--env', 'development'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'development'}}, 2), error=None)),
-    ('environment-long-multiple', CaseData(args=['--env=local,test'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'local', 'test'}}, 1), error=None)),
-    ('environment-long-multiple2', CaseData(args=['--env=development,staging'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'development', 'staging'}}, 1), error=None)),
-    ('environment-long-multiple-space', CaseData(args=['--env', 'local,test'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'local', 'test'}}, 2), error=None)),
-    ('environment-long-multiple-space2', CaseData(args=['--env', 'development,staging'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'development', 'staging'}}, 2), error=None)),
-    ('environment2-long', CaseData(args=['--environment=local'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'local'}}, 1), error=None)),
-    ('environment2-long2', CaseData(args=['--environment=development'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'development'}}, 1), error=None)),
-    ('environment2-long-space', CaseData(args=['--environment', 'local'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'local'}}, 2), error=None)),
-    ('environment2-long2-space', CaseData(args=['--environment', 'development'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'development'}}, 2), error=None)),
-    ('environment2-long-multiple', CaseData(args=['--environment=local,test'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'local', 'test'}}, 1), error=None)),
-    ('environment2-long2-multiple', CaseData(args=['--environment=development,staging'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'development', 'staging'}}, 1), error=None)),
-    ('environment2-long-multiple-space', CaseData(args=['--environment', 'local,test'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'local', 'test'}}, 2), error=None)),
-    ('environment2-long2-multiple-space', CaseData(args=['--environment', 'development,staging'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'development', 'staging'}}, 2), error=None))
+    ('help-short', CaseData(args=['-h'], expected=({'requires_help': True, 'verbosity': 0, 'environments': set()}, 1))),
+    ('help-long', CaseData(args=['--help'], expected=({'requires_help': True, 'verbosity': 0, 'environments': set()}, 1))),
+    ('verbosity-short', CaseData(args=['-v'], expected=({'requires_help': False, 'verbosity': 1, 'environments': set()}, 1))),
+    ('verbosity-long', CaseData(args=['--verbose'], expected=({'requires_help': False, 'verbosity': 1, 'environments': set()}, 1))),
+    ('verbosity-long-value-equal', CaseData(args=['--verbose=2'], expected=({'requires_help': False, 'verbosity': 2, 'environments': set()}, 1))),
+    ('verbosity-long-value-space', CaseData(args=['--verbose', '2'], expected=({'requires_help': False, 'verbosity': 2, 'environments': set()}, 2))),
+    ('verbosity-long2', CaseData(args=['--verbosity'], expected=({'requires_help': False, 'verbosity': 1, 'environments': set()}, 1))),
+    ('verbosity-long2-value-equal', CaseData(args=['--verbosity=2'], expected=({'requires_help': False, 'verbosity': 2, 'environments': set()}, 1))),
+    ('verbosity-long2-value-space', CaseData(args=['--verbosity', '2'], expected=({'requires_help': False, 'verbosity': 2, 'environments': set()}, 2))),
+    ('environment-short', CaseData(args=['-e=local'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'local'}}, 1))),
+    ('environment-short2', CaseData(args=['-e=development'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'development'}}, 1))),
+    ('environment-short-space', CaseData(args=['-e', 'local'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'local'}}, 2))),
+    ('environment-short-space2', CaseData(args=['-e', 'development'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'development'}}, 2))),
+    ('environment-short-multiple', CaseData(args=['-e=local,test'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'local', 'test'}}, 1))),
+    ('environment-short-multiple2', CaseData(args=['-e=development,staging'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'development', 'staging'}}, 1))),
+    ('environment-short-multiple-space', CaseData(args=['-e', 'local,test'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'local', 'test'}}, 2))),
+    ('environment-short-multiple-space2', CaseData(args=['-e', 'development,staging'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'development', 'staging'}}, 2))),
+    ('environment-long', CaseData(args=['--env=local'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'local'}}, 1))),
+    ('environment-long2', CaseData(args=['--env=development'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'development'}}, 1))),
+    ('environment-long-space', CaseData(args=['--env', 'local'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'local'}}, 2))),
+    ('environment-long-space2', CaseData(args=['--env', 'development'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'development'}}, 2))),
+    ('environment-long-multiple', CaseData(args=['--env=local,test'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'local', 'test'}}, 1))),
+    ('environment-long-multiple2', CaseData(args=['--env=development,staging'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'development', 'staging'}}, 1))),
+    ('environment-long-multiple-space', CaseData(args=['--env', 'local,test'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'local', 'test'}}, 2))),
+    ('environment-long-multiple-space2', CaseData(args=['--env', 'development,staging'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'development', 'staging'}}, 2))),
+    ('environment2-long', CaseData(args=['--environment=local'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'local'}}, 1))),
+    ('environment2-long2', CaseData(args=['--environment=development'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'development'}}, 1))),
+    ('environment2-long-space', CaseData(args=['--environment', 'local'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'local'}}, 2))),
+    ('environment2-long2-space', CaseData(args=['--environment', 'development'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'development'}}, 2))),
+    ('environment2-long-multiple', CaseData(args=['--environment=local,test'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'local', 'test'}}, 1))),
+    ('environment2-long2-multiple', CaseData(args=['--environment=development,staging'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'development', 'staging'}}, 1))),
+    ('environment2-long-multiple-space', CaseData(args=['--environment', 'local,test'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'local', 'test'}}, 2))),
+    ('environment2-long2-multiple-space', CaseData(args=['--environment', 'development,staging'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'development', 'staging'}}, 2)))
   ]
 
 def multi_option_cases() -> list[tuple[str, CaseData]]:
@@ -71,11 +71,11 @@ def multi_option_cases() -> list[tuple[str, CaseData]]:
   # pylint: disable=line-too-long
   # noinspection SpellCheckingInspection
   return [
-    ('multi-option', CaseData(args=['-vh'], expected=({'requires_help': True, 'verbosity': 1, 'environments': set()}, 1), error=None)),
-    ('multi-option2', CaseData(args=['-hv'], expected=({'requires_help': True, 'verbosity': 1, 'environments': set()}, 1), error=None)),
-    ('multi-option2', CaseData(args=['-hv'], expected=({'requires_help': True, 'verbosity': 1, 'environments': set()}, 1), error=None)),
-    ('multi-option3', CaseData(args=['-vv'], expected=({'requires_help': False, 'verbosity': 2, 'environments': set()}, 1), error=None)),
-    ('multi-option4', CaseData(args=['-vvhvh', '-e', 'local'], expected=({'requires_help': True, 'verbosity': 3, 'environments': {'local'}}, 3), error=None)),
+    ('multi-option', CaseData(args=['-vh'], expected=({'requires_help': True, 'verbosity': 1, 'environments': set()}, 1))),
+    ('multi-option2', CaseData(args=['-hv'], expected=({'requires_help': True, 'verbosity': 1, 'environments': set()}, 1))),
+    ('multi-option2', CaseData(args=['-hv'], expected=({'requires_help': True, 'verbosity': 1, 'environments': set()}, 1))),
+    ('multi-option3', CaseData(args=['-vv'], expected=({'requires_help': False, 'verbosity': 2, 'environments': set()}, 1))),
+    ('multi-option4', CaseData(args=['-vvhvh', '-e', 'local'], expected=({'requires_help': True, 'verbosity': 3, 'environments': {'local'}}, 3))),
   ]
 
 
@@ -128,7 +128,7 @@ def combine_cases(
   combined_expected = (
     {'requires_help': requires_help, 'verbosity': verbosity, 'environments': environments},
     end_index)
-  case = CaseData(args=combined_args, expected=combined_expected, error=None)
+  case = CaseData(args=combined_args, expected=combined_expected)
   return name, case
 
 def double_option_cases() -> list[tuple[str, CaseData]]:
@@ -189,7 +189,7 @@ def cases_with_extra_args() -> list[tuple[str, CaseData]]:
   for name, case in input_cases:
     # Add extra args to the end of the args list
     extra_args = ['extra_arg1', 'extra_arg2']
-    case_with_extra_args = CaseData(args=case.args + extra_args, expected=case.expected, error=None)
+    case_with_extra_args = CaseData(args=case.args + extra_args, expected=case.expected)
     output_cases.append((f'{name}-extra-args', case_with_extra_args))
   return output_cases
 
@@ -203,11 +203,11 @@ def edge_cases() -> list[tuple[str, CaseData]]:
   """
   # pylint: disable=line-too-long
   return [
-    ('bad-help-value', CaseData(args=['-h', 'True', '-v', '1'], expected=({'requires_help': True, 'verbosity': 0, 'environments': set()}, 1), error=None)),
-    ('option-after-first-parameter', CaseData(args=['-v', '1', 'parameter', '-h'], expected=({'requires_help': False, 'verbosity': 1, 'environments': set()}, 2), error=None)),
-    ('terminator-before-option-value', CaseData(args=['-v', '--', '3', '-h'], expected=({'requires_help': False, 'verbosity': 1, 'environments': set()}, 2), error=None)),
-    ('multiple-terminators', CaseData(args=['-v', '--', '3', '--', '-h'], expected=({'requires_help': False, 'verbosity': 1, 'environments': set()}, 2), error=None)),
-    ('terminator-before-environment-value', CaseData(args=['-e=local,test', '--', '-e=development,staging'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'local', 'test'}}, 2), error=None))
+    ('bad-help-value', CaseData(args=['-h', 'True', '-v', '1'], expected=({'requires_help': True, 'verbosity': 0, 'environments': set()}, 1))),
+    ('option-after-first-parameter', CaseData(args=['-v', '1', 'parameter', '-h'], expected=({'requires_help': False, 'verbosity': 1, 'environments': set()}, 2))),
+    ('terminator-before-option-value', CaseData(args=['-v', '--', '3', '-h'], expected=({'requires_help': False, 'verbosity': 1, 'environments': set()}, 2))),
+    ('multiple-terminators', CaseData(args=['-v', '--', '3', '--', '-h'], expected=({'requires_help': False, 'verbosity': 1, 'environments': set()}, 2))),
+    ('terminator-before-environment-value', CaseData(args=['-e=local,test', '--', '-e=development,staging'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'local', 'test'}}, 2)))
   ]
 
 def correct_cases() -> list[tuple[str, CaseData]]:
@@ -240,18 +240,18 @@ def incorrect_cases() -> list[tuple[str, CaseData]]:
     ('error-long-version-bad-value2', CaseData(args=['--verbose=True'], error=ValueError)),
     ('error-long-version2-bad-value', CaseData(args=['--verbosity=bad-value'], error=ValueError)),
     ('error-long-version2-bad-value2', CaseData(args=['--verbosity=True'], error=ValueError)),
-    ('error-short-environment-bad-value', CaseData(args=['-e=bad-value'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'bad-value'}}, 1), error=None)),
-    ('error-short-environment-bad-value2', CaseData(args=['-e=True'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'True'}}, 1), error=None)),
-    ('error-short-environment-bad-value-multiple', CaseData(args=['-e=bad-value,local'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'bad-value', 'local'}}, 1), error=None)),
-    ('error-short-environment-bad-value-multiple2', CaseData(args=['-e=local,bad-value'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'local', 'bad-value'}}, 1), error=None)),
-    ('error-long-environment-bad-value', CaseData(args=['--env=bad-value'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'bad-value'}}, 1), error=None)),
-    ('error-long-environment-bad-value2', CaseData(args=['--env=True'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'True'}}, 1), error=None)),
-    ('error-long-environment-bad-value-multiple', CaseData(args=['--env=bad-value,local'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'bad-value', 'local'}}, 1), error=None)),
-    ('error-long-environment-bad-value-multiple2', CaseData(args=['--env=local,bad-value'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'local', 'bad-value'}}, 1), error=None)),
-    ('error-long-environment2-bad-value', CaseData(args=['--environment=bad-value'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'bad-value'}}, 1), error=None)),
-    ('error-long-environment2-bad-value2', CaseData(args=['--environment=True'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'True'}}, 1), error=None)),
-    ('error-long-environment2-bad-value-multiple', CaseData(args=['--environment=bad-value,local'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'bad-value', 'local'}}, 1), error=None)),
-    ('error-long-environment2-bad-value-multiple2', CaseData(args=['--environment=local,bad-value'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'local', 'bad-value'}}, 1), error=None)),
+    ('error-short-environment-bad-value', CaseData(args=['-e=bad-value'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'bad-value'}}, 1))),
+    ('error-short-environment-bad-value2', CaseData(args=['-e=True'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'True'}}, 1))),
+    ('error-short-environment-bad-value-multiple', CaseData(args=['-e=bad-value,local'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'bad-value', 'local'}}, 1))),
+    ('error-short-environment-bad-value-multiple2', CaseData(args=['-e=local,bad-value'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'local', 'bad-value'}}, 1))),
+    ('error-long-environment-bad-value', CaseData(args=['--env=bad-value'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'bad-value'}}, 1))),
+    ('error-long-environment-bad-value2', CaseData(args=['--env=True'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'True'}}, 1))),
+    ('error-long-environment-bad-value-multiple', CaseData(args=['--env=bad-value,local'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'bad-value', 'local'}}, 1))),
+    ('error-long-environment-bad-value-multiple2', CaseData(args=['--env=local,bad-value'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'local', 'bad-value'}}, 1))),
+    ('error-long-environment2-bad-value', CaseData(args=['--environment=bad-value'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'bad-value'}}, 1))),
+    ('error-long-environment2-bad-value2', CaseData(args=['--environment=True'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'True'}}, 1))),
+    ('error-long-environment2-bad-value-multiple', CaseData(args=['--environment=bad-value,local'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'bad-value', 'local'}}, 1))),
+    ('error-long-environment2-bad-value-multiple2', CaseData(args=['--environment=local,bad-value'], expected=({'requires_help': False, 'verbosity': 0, 'environments': {'local', 'bad-value'}}, 1))),
     ('error-short-help-value-correct-verbosity', CaseData(args=['-h=1', '-v'], error=ValueError)),
     ('error-short-help-value-correct-verbosity', CaseData(args=['-v', '-h=1'], error=ValueError)),
     ('error-terminator-before-environment-value', CaseData(args=['--environment', '--', 'local,test'], error=ValueError))

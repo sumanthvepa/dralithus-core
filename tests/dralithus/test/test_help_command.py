@@ -42,20 +42,20 @@ def make_cases() -> list[tuple[str, CaseData]]:
   """
   # pylint: disable=line-too-long
   return [
-    ('help_command', CaseData(args=CommandLine(program='drl', command_name=None, global_options=Options([]), command_options=Options([]), parameters=set()), expected=HelpCommand('drl', None, None, 0), error=None)),
-    ('help_command_global_verbosity', CaseData(args=CommandLine(program='drl', command_name=None, global_options=Options(['-v=1']), command_options=Options([]), parameters=set()), expected=HelpCommand('drl', None, None, 1), error=None)),
-    ('help_command_command_verbosity', CaseData(args=CommandLine(program='drl', command_name=None, global_options=Options([]), command_options=Options(['-v=1']), parameters=set()), expected=HelpCommand('drl', None, None, 1), error=None)),
-    ('help_command_global_and_command_verbosity', CaseData(args=CommandLine(program='drl', command_name=None, global_options=Options(['-v=1']), command_options=Options(['-v=1']), parameters=set()), expected=HelpCommand('drl', None, None, 2), error=None)),
-    ('help_command_global_and_command_verbosity_more_than_3', CaseData(args=CommandLine(program='drl', command_name=None, global_options=Options(['-v=2']), command_options=Options(['-v=2']), parameters=set()), expected=HelpCommand('drl', None, None, 3), error=None)),
-    ('help_global_option', CaseData(args=CommandLine(program='drl', command_name=None, global_options=Options(['--help']), command_options=Options([]), parameters=set()), expected=HelpCommand('drl', None, None, 0), error=None)),
-    ('help_global_option_global_verbosity', CaseData(args=CommandLine(program='drl', command_name=None, global_options=Options(['-v', '--help']), command_options=Options([]), parameters=set()), expected=HelpCommand('drl', None, None, 1), error=None)),
-    ('help_global_option_command_verbosity', CaseData(args=CommandLine(program='drl', command_name=None, global_options=Options(['--help']), command_options=Options(['-v', ]), parameters=set()), expected=HelpCommand('drl', None, None, 1), error=None)),
-    ('help_global_option_global_and_command_verbosity', CaseData(args=CommandLine(program='drl', command_name=None, global_options=Options(['--help', '-v']), command_options=Options(['-v=1']), parameters=set()), expected=HelpCommand('drl', None, None, 2), error=None)),
-    ('help_command_option', CaseData(args=CommandLine(program='drl', command_name=None, global_options=Options([]), command_options=Options(['--help']), parameters=set()), expected=HelpCommand('drl', None, None, 0), error=None)),
-    ('help_command_option_global_verbosity', CaseData(args=CommandLine(program='drl', command_name=None, global_options=Options(['-v']), command_options=Options(['--help']), parameters=set()), expected=HelpCommand('drl', None, None, 1), error=None)),
-    ('help_command_option_command_verbosity', CaseData(args=CommandLine(program='drl', command_name=None, global_options=Options([]), command_options=Options(['--help', '-v', ]), parameters=set()), expected=HelpCommand('drl', None, None, 1), error=None)),
-    ('help_command_option_global_and_command_verbosity', CaseData(args=CommandLine(program='drl', command_name=None, global_options=Options(['-v']), command_options=Options(['-v=1', '--help']), parameters=set()), expected=HelpCommand('drl', None, None, 2), error=None)),
-    ('help_command_command_needing_help', CaseData(args=CommandLine(program='drl', command_name='deploy', global_options=Options([]), command_options=Options([]), parameters=set()), expected=HelpCommand('drl', 'deploy', None, 0), error=None)),
+    ('help_command', CaseData(args=CommandLine(program='drl', command_name=None, global_options=Options([]), command_options=Options([]), parameters=set()), expected=HelpCommand('drl', None, None, 0))),
+    ('help_command_global_verbosity', CaseData(args=CommandLine(program='drl', command_name=None, global_options=Options(['-v=1']), command_options=Options([]), parameters=set()), expected=HelpCommand('drl', None, None, 1))),
+    ('help_command_command_verbosity', CaseData(args=CommandLine(program='drl', command_name=None, global_options=Options([]), command_options=Options(['-v=1']), parameters=set()), expected=HelpCommand('drl', None, None, 1))),
+    ('help_command_global_and_command_verbosity', CaseData(args=CommandLine(program='drl', command_name=None, global_options=Options(['-v=1']), command_options=Options(['-v=1']), parameters=set()), expected=HelpCommand('drl', None, None, 2))),
+    ('help_command_global_and_command_verbosity_more_than_3', CaseData(args=CommandLine(program='drl', command_name=None, global_options=Options(['-v=2']), command_options=Options(['-v=2']), parameters=set()), expected=HelpCommand('drl', None, None, 3))),
+    ('help_global_option', CaseData(args=CommandLine(program='drl', command_name=None, global_options=Options(['--help']), command_options=Options([]), parameters=set()), expected=HelpCommand('drl', None, None, 0))),
+    ('help_global_option_global_verbosity', CaseData(args=CommandLine(program='drl', command_name=None, global_options=Options(['-v', '--help']), command_options=Options([]), parameters=set()), expected=HelpCommand('drl', None, None, 1))),
+    ('help_global_option_command_verbosity', CaseData(args=CommandLine(program='drl', command_name=None, global_options=Options(['--help']), command_options=Options(['-v', ]), parameters=set()), expected=HelpCommand('drl', None, None, 1))),
+    ('help_global_option_global_and_command_verbosity', CaseData(args=CommandLine(program='drl', command_name=None, global_options=Options(['--help', '-v']), command_options=Options(['-v=1']), parameters=set()), expected=HelpCommand('drl', None, None, 2))),
+    ('help_command_option', CaseData(args=CommandLine(program='drl', command_name=None, global_options=Options([]), command_options=Options(['--help']), parameters=set()), expected=HelpCommand('drl', None, None, 0))),
+    ('help_command_option_global_verbosity', CaseData(args=CommandLine(program='drl', command_name=None, global_options=Options(['-v']), command_options=Options(['--help']), parameters=set()), expected=HelpCommand('drl', None, None, 1))),
+    ('help_command_option_command_verbosity', CaseData(args=CommandLine(program='drl', command_name=None, global_options=Options([]), command_options=Options(['--help', '-v', ]), parameters=set()), expected=HelpCommand('drl', None, None, 1))),
+    ('help_command_option_global_and_command_verbosity', CaseData(args=CommandLine(program='drl', command_name=None, global_options=Options(['-v']), command_options=Options(['-v=1', '--help']), parameters=set()), expected=HelpCommand('drl', None, None, 2))),
+    ('help_command_command_needing_help', CaseData(args=CommandLine(program='drl', command_name='deploy', global_options=Options([]), command_options=Options([]), parameters=set()), expected=HelpCommand('drl', 'deploy', None, 0))),
   ]
 
 
@@ -66,7 +66,7 @@ def make_error_cases() -> list[tuple[str, CaseData]]:
   """
   # pylint: disable=line-too-long
   return [
-    ('help_command_from_error', CaseData(args=CommandLineError(program='drl', command=None, verbosity=0, message='No command specified'), expected=HelpCommand('drl', None, 'No command specified', 0), error=None)),
+    ('help_command_from_error', CaseData(args=CommandLineError(program='drl', command=None, verbosity=0, message='No command specified'), expected=HelpCommand('drl', None, 'No command specified', 0))),
   ]
 
 class TestHelpCommand(unittest.TestCase, CaseExecutor):
