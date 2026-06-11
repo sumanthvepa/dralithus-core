@@ -26,6 +26,15 @@ from pathlib import Path
 from dralithus.project.error import DralithusProjectError
 
 
+_PACKAGES_TXT_HEADER = (
+  '# Third-party packages, one per line.\n'
+  '# Append " [dev]" to mark a development-only dependency.\n')
+
+_LOCAL_PACKAGES_TXT_HEADER = (
+  '# Local editable packages, one path per line.\n'
+  '# Append " [dev]" to mark a development-only dependency.\n')
+
+
 class Packages3:
   """
     Represent the Milestone 42 packages3 dependency convention.
@@ -125,4 +134,16 @@ class Packages3:
       :raises DralithusProjectError: When the project is already
         initialized, or a dependency file cannot be written
     """
-    raise NotImplementedError('Packages3.create is not yet implemented')
+    packages_txt = project_root / 'packages.txt'
+    local_packages_txt = project_root / 'local-packages.txt'
+    if packages_txt.exists():
+      raise DralithusProjectError(
+        f'Packages already initialized: {packages_txt}')
+    try:
+      packages_txt.write_text(_PACKAGES_TXT_HEADER, encoding='utf-8')
+      local_packages_txt.write_text(
+        _LOCAL_PACKAGES_TXT_HEADER, encoding='utf-8')
+    except OSError as error:
+      raise DralithusProjectError(
+        f'Could not write dependency file: {project_root}') from error
+    return cls(project_root)
