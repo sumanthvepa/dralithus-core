@@ -83,7 +83,7 @@ class TestPyProjectToml(unittest.TestCase):
         (project_root / 'local-packages.txt').write_text(
           '\n'.join(local_lines),
           encoding='utf-8')
-      packages = Packages3.from_project_root(project_root)
+      packages = Packages3(project_root)
     return packages
 
   @classmethod

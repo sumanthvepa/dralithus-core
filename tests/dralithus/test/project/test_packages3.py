@@ -164,7 +164,7 @@ def execute_packages3_case(args: Packages3CaseArgs) -> Packages3Expected:
     if args.local_packages_txt is not None:
       (project_root / 'local-packages.txt').write_text(
         args.local_packages_txt, encoding='utf-8')
-    packages = Packages3.from_project_root(project_root)
+    packages = Packages3(project_root)
     result = Packages3Expected(
       packages.production_dependencies,
       packages.dev_dependencies,
@@ -179,8 +179,8 @@ class TestPackages3(unittest.TestCase, CaseExecutor):
 
   def test_missing_packages_txt_raises(self) -> None:
     """
-      Verify a missing packages.txt raises DralithusProjectError
-      identifying the unreadable dependency file.
+      Verify constructing over a missing packages.txt raises
+      DralithusProjectError identifying the unreadable dependency file.
 
       :return: None
     """
@@ -188,9 +188,64 @@ class TestPackages3(unittest.TestCase, CaseExecutor):
       project_root = Path(temp_directory)
       packages_txt = project_root / 'packages.txt'
       with self.assertRaises(DralithusProjectError) as context:
-        Packages3.from_project_root(project_root)
+        Packages3(project_root)
       self.assertEqual(
         f'Could not read dependency file: {packages_txt}',
+        str(context.exception))
+
+  def test_create_writes_packages_files(self) -> None:
+    """
+      Verify create writes packages.txt and local-packages.txt into an
+      uninitialized project root and returns the dev baseline only.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+
+      packages = Packages3.create(project_root)
+
+      self.assertTrue((project_root / 'packages.txt').is_file())
+      self.assertTrue((project_root / 'local-packages.txt').is_file())
+      self.assertEqual([], packages.production_dependencies)
+      self.assertEqual(
+        ['mypy', 'pylint', 'parameterized'], packages.dev_dependencies)
+      self.assertEqual([], packages.local_dependencies)
+
+  def test_create_seeds_header_comments(self) -> None:
+    """
+      Verify create seeds each dependency file with a header comment
+      and no actual dependencies.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+
+      Packages3.create(project_root)
+
+      packages_text = (project_root / 'packages.txt').read_text(
+        encoding='utf-8')
+      local_text = (project_root / 'local-packages.txt').read_text(
+        encoding='utf-8')
+      self.assertTrue(packages_text.startswith('#'))
+      self.assertTrue(local_text.startswith('#'))
+
+  def test_create_raises_when_already_initialized(self) -> None:
+    """
+      Verify create refuses to overwrite an existing packages.txt.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      packages_txt = project_root / 'packages.txt'
+      packages_txt.write_text('requests\n', encoding='utf-8')
+
+      with self.assertRaises(DralithusProjectError) as context:
+        Packages3.create(project_root)
+      self.assertEqual(
+        f'Packages already initialized: {packages_txt}',
         str(context.exception))
 
   @parameterized.expand(basic_cases())

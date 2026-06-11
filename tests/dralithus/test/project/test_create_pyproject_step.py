@@ -86,7 +86,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
       (project_root / 'local-packages.txt').write_text(
         '\n'.join(local_lines),
         encoding='utf-8')
-    return Packages3.from_project_root(project_root)
+    return Packages3(project_root)
 
   @staticmethod
   def _python_requirement() -> str:
@@ -305,7 +305,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
 
       pyproject = PyProjectToml.from_file(
         project_root / 'pyproject.toml',
-        Packages3.from_project_root(project_root))
+        Packages3(project_root))
       self.assertEqual(
         pyproject.packages.production_dependencies,
         ['requests'])
@@ -338,7 +338,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
 
       parsed = PyProjectToml.from_file(
         project_root / 'pyproject.toml',
-        Packages3.from_project_root(project_root))
+        Packages3(project_root))
       self.assertEqual(parsed.packages.production_dependencies, [])
       self.assertEqual(parsed.packages.local_dependencies, ['../common-lib'])
 

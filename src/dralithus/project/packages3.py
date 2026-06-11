@@ -112,16 +112,17 @@ class Packages3:
     return list(self._local_dependencies)
 
   @classmethod
-  def from_project_root(cls, project_root: Path) -> Packages3:
+  def create(cls, project_root: Path) -> Packages3:
     """
-      Create an empty packages configuration in the specified project root.
+      Create a new packages configuration in the project root.
 
-      This will create an empty packages.txt file as well as
-      local-packages.txt.
+      Writes a fresh packages.txt and local-packages.txt, each seeded
+      with a header comment, then returns a Packages3 over them. Use
+      the constructor instead to read an already-initialized project.
 
       :param project_root: The root directory of the Python project
-      :return: The packages3 proxy
-      :raises DralithusProjectError: When packages.txt is missing, or
-        a dependency file cannot be read or decoded
+      :return: The newly created packages3 model
+      :raises DralithusProjectError: When the project is already
+        initialized, or a dependency file cannot be written
     """
-    return cls(project_root)
+    raise NotImplementedError('Packages3.create is not yet implemented')

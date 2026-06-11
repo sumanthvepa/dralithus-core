@@ -109,7 +109,7 @@ class CreatePyProjectStep(ExecutionStep):
       :return: The project's packages3 dependency model
       :raises DralithusProjectError: When packages.txt is missing
     """
-    return Packages3.from_project_root(project_root)
+    return Packages3(project_root)
 
   def _expected_pyproject(
     self,
