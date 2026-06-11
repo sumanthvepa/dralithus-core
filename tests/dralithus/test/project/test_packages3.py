@@ -49,24 +49,6 @@ class Packages3Expected(NamedTuple):
   local_dependencies: list[str]
 
 
-def error_cases() -> list[tuple[str, CaseData]]:
-  """
-    Return packages3 error cases.
-
-    :return: The error cases
-  """
-  return [
-    (
-      'missing_packages_txt',
-      CaseData(
-        args=Packages3CaseArgs(
-          packages_txt=None,
-          local_packages_txt=None),
-        error=DralithusProjectError,
-        error_message='No packages.txt file found in project root')),
-  ]
-
-
 def basic_cases() -> list[tuple[str, CaseData]]:
   """
     Return basic packages3 artifact cases.
@@ -195,16 +177,21 @@ class TestPackages3(unittest.TestCase, CaseExecutor):
     Unit tests for the Packages3 class.
   """
 
-  @parameterized.expand(error_cases())
-  def test_error_cases(self, _name: str, case: CaseData) -> None:
+  def test_missing_packages_txt_raises(self) -> None:
     """
-      Verify packages3 raises on malformed or missing artifacts.
+      Verify a missing packages.txt raises DralithusProjectError
+      identifying the unreadable dependency file.
 
-      :param _name: The test case name
-      :param case: The test case
       :return: None
     """
-    self.execute(execute_packages3_case, case)
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      packages_txt = project_root / 'packages.txt'
+      with self.assertRaises(DralithusProjectError) as context:
+        Packages3.from_project_root(project_root)
+      self.assertEqual(
+        f'Could not read dependency file: {packages_txt}',
+        str(context.exception))
 
   @parameterized.expand(basic_cases())
   def test_basic_cases(self, _name: str, case: CaseData) -> None:

@@ -159,7 +159,7 @@ class CreateVenvStep(ExecutionStep):
       command: list[str] = [
         str(self._python_executable), '-m', 'venv', self._venv_name]
       if not dry_run:
-        print(f'Creating venv: {self._venv_name}: {" ".join(command)}')
+        # print(f'Creating venv: {self._venv_name}: {" ".join(command)}')
         subprocess.run(command, cwd=project_root, check=True)
         return True  # successfully created the venv
     except OSError as error:

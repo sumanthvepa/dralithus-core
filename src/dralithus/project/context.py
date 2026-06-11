@@ -30,8 +30,6 @@ class ProjectContext:
     Hold shared state for project creation steps.
   """
   project_root: Path
-  python_executable: str = 'python3.13'
-  packages_script: Path = Path('~/bin/packages3.sh').expanduser()
 
   @property
   def venv_path(self) -> Path:

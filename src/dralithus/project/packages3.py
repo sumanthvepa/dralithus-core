@@ -20,6 +20,7 @@
 # along with this program.  If not, see
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
+from __future__ import annotations
 from pathlib import Path
 
 from dralithus.project.error import DralithusProjectError
@@ -30,7 +31,7 @@ class Packages3:
     Represent the Milestone 42 packages3 dependency convention.
 
     This is a read-only proxy for the artifacts used by
-    packages3.sh: packages.txt, local-packages.txt, and the implicit
+    packages system: packages.txt, local-packages.txt, and the implicit
     Milestone 42 development dependencies installed by packages3.sh.
   """
   _implicit_dev_dependencies = ('mypy', 'pylint', 'parameterized')
@@ -42,10 +43,17 @@ class Packages3:
 
       :param path: The dependency file to read
       :return: The production and development dependency lists
+      :raises DralithusProjectError: When the file cannot be read or
+        decoded. The original exception is preserved as the cause.
     """
     production: list[str] = []
     development: list[str] = []
-    for line in path.read_text(encoding='utf-8').splitlines():
+    try:
+      lines = path.read_text(encoding='utf-8').splitlines()
+    except (OSError, UnicodeDecodeError) as error:
+      raise DralithusProjectError(
+        f'Could not read dependency file: {path}') from error
+    for line in lines:
       dependency = line.split('#', maxsplit=1)[0].strip()
       if dependency.endswith(' [dev]'):
         development.append(dependency.removesuffix(' [dev]').strip())
@@ -59,6 +67,8 @@ class Packages3:
 
       :param project_root: The root directory of the Python project
       :return: None
+      :raises DralithusProjectError: When a dependency file cannot be
+        read or decoded
     """
     packages_txt = project_root / 'packages.txt'
     local_packages_txt = project_root / 'local-packages.txt'
@@ -102,16 +112,16 @@ class Packages3:
     return list(self._local_dependencies)
 
   @classmethod
-  def from_project_root(cls, project_root: Path) -> 'Packages3':
+  def from_project_root(cls, project_root: Path) -> Packages3:
     """
-      Create a packages3 proxy for a Python project root.
+      Create an empty packages configuration in the specified project root.
+
+      This will create an empty packages.txt file as well as
+      local-packages.txt.
 
       :param project_root: The root directory of the Python project
       :return: The packages3 proxy
-      :raises DralithusProjectError: When packages.txt is missing
+      :raises DralithusProjectError: When packages.txt is missing, or
+        a dependency file cannot be read or decoded
     """
-    packages_txt = project_root / 'packages.txt'
-    if not packages_txt.exists():
-      raise DralithusProjectError(
-        'No packages.txt file found in project root')
     return cls(project_root)
