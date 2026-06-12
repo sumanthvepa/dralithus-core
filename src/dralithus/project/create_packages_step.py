@@ -31,14 +31,23 @@ from dralithus.project.packages import Packages
 
 class CreatePackagesStep(ExecutionStep):
   """
-    Represent a project creation step that seeds the Packages System
-    dependency files (packages.txt and local-packages.txt)
+    Represent a project creation step that creates the Packages
+    System dependency files (packages.txt and local-packages.txt)
 
     Creates whichever of packages.txt and local-packages.txt is
     missing from the project root, seeded with a header comment.
-    Existing dependency files are left untouched. Rollback removes
-    only the files this step created.
+    Existing dependency files are left untouched. Creation and
+    rollback are owned entirely by this step: it records exactly
+    the files its own exclusive writes created, and rollback
+    removes only those.
   """
+  _PACKAGES_HEADER = (
+    '# Third-party packages, one per line.\n'
+    '# Append " [dev]" to mark a development-only dependency.\n')
+  _LOCAL_PACKAGES_HEADER = (
+    '# Local editable packages, one path per line.\n'
+    '# Append " [dev]" to mark a development-only dependency.\n')
+
   _created_files: list[Path]
 
   def _remove_created_files(self) -> None:
@@ -58,6 +67,58 @@ class CreatePackagesStep(ExecutionStep):
         raise DralithusProjectError(
           f'Could not remove dependency file: {path}') from error
     self._created_files = []
+
+  def _create_missing_files(self, project_root: Path) -> None:
+    """
+      Create the missing dependency files in the project root.
+
+      Records exactly the files this step created. On a write
+      failure the files this step created are removed before
+      raising, so nothing is left behind.
+
+      :param project_root: The project root directory
+      :return: None
+      :raises DralithusProjectError: When a missing dependency file
+        cannot be written
+    """
+    targets = (
+      (project_root / Packages.PACKAGES_FILENAME,
+       self._PACKAGES_HEADER),
+      (project_root / Packages.LOCAL_PACKAGES_FILENAME,
+       self._LOCAL_PACKAGES_HEADER))
+    try:
+      for path, content in targets:
+        if self._create_file(path, content):
+          self._created_files.append(path)
+    except OSError as error:
+      self._remove_created_files()
+      raise DralithusProjectError(
+        f'Could not write dependency file: {project_root}') from error
+
+  @staticmethod
+  def _create_file(path: Path, content: str) -> bool:
+    """
+      Write content to path unless the path already exists.
+
+      Creation is exclusive, so a file that appears between any
+      earlier existence check and the write is never overwritten,
+      and the return value reports true ownership: True only when
+      this call created the file.
+
+      :param path: The dependency file to create
+      :param content: The content to write
+      :return: True if this call created the file, False if the
+        path already existed (including as a dangling symlink)
+      :raises OSError: When the file cannot be written
+    """
+    created = False
+    try:
+      with path.open('x', encoding='utf-8') as file:
+        file.write(content)
+      created = True
+    except FileExistsError:
+      pass
+    return created
 
   def __init__(self) -> None:
     """
@@ -80,10 +141,9 @@ class CreatePackagesStep(ExecutionStep):
         cannot be written, or an existing one cannot be read
     """
     if not dry_run:
-      # Ownership comes from seed, which reports exactly the files
-      # it created; the failure cleanup is needed because the
-      # orchestrator never rolls back a step whose own run raised.
-      self._created_files.extend(Packages.seed(context.project_root))
+      # The failure cleanup is needed because the orchestrator
+      # never rolls back a step whose own run raised.
+      self._create_missing_files(context.project_root)
       try:
         Packages(context.project_root)
       except DralithusProjectError:

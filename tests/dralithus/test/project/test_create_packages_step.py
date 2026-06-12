@@ -141,6 +141,75 @@ class TestCreatePackagesStep(unittest.TestCase):
       ):
         step.run(context)
 
+  def test_run_seeds_header_content(self) -> None:
+    """
+      Verify the created dependency files contain exactly the seed
+      header comments.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      step = CreatePackagesStep()
+
+      step.run(context)
+
+      packages_text = (
+        project_root / Packages.PACKAGES_FILENAME).read_text(
+          encoding='utf-8')
+      local_text = (
+        project_root / Packages.LOCAL_PACKAGES_FILENAME).read_text(
+          encoding='utf-8')
+      self.assertEqual(
+        '# Third-party packages, one per line.\n'
+        '# Append " [dev]" to mark a development-only dependency.\n',
+        packages_text)
+      self.assertEqual(
+        '# Local editable packages, one path per line.\n'
+        '# Append " [dev]" to mark a development-only dependency.\n',
+        local_text)
+
+  def test_run_write_failure_removes_partially_created_files(
+    self
+  ) -> None:
+    """
+      Verify a run that fails writing a dependency file removes the
+      files it already created before raising.
+
+      The first dependency file is written for real; the write of
+      the second is forced to fail. The failed run must not leave
+      the first file behind.
+
+      :return: None
+    """
+    real_create_file = (
+      CreatePackagesStep._create_file)  # pylint: disable=protected-access
+
+    def fail_local(path: Path, content: str) -> bool:
+      if path.name == Packages.LOCAL_PACKAGES_FILENAME:
+        raise OSError('simulated write failure')
+      return real_create_file(path, content)
+
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      step = CreatePackagesStep()
+
+      with mock.patch.object(
+        CreatePackagesStep, '_create_file', side_effect=fail_local
+      ):
+        with self.assertRaises(DralithusProjectError) as context_manager:
+          step.run(context)
+
+      self.assertEqual(
+        f'Could not write dependency file: {project_root}',
+        str(context_manager.exception))
+      self.assertFalse(
+        (project_root / Packages.PACKAGES_FILENAME).exists())
+      self.assertFalse(
+        (project_root / Packages.LOCAL_PACKAGES_FILENAME).exists())
+
   def test_run_failure_removes_partially_created_files(self) -> None:
     """
       Verify that a failed run removes the dependency files it
