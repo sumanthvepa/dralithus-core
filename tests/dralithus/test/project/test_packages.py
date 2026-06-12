@@ -24,6 +24,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import NamedTuple
 import unittest
+from unittest import mock
 
 from parameterized import parameterized
 
@@ -299,6 +300,143 @@ class TestPackages(unittest.TestCase, CaseExecutor):
         local_packages_txt.read_text(encoding='utf-8'))
       self.assertEqual(['requests'], packages.production_dependencies)
       self.assertEqual(['../common-lib'], packages.local_dependencies)
+
+  def test_seed_creates_missing_files_and_returns_them(self) -> None:
+    """
+      Verify seed creates both dependency files in an empty project
+      root and returns exactly the paths it created.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      packages_txt = project_root / Packages.PACKAGES_FILENAME
+      local_packages_txt = (
+        project_root / Packages.LOCAL_PACKAGES_FILENAME)
+
+      created = Packages.seed(project_root)
+
+      self.assertEqual([packages_txt, local_packages_txt], created)
+      self.assertTrue(packages_txt.is_file())
+      self.assertTrue(local_packages_txt.is_file())
+
+  def test_seed_returns_only_created_files(self) -> None:
+    """
+      Verify seed reports only the files it created, leaving an
+      existing dependency file untouched and unreported.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      packages_txt = project_root / Packages.PACKAGES_FILENAME
+      local_packages_txt = (
+        project_root / Packages.LOCAL_PACKAGES_FILENAME)
+      packages_txt.write_text('requests\n', encoding='utf-8')
+
+      created = Packages.seed(project_root)
+
+      self.assertEqual([local_packages_txt], created)
+      self.assertEqual(
+        'requests\n', packages_txt.read_text(encoding='utf-8'))
+
+  def test_seed_returns_empty_when_nothing_missing(self) -> None:
+    """
+      Verify seed creates and reports nothing when both dependency
+      files already exist.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      (project_root / Packages.PACKAGES_FILENAME).write_text(
+        'requests\n', encoding='utf-8')
+      (project_root / Packages.LOCAL_PACKAGES_FILENAME).write_text(
+        '../common-lib\n', encoding='utf-8')
+
+      created = Packages.seed(project_root)
+
+      self.assertEqual([], created)
+
+  def test_seed_does_not_claim_dangling_symlink(self) -> None:
+    """
+      Verify seed neither replaces nor reports a dangling symlink.
+
+      A dangling symlink fails Path.exists but is still a user-owned
+      path entry; exclusive creation refuses it, and seed must not
+      claim it as created.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      packages_txt = project_root / Packages.PACKAGES_FILENAME
+      local_packages_txt = (
+        project_root / Packages.LOCAL_PACKAGES_FILENAME)
+      local_packages_txt.symlink_to(project_root / 'does-not-exist')
+
+      created = Packages.seed(project_root)
+
+      self.assertEqual([packages_txt], created)
+      self.assertTrue(local_packages_txt.is_symlink())
+
+  def test_seed_cleans_up_partial_failure(self) -> None:
+    """
+      Verify a failed seed removes the files it created before
+      raising.
+
+      The first dependency file is written for real; the write of
+      the second is forced to fail. The failed seed must remove the
+      first file so nothing is left behind.
+
+      :return: None
+    """
+    real_seed_file = Packages._seed_file  # pylint: disable=protected-access
+
+    def fail_local(path: Path, content: str) -> bool:
+      if path.name == Packages.LOCAL_PACKAGES_FILENAME:
+        raise OSError('simulated write failure')
+      return real_seed_file(path, content)
+
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      packages_txt = project_root / Packages.PACKAGES_FILENAME
+
+      with mock.patch.object(
+        Packages, '_seed_file', side_effect=fail_local
+      ):
+        with self.assertRaises(DralithusProjectError) as context:
+          Packages.seed(project_root)
+
+      self.assertEqual(
+        f'Could not write dependency file: {project_root}',
+        str(context.exception))
+      self.assertFalse(packages_txt.exists())
+
+  def test_create_never_overwrites_despite_stale_existence_check(
+    self
+  ) -> None:
+    """
+      Verify create does not overwrite a file that an existence
+      check failed to see.
+
+      Simulates the time-of-check to time-of-use race: the file is
+      on disk, but Path.exists reports it missing - as it would for
+      a file created concurrently after the check. Creation must be
+      exclusive, so the existing content survives.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      packages_txt = project_root / Packages.PACKAGES_FILENAME
+      packages_txt.write_text('requests\n', encoding='utf-8')
+
+      with mock.patch.object(Path, 'exists', return_value=False):
+        Packages.create(project_root)
+
+      self.assertEqual(
+        'requests\n', packages_txt.read_text(encoding='utf-8'))
 
   def test_create_raises_when_packages_txt_unreadable(self) -> None:
     """

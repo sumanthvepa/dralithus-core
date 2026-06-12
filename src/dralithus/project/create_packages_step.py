@@ -59,19 +59,6 @@ class CreatePackagesStep(ExecutionStep):
           f'Could not remove dependency file: {path}') from error
     self._created_files = []
 
-  @staticmethod
-  def _missing_files(project_root: Path) -> list[Path]:
-    """
-      Return the dependency files missing from the project root.
-
-      :param project_root: The project root directory
-      :return: The dependency file paths that do not exist yet
-    """
-    candidates = [
-      project_root / Packages.PACKAGES_FILENAME,
-      project_root / Packages.LOCAL_PACKAGES_FILENAME]
-    return [path for path in candidates if not path.exists()]
-
   def __init__(self) -> None:
     """
       Initialize the packages creation step.
@@ -93,10 +80,15 @@ class CreatePackagesStep(ExecutionStep):
         cannot be written, or an existing one cannot be read
     """
     if not dry_run:
-      # Record the files create will write before calling it, so a
-      # failure after a partial write can still be rolled back.
-      self._created_files.extend(self._missing_files(context.project_root))
-      Packages.create(context.project_root)
+      # Ownership comes from seed, which reports exactly the files
+      # it created; the failure cleanup is needed because the
+      # orchestrator never rolls back a step whose own run raised.
+      self._created_files.extend(Packages.seed(context.project_root))
+      try:
+        Packages(context.project_root)
+      except DralithusProjectError:
+        self._remove_created_files()
+        raise
 
   @override
   def rollback(self, context: ProjectContext, dry_run: bool = False) -> None:

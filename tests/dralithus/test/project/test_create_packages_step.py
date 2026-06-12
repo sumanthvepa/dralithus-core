@@ -23,6 +23,7 @@
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
+from unittest import mock
 
 from dralithus.project.context import ProjectContext
 from dralithus.project.create_packages_step import CreatePackagesStep
@@ -140,6 +141,29 @@ class TestCreatePackagesStep(unittest.TestCase):
       ):
         step.run(context)
 
+  def test_run_failure_removes_partially_created_files(self) -> None:
+    """
+      Verify that a failed run removes the dependency files it
+      created before failing.
+
+      An unreadable packages.txt is detected only after the missing
+      local-packages.txt has been seeded; the failed run must not
+      leave the seeded file behind.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      (project_root / Packages.PACKAGES_FILENAME).mkdir()
+      step = CreatePackagesStep()
+
+      with self.assertRaises(DralithusProjectError):
+        step.run(context)
+
+      self.assertFalse(
+        (project_root / Packages.LOCAL_PACKAGES_FILENAME).exists())
+
   def test_rollback_removes_created_files(self) -> None:
     """
       Verify that rollback removes the dependency files created by
@@ -242,6 +266,63 @@ class TestCreatePackagesStep(unittest.TestCase):
       self.assertFalse(packages_txt.exists())
       self.assertFalse(
         (project_root / Packages.LOCAL_PACKAGES_FILENAME).exists())
+
+  def test_rollback_preserves_dangling_symlink(self) -> None:
+    """
+      Verify rollback does not delete a user-owned dangling symlink.
+
+      A dangling symlink fails Path.exists, so ownership tracking
+      based on an existence check would wrongly claim it. The step
+      must not remove it on rollback.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      local_packages_txt = (
+        project_root / Packages.LOCAL_PACKAGES_FILENAME)
+      local_packages_txt.symlink_to(project_root / 'does-not-exist')
+      step = CreatePackagesStep()
+
+      step.run(context)
+      step.rollback(context)
+
+      self.assertTrue(local_packages_txt.is_symlink())
+      self.assertFalse(
+        (project_root / Packages.PACKAGES_FILENAME).exists())
+
+  def test_rollback_preserves_file_appearing_after_stale_check(
+    self
+  ) -> None:
+    """
+      Verify rollback preserves a file the step did not create.
+
+      Simulates the time-of-check to time-of-use race: an existing
+      local-packages.txt is hidden from Path.exists during run, as
+      it would be for a file created concurrently after the check.
+      Ownership must come from exclusive creation, so rollback must
+      leave the file alone.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      local_packages_txt = (
+        project_root / Packages.LOCAL_PACKAGES_FILENAME)
+      local_packages_txt.write_text('../common-lib\n', encoding='utf-8')
+      step = CreatePackagesStep()
+
+      with mock.patch.object(Path, 'exists', return_value=False):
+        step.run(context)
+      step.rollback(context)
+
+      self.assertEqual(
+        '../common-lib\n',
+        local_packages_txt.read_text(encoding='utf-8'))
+      self.assertFalse(
+        (project_root / Packages.PACKAGES_FILENAME).exists())
 
   def test_rollback_wraps_removal_failure(self) -> None:
     """
