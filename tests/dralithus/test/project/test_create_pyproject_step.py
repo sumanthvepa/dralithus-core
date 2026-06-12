@@ -79,11 +79,11 @@ class TestCreatePyProjectStep(unittest.TestCase):
       *local_dependencies,
       *[f'{dependency} [dev]'
         for dependency in local_dev_dependencies]]
-    (project_root / 'packages.txt').write_text(
+    (project_root / Packages3.PACKAGES_FILENAME).write_text(
       '\n'.join(package_lines),
       encoding='utf-8')
     if local_lines:
-      (project_root / 'local-packages.txt').write_text(
+      (project_root / Packages3.LOCAL_PACKAGES_FILENAME).write_text(
         '\n'.join(local_lines),
         encoding='utf-8')
     return Packages3(project_root)
@@ -191,7 +191,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
       cwd=project_root,
       check=True)
     if create_packages_txt:
-      (project_root / 'packages.txt').write_text('', encoding='utf-8')
+      (project_root / Packages3.PACKAGES_FILENAME).write_text('', encoding='utf-8')
 
   # pylint: disable-next=too-many-arguments,too-many-positional-arguments
   def _validate_pyproject(
@@ -261,7 +261,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
       project_root = Path(temp_directory)
       context = ProjectContext(project_root=project_root)
       self._create_venv(project_root)
-      (project_root / 'packages.txt').write_text(
+      (project_root / Packages3.PACKAGES_FILENAME).write_text(
         '# third-party packages\n'
         '\n'
         'requests\n'
@@ -288,11 +288,11 @@ class TestCreatePyProjectStep(unittest.TestCase):
       project_root = Path(temp_directory)
       context = ProjectContext(project_root=project_root)
       self._create_venv(project_root)
-      (project_root / 'packages.txt').write_text(
+      (project_root / Packages3.PACKAGES_FILENAME).write_text(
         'requests\n'
         'pytest [dev]\n',
         encoding='utf-8')
-      (project_root / 'local-packages.txt').write_text(
+      (project_root / Packages3.LOCAL_PACKAGES_FILENAME).write_text(
         '../common-lib\n'
         '../test-lib [dev]\n',
         encoding='utf-8')
@@ -326,7 +326,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
       project_root = Path(temp_directory)
       context = ProjectContext(project_root=project_root)
       self._create_venv(project_root)
-      (project_root / 'local-packages.txt').write_text(
+      (project_root / Packages3.LOCAL_PACKAGES_FILENAME).write_text(
         '../common-lib\n',
         encoding='utf-8')
       step = CreatePyProjectStep(
@@ -592,7 +592,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
       project_root = Path(temp_directory)
       context = ProjectContext(project_root=project_root)
       self._create_venv(project_root)
-      (project_root / 'packages.txt').write_text(
+      (project_root / Packages3.PACKAGES_FILENAME).write_text(
         'requests\n',
         encoding='utf-8')
       text = self._pyproject_text(dependencies=[])

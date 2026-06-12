@@ -159,10 +159,10 @@ def execute_packages3_case(args: Packages3CaseArgs) -> Packages3Expected:
   with TemporaryDirectory() as temp_directory:
     project_root = Path(temp_directory)
     if args.packages_txt is not None:
-      (project_root / 'packages.txt').write_text(
+      (project_root / Packages3.PACKAGES_FILENAME).write_text(
         args.packages_txt, encoding='utf-8')
     if args.local_packages_txt is not None:
-      (project_root / 'local-packages.txt').write_text(
+      (project_root / Packages3.LOCAL_PACKAGES_FILENAME).write_text(
         args.local_packages_txt, encoding='utf-8')
     packages = Packages3(project_root)
     result = Packages3Expected(
@@ -186,7 +186,7 @@ class TestPackages3(unittest.TestCase, CaseExecutor):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      packages_txt = project_root / 'packages.txt'
+      packages_txt = project_root / Packages3.PACKAGES_FILENAME
       with self.assertRaises(DralithusProjectError) as context:
         Packages3(project_root)
       self.assertEqual(
@@ -205,8 +205,8 @@ class TestPackages3(unittest.TestCase, CaseExecutor):
 
       packages = Packages3.create(project_root)
 
-      self.assertTrue((project_root / 'packages.txt').is_file())
-      self.assertTrue((project_root / 'local-packages.txt').is_file())
+      self.assertTrue((project_root / Packages3.PACKAGES_FILENAME).is_file())
+      self.assertTrue((project_root / Packages3.LOCAL_PACKAGES_FILENAME).is_file())
       self.assertEqual([], packages.production_dependencies)
       self.assertEqual(
         ['mypy', 'pylint', 'parameterized'], packages.dev_dependencies)
@@ -224,9 +224,9 @@ class TestPackages3(unittest.TestCase, CaseExecutor):
 
       Packages3.create(project_root)
 
-      packages_text = (project_root / 'packages.txt').read_text(
+      packages_text = (project_root / Packages3.PACKAGES_FILENAME).read_text(
         encoding='utf-8')
-      local_text = (project_root / 'local-packages.txt').read_text(
+      local_text = (project_root / Packages3.LOCAL_PACKAGES_FILENAME).read_text(
         encoding='utf-8')
       self.assertTrue(packages_text.startswith('#'))
       self.assertTrue(local_text.startswith('#'))
@@ -239,7 +239,7 @@ class TestPackages3(unittest.TestCase, CaseExecutor):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      packages_txt = project_root / 'packages.txt'
+      packages_txt = project_root / Packages3.PACKAGES_FILENAME
       packages_txt.write_text('requests\n', encoding='utf-8')
 
       with self.assertRaises(DralithusProjectError) as context:

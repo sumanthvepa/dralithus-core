@@ -43,6 +43,9 @@ class Packages3:
     packages system: packages.txt, local-packages.txt, and the implicit
     Milestone 42 development dependencies installed by packages3.sh.
   """
+  PACKAGES_FILENAME = 'packages.txt'
+  LOCAL_PACKAGES_FILENAME = 'local-packages.txt'
+
   _implicit_dev_dependencies = ('mypy', 'pylint', 'parameterized')
 
   @staticmethod
@@ -79,8 +82,8 @@ class Packages3:
       :raises DralithusProjectError: When a dependency file cannot be
         read or decoded
     """
-    packages_txt = project_root / 'packages.txt'
-    local_packages_txt = project_root / 'local-packages.txt'
+    packages_txt = project_root / self.PACKAGES_FILENAME
+    local_packages_txt = project_root / self.LOCAL_PACKAGES_FILENAME
     production, production_dev = self._read_dependencies(packages_txt)
     local: list[str] = []
     local_dev: list[str] = []
@@ -134,8 +137,8 @@ class Packages3:
       :raises DralithusProjectError: When the project is already
         initialized, or a dependency file cannot be written
     """
-    packages_txt = project_root / 'packages.txt'
-    local_packages_txt = project_root / 'local-packages.txt'
+    packages_txt = project_root / cls.PACKAGES_FILENAME
+    local_packages_txt = project_root / cls.LOCAL_PACKAGES_FILENAME
     if packages_txt.exists():
       raise DralithusProjectError(
         f'Packages already initialized: {packages_txt}')

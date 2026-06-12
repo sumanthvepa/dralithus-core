@@ -76,11 +76,11 @@ class TestPyProjectToml(unittest.TestCase):
         *local_dependencies,
         *[f'{dependency} [dev]'
           for dependency in local_dev_dependencies]]
-      (project_root / 'packages.txt').write_text(
+      (project_root / Packages3.PACKAGES_FILENAME).write_text(
         '\n'.join(package_lines),
         encoding='utf-8')
       if local_lines:
-        (project_root / 'local-packages.txt').write_text(
+        (project_root / Packages3.LOCAL_PACKAGES_FILENAME).write_text(
           '\n'.join(local_lines),
           encoding='utf-8')
       packages = Packages3(project_root)
