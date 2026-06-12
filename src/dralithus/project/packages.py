@@ -20,7 +20,6 @@
 # along with this program.  If not, see
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
-from __future__ import annotations
 from pathlib import Path
 
 from dralithus.project.error import DralithusProjectError
@@ -64,31 +63,6 @@ class Packages:
       elif dependency:
         production.append(dependency)
     return production, development
-
-  @staticmethod
-  def _seed_file(path: Path, content: str) -> bool:
-    """
-      Write content to path unless the path already exists.
-
-      Creation is exclusive, so a file that appears between any
-      earlier existence check and the write is never overwritten,
-      and the return value reports true ownership: True only when
-      this call created the file.
-
-      :param path: The dependency file to seed
-      :param content: The seed content to write
-      :return: True if this call created the file, False if the
-        path already existed (including as a dangling symlink)
-      :raises OSError: When the file cannot be written
-    """
-    created = False
-    try:
-      with path.open('x', encoding='utf-8') as file:
-        file.write(content)
-      created = True
-    except FileExistsError:
-      pass
-    return created
 
   def __init__(self, project_root: Path) -> None:
     """
@@ -139,59 +113,3 @@ class Packages:
       :return: The local dependency list
     """
     return list(self._local_dependencies)
-
-  @classmethod
-  def seed(cls, project_root: Path) -> list[Path]:
-    """
-      Seed any missing dependency files in the project root.
-
-      Writes whichever of packages.txt and local-packages.txt does
-      not already exist, seeded with a header comment, and returns
-      exactly the paths this call created. Existing dependency files
-      are left untouched. On a write failure the files this call
-      created are removed before raising, so seed either returns an
-      accurate list or leaves nothing behind.
-
-      :param project_root: The root directory of the Python project
-      :return: The dependency file paths this call created
-      :raises DralithusProjectError: When a missing dependency file
-        cannot be written
-    """
-    packages_header = (
-      '# Third-party packages, one per line.\n'
-      '# Append " [dev]" to mark a development-only dependency.\n')
-    local_packages_header = (
-      '# Local editable packages, one path per line.\n'
-      '# Append " [dev]" to mark a development-only dependency.\n')
-    targets = (
-      (project_root / cls.PACKAGES_FILENAME, packages_header),
-      (project_root / cls.LOCAL_PACKAGES_FILENAME,
-       local_packages_header))
-    created: list[Path] = []
-    try:
-      for path, content in targets:
-        if cls._seed_file(path, content):
-          created.append(path)
-    except OSError as error:
-      for path in created:
-        path.unlink(missing_ok=True)
-      raise DralithusProjectError(
-        f'Could not write dependency file: {project_root}') from error
-    return created
-
-  @classmethod
-  def create(cls, project_root: Path) -> Packages:
-    """
-      Create any missing packages configuration in the project root.
-
-      Seeds whichever of packages.txt and local-packages.txt does
-      not already exist, then returns a Packages over the resulting
-      files. Existing dependency files are left untouched.
-
-      :param project_root: The root directory of the Python project
-      :return: The Packages model over the dependency files
-      :raises DralithusProjectError: When a missing dependency file
-        cannot be written, or an existing one cannot be read
-    """
-    cls.seed(project_root)
-    return cls(project_root)
