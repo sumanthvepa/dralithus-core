@@ -1,11 +1,11 @@
-*issue012-remove-typing-extensions-imports: Replace typing_extensions imports with stdlib typing.override
+[DONE]issue012-remove-typing-extensions-imports: Replace typing_extensions imports with stdlib typing.override
 [DONE]issue011-fix-readme-grammar: Fix grammar and typos in README.md
 [DONE]issue-010-fix-case-executor-design-errors: Fix case executor design errors
 [DONE]issue009-fix-intellij-idea-warnings: Fix warnings generated in IntelliJ IDEA
 [DONE]issue008-fix-mypy-errors: Fix errors reported by mypy
 [DONE]issue007-dralithus-test-cleanup: Remove unused CaseExecutor class
 [DONE]issue006-release1-fix-style-issue: Fix minor style isssues in some dralithus.command_line test suite files
-issue005-release1-new-project-python: Implement a new project command to create a new python project
+*issue005-release1-new-project-python: Implement a new project command to create a new python project
 [CANCELLED]issue004-release1-deploy-sample: Generate deployment commands, that if executed will create/update the sample application in the local environment. Note: Learned even more about how I want to build the project. And I've changed te goals a little bit.
 [DONE]issue003-release0-gpl-copyleft-notice: Add GPL copyleft notice to all source files
 [DONE]issue002-release0-print-command-line-parameters: Parse the command line and print the environment name and the application name

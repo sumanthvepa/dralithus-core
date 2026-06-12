@@ -22,6 +22,7 @@
 # -------------------------------------------------------------------
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from typing import IO
 import unittest
 from unittest import mock
 
@@ -29,6 +30,50 @@ from dralithus.project.context import ProjectContext
 from dralithus.project.create_packages_step import CreatePackagesStep
 from dralithus.project.error import DralithusProjectError
 from dralithus.project.packages import Packages
+
+
+class FailingWriteFile:
+  """
+    Wrap a real open file and fail every write.
+
+    Simulates a write failure (such as a full disk) that strikes
+    after an exclusive open has already created the file on disk.
+  """
+  def __init__(self, file: IO[str]) -> None:
+    """
+      Initialize the failing write wrapper.
+
+      :param file: The real open file to wrap
+      :return: None
+    """
+    self._file = file
+
+  def __enter__(self) -> 'FailingWriteFile':
+    """
+      Enter the context manager.
+
+      :return: This wrapper
+    """
+    return self
+
+  def __exit__(self, *exc_info: object) -> None:
+    """
+      Close the wrapped file on context exit.
+
+      :param exc_info: The exception information, if any
+      :return: None
+    """
+    self._file.close()
+
+  def write(self, _content: str) -> int:
+    """
+      Fail the write.
+
+      :param _content: The content that would have been written
+      :return: Never returns
+      :raises OSError: Always
+    """
+    raise OSError('simulated write failure')
 
 
 class TestCreatePackagesStep(unittest.TestCase):
@@ -199,6 +244,49 @@ class TestCreatePackagesStep(unittest.TestCase):
       with mock.patch.object(
         CreatePackagesStep, '_create_file', side_effect=fail_local
       ):
+        with self.assertRaises(DralithusProjectError) as context_manager:
+          step.run(context)
+
+      self.assertEqual(
+        f'Could not write dependency file: {project_root}',
+        str(context_manager.exception))
+      self.assertFalse(
+        (project_root / Packages.PACKAGES_FILENAME).exists())
+      self.assertFalse(
+        (project_root / Packages.LOCAL_PACKAGES_FILENAME).exists())
+
+  def test_run_write_failure_after_creation_removes_file(self) -> None:
+    """
+      Verify a run whose write fails after exclusive creation
+      removes the created file before raising.
+
+      The exclusive open creates packages.txt on disk, but writing
+      its content then fails. The failed run must not leave the
+      empty partially written file behind, where a later run would
+      accept it as a pre-existing dependency file.
+
+      :return: None
+    """
+    real_open = Path.open
+
+    def failing_open(
+      path: Path,
+      mode: str = 'r',
+      encoding: str | None = None
+    ) -> object:
+      # The wrapper (or the caller) is responsible for closing.
+      # pylint: disable-next=consider-using-with
+      file = real_open(path, mode, encoding=encoding)
+      if mode == 'x' and path.name == Packages.PACKAGES_FILENAME:
+        return FailingWriteFile(file)
+      return file
+
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      step = CreatePackagesStep()
+
+      with mock.patch.object(Path, 'open', failing_open):
         with self.assertRaises(DralithusProjectError) as context_manager:
           step.run(context)
 
