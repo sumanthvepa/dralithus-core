@@ -27,7 +27,7 @@ import tomllib
 import unittest
 
 from dralithus.project.error import DralithusProjectError
-from dralithus.project.packages3 import Packages3
+from dralithus.project.packages import Packages
 from dralithus.project.pyproject_toml import PyProjectToml
 
 
@@ -45,15 +45,15 @@ class TestPyProjectToml(unittest.TestCase):
     dev_dependencies: list[str] | None = None,
     local_dependencies: list[str] | None = None,
     local_dev_dependencies: list[str] | None = None
-  ) -> Packages3:
+  ) -> Packages:
     """
-      Construct a Packages3 fixture from package artifact contents.
+      Construct a Packages fixture from package artifact contents.
 
       :param production_dependencies: The packages.txt dependencies
       :param dev_dependencies: The expected full dev dependency list
       :param local_dependencies: The local-packages.txt dependencies
       :param local_dev_dependencies: The local dev dependencies
-      :return: The Packages3 fixture
+      :return: The Packages fixture
     """
     if production_dependencies is None:
       production_dependencies = []
@@ -76,14 +76,14 @@ class TestPyProjectToml(unittest.TestCase):
         *local_dependencies,
         *[f'{dependency} [dev]'
           for dependency in local_dev_dependencies]]
-      (project_root / Packages3.PACKAGES_FILENAME).write_text(
+      (project_root / Packages.PACKAGES_FILENAME).write_text(
         '\n'.join(package_lines),
         encoding='utf-8')
       if local_lines:
-        (project_root / Packages3.LOCAL_PACKAGES_FILENAME).write_text(
+        (project_root / Packages.LOCAL_PACKAGES_FILENAME).write_text(
           '\n'.join(local_lines),
           encoding='utf-8')
-      packages = Packages3(project_root)
+      packages = Packages(project_root)
     return packages
 
   @classmethod
@@ -468,7 +468,7 @@ class TestPyProjectToml(unittest.TestCase):
 
   def test_from_file_accepts_extra_dev_dependencies(self) -> None:
     """
-      Verify from_file accepts dev dependencies beyond Packages3.
+      Verify from_file accepts dev dependencies beyond Packages.
 
       :return: None
     """
@@ -483,7 +483,7 @@ class TestPyProjectToml(unittest.TestCase):
 
   def test_from_file_rejects_dependency_mismatch(self) -> None:
     """
-      Verify from_file rejects dependencies that differ from Packages3.
+      Verify from_file rejects dependencies that differ from Packages.
 
       :return: None
     """

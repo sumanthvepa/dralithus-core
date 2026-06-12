@@ -1,8 +1,8 @@
 """
-  test_packages3.py: Unit tests for packages3.
+  test_packages.py: Unit tests for the Packages model.
 """
 # -------------------------------------------------------------------
-# test_packages3.py: Unit tests for packages3.
+# test_packages.py: Unit tests for the Packages model.
 #
 # Copyright (C) 2026 Sumanth Vepa.
 #
@@ -28,21 +28,21 @@ import unittest
 from parameterized import parameterized
 
 from dralithus.project.error import DralithusProjectError
-from dralithus.project.packages3 import Packages3
+from dralithus.project.packages import Packages
 from dralithus.test import CaseData, CaseExecutor
 
 
-class Packages3CaseArgs(NamedTuple):
+class PackagesCaseArgs(NamedTuple):
   """
-    Hold packages3 artifact contents for a test case.
+    Hold Packages System artifact contents for a test case.
   """
   packages_txt: str | None
   local_packages_txt: str | None
 
 
-class Packages3Expected(NamedTuple):
+class PackagesExpected(NamedTuple):
   """
-    Hold the expected Packages3 dependency lists.
+    Hold the expected Packages dependency lists.
   """
   production_dependencies: list[str]
   dev_dependencies: list[str]
@@ -51,28 +51,28 @@ class Packages3Expected(NamedTuple):
 
 def basic_cases() -> list[tuple[str, CaseData]]:
   """
-    Return basic packages3 artifact cases.
+    Return basic Packages System artifact cases.
 
-    :return: The basic packages3 cases
+    :return: The basic Packages System cases
   """
   return [
     (
       'empty_packages_no_local_packages',
       CaseData(
-        args=Packages3CaseArgs(
+        args=PackagesCaseArgs(
           packages_txt='',
           local_packages_txt=None),
-        expected=Packages3Expected(
+        expected=PackagesExpected(
           production_dependencies=[],
           dev_dependencies=['mypy', 'pylint', 'parameterized'],
           local_dependencies=[]))),
     (
       'production_and_local_dependencies',
       CaseData(
-        args=Packages3CaseArgs(
+        args=PackagesCaseArgs(
           packages_txt='requests\nrich\n',
           local_packages_txt='../common-lib\n../tools-lib\n'),
-        expected=Packages3Expected(
+        expected=PackagesExpected(
           production_dependencies=['requests', 'rich'],
           dev_dependencies=['mypy', 'pylint', 'parameterized'],
           local_dependencies=['../common-lib', '../tools-lib']))),
@@ -81,7 +81,7 @@ def basic_cases() -> list[tuple[str, CaseData]]:
 
 def comment_and_whitespace_cases() -> list[tuple[str, CaseData]]:
   """
-    Return packages3 comment and whitespace cases.
+    Return Packages System comment and whitespace cases.
 
     :return: The comment and whitespace cases
   """
@@ -89,27 +89,27 @@ def comment_and_whitespace_cases() -> list[tuple[str, CaseData]]:
     (
       'packages_txt_comments_and_whitespace',
       CaseData(
-        args=Packages3CaseArgs(
+        args=PackagesCaseArgs(
           packages_txt='# third-party packages\n'
           '\n'
           'requests  # HTTP client\n'
           '  rich  \n'
           '  # display library\n',
           local_packages_txt=None),
-        expected=Packages3Expected(
+        expected=PackagesExpected(
           production_dependencies=['requests', 'rich'],
           dev_dependencies=['mypy', 'pylint', 'parameterized'],
           local_dependencies=[]))),
     (
       'local_packages_txt_comments_and_whitespace',
       CaseData(
-        args=Packages3CaseArgs(
+        args=PackagesCaseArgs(
           packages_txt='',
           local_packages_txt='# local packages\n'
           '\n'
           '../common-lib  # shared library\n'
           '  ../tools-lib  \n'),
-        expected=Packages3Expected(
+        expected=PackagesExpected(
           production_dependencies=[],
           dev_dependencies=['mypy', 'pylint', 'parameterized'],
           local_dependencies=['../common-lib', '../tools-lib']))),
@@ -118,7 +118,7 @@ def comment_and_whitespace_cases() -> list[tuple[str, CaseData]]:
 
 def dev_marker_cases() -> list[tuple[str, CaseData]]:
   """
-    Return packages3 development marker cases.
+    Return Packages System development marker cases.
 
     :return: The development marker cases
   """
@@ -126,10 +126,10 @@ def dev_marker_cases() -> list[tuple[str, CaseData]]:
     (
       'packages_txt_dev_marker',
       CaseData(
-        args=Packages3CaseArgs(
+        args=PackagesCaseArgs(
           packages_txt='requests\npytest [dev]\nrich\n',
           local_packages_txt=None),
-        expected=Packages3Expected(
+        expected=PackagesExpected(
           production_dependencies=['requests', 'rich'],
           dev_dependencies=[
             'mypy', 'pylint', 'parameterized', 'pytest'],
@@ -137,11 +137,11 @@ def dev_marker_cases() -> list[tuple[str, CaseData]]:
     (
       'local_packages_txt_dev_marker',
       CaseData(
-        args=Packages3CaseArgs(
+        args=PackagesCaseArgs(
           packages_txt='',
           local_packages_txt=(
             '../common-lib\n../test-lib [dev]\n../tools-lib\n')),
-        expected=Packages3Expected(
+        expected=PackagesExpected(
           production_dependencies=[],
           dev_dependencies=[
             'mypy', 'pylint', 'parameterized', '../test-lib'],
@@ -149,32 +149,32 @@ def dev_marker_cases() -> list[tuple[str, CaseData]]:
   ]
 
 
-def execute_packages3_case(args: Packages3CaseArgs) -> Packages3Expected:
+def execute_packages_case(args: PackagesCaseArgs) -> PackagesExpected:
   """
-    Execute a packages3 artifact case.
+    Execute a Packages System artifact case.
 
-    :param args: The packages3 artifact contents
+    :param args: The Packages System artifact contents
     :return: The dependency lists read from the artifacts
   """
   with TemporaryDirectory() as temp_directory:
     project_root = Path(temp_directory)
     if args.packages_txt is not None:
-      (project_root / Packages3.PACKAGES_FILENAME).write_text(
+      (project_root / Packages.PACKAGES_FILENAME).write_text(
         args.packages_txt, encoding='utf-8')
     if args.local_packages_txt is not None:
-      (project_root / Packages3.LOCAL_PACKAGES_FILENAME).write_text(
+      (project_root / Packages.LOCAL_PACKAGES_FILENAME).write_text(
         args.local_packages_txt, encoding='utf-8')
-    packages = Packages3(project_root)
-    result = Packages3Expected(
+    packages = Packages(project_root)
+    result = PackagesExpected(
       packages.production_dependencies,
       packages.dev_dependencies,
       packages.local_dependencies)
   return result
 
 
-class TestPackages3(unittest.TestCase, CaseExecutor):
+class TestPackages(unittest.TestCase, CaseExecutor):
   """
-    Unit tests for the Packages3 class.
+    Unit tests for the Packages class.
   """
 
   def test_missing_packages_txt_raises(self) -> None:
@@ -186,9 +186,9 @@ class TestPackages3(unittest.TestCase, CaseExecutor):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      packages_txt = project_root / Packages3.PACKAGES_FILENAME
+      packages_txt = project_root / Packages.PACKAGES_FILENAME
       with self.assertRaises(DralithusProjectError) as context:
-        Packages3(project_root)
+        Packages(project_root)
       self.assertEqual(
         f'Could not read dependency file: {packages_txt}',
         str(context.exception))
@@ -203,10 +203,10 @@ class TestPackages3(unittest.TestCase, CaseExecutor):
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
 
-      packages = Packages3.create(project_root)
+      packages = Packages.create(project_root)
 
-      self.assertTrue((project_root / Packages3.PACKAGES_FILENAME).is_file())
-      self.assertTrue((project_root / Packages3.LOCAL_PACKAGES_FILENAME).is_file())
+      self.assertTrue((project_root / Packages.PACKAGES_FILENAME).is_file())
+      self.assertTrue((project_root / Packages.LOCAL_PACKAGES_FILENAME).is_file())
       self.assertEqual([], packages.production_dependencies)
       self.assertEqual(
         ['mypy', 'pylint', 'parameterized'], packages.dev_dependencies)
@@ -222,11 +222,11 @@ class TestPackages3(unittest.TestCase, CaseExecutor):
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
 
-      Packages3.create(project_root)
+      Packages.create(project_root)
 
-      packages_text = (project_root / Packages3.PACKAGES_FILENAME).read_text(
+      packages_text = (project_root / Packages.PACKAGES_FILENAME).read_text(
         encoding='utf-8')
-      local_text = (project_root / Packages3.LOCAL_PACKAGES_FILENAME).read_text(
+      local_text = (project_root / Packages.LOCAL_PACKAGES_FILENAME).read_text(
         encoding='utf-8')
       self.assertTrue(packages_text.startswith('#'))
       self.assertTrue(local_text.startswith('#'))
@@ -239,11 +239,11 @@ class TestPackages3(unittest.TestCase, CaseExecutor):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      packages_txt = project_root / Packages3.PACKAGES_FILENAME
+      packages_txt = project_root / Packages.PACKAGES_FILENAME
       packages_txt.write_text('requests\n', encoding='utf-8')
 
       with self.assertRaises(DralithusProjectError) as context:
-        Packages3.create(project_root)
+        Packages.create(project_root)
       self.assertEqual(
         f'Packages already initialized: {packages_txt}',
         str(context.exception))
@@ -251,13 +251,13 @@ class TestPackages3(unittest.TestCase, CaseExecutor):
   @parameterized.expand(basic_cases())
   def test_basic_cases(self, _name: str, case: CaseData) -> None:
     """
-      Verify basic packages3 artifact behavior.
+      Verify basic Packages System artifact behavior.
 
       :param _name: The test case name
       :param case: The test case
       :return: None
     """
-    self.execute(execute_packages3_case, case)
+    self.execute(execute_packages_case, case)
 
   @parameterized.expand(comment_and_whitespace_cases())
   def test_comment_and_whitespace_cases(
@@ -272,7 +272,7 @@ class TestPackages3(unittest.TestCase, CaseExecutor):
       :param case: The test case
       :return: None
     """
-    self.execute(execute_packages3_case, case)
+    self.execute(execute_packages_case, case)
 
   @parameterized.expand(dev_marker_cases())
   def test_dev_marker_cases(self, _name: str, case: CaseData) -> None:
@@ -283,4 +283,4 @@ class TestPackages3(unittest.TestCase, CaseExecutor):
       :param case: The test case
       :return: None
     """
-    self.execute(execute_packages3_case, case)
+    self.execute(execute_packages_case, case)

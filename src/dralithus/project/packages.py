@@ -1,8 +1,8 @@
 """
-  packages3.py: Define the Packages3 class.
+  packages.py: Define the Packages class.
 """
 # -------------------------------------------------------------------
-# packages3.py: Define the Packages3 class.
+# packages.py: Define the Packages class.
 #
 # Copyright (C) 2026 Sumanth Vepa.
 #
@@ -26,22 +26,14 @@ from pathlib import Path
 from dralithus.project.error import DralithusProjectError
 
 
-_PACKAGES_TXT_HEADER = (
-  '# Third-party packages, one per line.\n'
-  '# Append " [dev]" to mark a development-only dependency.\n')
-
-_LOCAL_PACKAGES_TXT_HEADER = (
-  '# Local editable packages, one path per line.\n'
-  '# Append " [dev]" to mark a development-only dependency.\n')
-
-
-class Packages3:
+class Packages:
   """
-    Represent the Milestone 42 packages3 dependency convention.
+    Represent the Milestone 42 Packages System dependency convention.
 
-    This is a read-only proxy for the artifacts used by
-    packages system: packages.txt, local-packages.txt, and the implicit
-    Milestone 42 development dependencies installed by packages3.sh.
+    This models the Packages System artifacts: packages.txt,
+    local-packages.txt, and the implicit Milestone 42 development
+    dependencies (mypy, pylint, parameterized). The Packages System
+    is dralithus's successor to the legacy packages3.sh shell script.
   """
   PACKAGES_FILENAME = 'packages.txt'
   LOCAL_PACKAGES_FILENAME = 'local-packages.txt'
@@ -75,7 +67,7 @@ class Packages3:
 
   def __init__(self, project_root: Path) -> None:
     """
-      Initialize the packages3 proxy.
+      Initialize the Packages model.
 
       :param project_root: The root directory of the Python project
       :return: None
@@ -124,28 +116,34 @@ class Packages3:
     return list(self._local_dependencies)
 
   @classmethod
-  def create(cls, project_root: Path) -> Packages3:
+  def create(cls, project_root: Path) -> Packages:
     """
       Create a new packages configuration in the project root.
 
       Writes a fresh packages.txt and local-packages.txt, each seeded
-      with a header comment, then returns a Packages3 over them. Use
+      with a header comment, then returns a Packages over them. Use
       the constructor instead to read an already-initialized project.
 
       :param project_root: The root directory of the Python project
-      :return: The newly created packages3 model
+      :return: The newly created Packages model
       :raises DralithusProjectError: When the project is already
         initialized, or a dependency file cannot be written
     """
+    packages_header = (
+      '# Third-party packages, one per line.\n'
+      '# Append " [dev]" to mark a development-only dependency.\n')
+    local_packages_header = (
+      '# Local editable packages, one path per line.\n'
+      '# Append " [dev]" to mark a development-only dependency.\n')
     packages_txt = project_root / cls.PACKAGES_FILENAME
     local_packages_txt = project_root / cls.LOCAL_PACKAGES_FILENAME
     if packages_txt.exists():
       raise DralithusProjectError(
         f'Packages already initialized: {packages_txt}')
     try:
-      packages_txt.write_text(_PACKAGES_TXT_HEADER, encoding='utf-8')
+      packages_txt.write_text(packages_header, encoding='utf-8')
       local_packages_txt.write_text(
-        _LOCAL_PACKAGES_TXT_HEADER, encoding='utf-8')
+        local_packages_header, encoding='utf-8')
     except OSError as error:
       raise DralithusProjectError(
         f'Could not write dependency file: {project_root}') from error

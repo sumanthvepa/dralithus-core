@@ -25,7 +25,7 @@ import tomllib
 from typing import Any
 
 from dralithus.project.error import DralithusProjectError
-from dralithus.project.packages3 import Packages3
+from dralithus.project.packages import Packages
 
 
 class PyProjectToml:
@@ -51,7 +51,7 @@ class PyProjectToml:
     description: str,
     package_name: str,
     python_requirement: str,
-    packages: Packages3,
+    packages: Packages,
     version: str = '0.1.0'
   ) -> None:
     """
@@ -62,7 +62,7 @@ class PyProjectToml:
       :param package_name: The Python package name
       :param python_requirement: The Python version requirement
         (e.g. '>=3.13')
-      :param packages: The project's packages3 dependency model
+      :param packages: The project's Packages dependency model
       :param version: The project version
       :return: None
     """
@@ -110,11 +110,11 @@ class PyProjectToml:
     return self._python_requirement
 
   @property
-  def packages(self) -> Packages3:
+  def packages(self) -> Packages:
     """
-      Return the project's packages3 dependency model.
+      Return the project's Packages dependency model.
 
-      :return: The project's packages3 dependency model
+      :return: The project's Packages dependency model
     """
     return self._packages
 
@@ -332,7 +332,7 @@ class PyProjectToml:
     return pattern[:-1]
 
   @classmethod
-  def from_file(cls, path: Path, packages: Packages3) -> 'PyProjectToml':
+  def from_file(cls, path: Path, packages: Packages) -> 'PyProjectToml':
     """
       Load a pyproject.toml from disk.
 
@@ -341,11 +341,11 @@ class PyProjectToml:
       block, readme, packages.find.where, namespaces, and dependency
       fields). Variable fields are extracted from the file and stored
       on the returned instance. Dependency fields are validated
-      against packages3 artifacts and are not treated as a source of
+      against Packages System artifacts and are not treated as a source of
       truth.
 
       :param path: The path to the pyproject.toml file
-      :param packages: The authoritative packages3 dependency model
+      :param packages: The authoritative Packages dependency model
       :return: A PyProjectToml instance matching the file
       :raises DralithusProjectError: When the file cannot be read,
         contains invalid TOML, or does not conform to the

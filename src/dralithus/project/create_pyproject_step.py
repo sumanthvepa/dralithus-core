@@ -26,7 +26,7 @@ from typing import override
 from dralithus.project.context import ProjectContext
 from dralithus.project.execution_step import ExecutionStep
 from dralithus.project.error import DralithusProjectError
-from dralithus.project.packages3 import Packages3
+from dralithus.project.packages import Packages
 from dralithus.project.pyproject_toml import PyProjectToml
 
 
@@ -98,18 +98,18 @@ class CreatePyProjectStep(ExecutionStep):
     return f'>={parts[0]}.{parts[1]}'
 
   @staticmethod
-  def _packages(project_root: Path) -> Packages3:
+  def _packages(project_root: Path) -> Packages:
     """
-      Return the project's packages3 dependency model.
+      Return the project's Packages dependency model.
 
       Reads production, development, and editable local dependencies
-      from the packages3 project artifacts.
+      from the Packages System project artifacts.
 
       :param project_root: The project root directory
-      :return: The project's packages3 dependency model
+      :return: The project's Packages dependency model
       :raises DralithusProjectError: When packages.txt is missing
     """
-    return Packages3(project_root)
+    return Packages(project_root)
 
   def _expected_pyproject(
     self,

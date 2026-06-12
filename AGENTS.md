@@ -124,8 +124,8 @@ How to apply:
   `pyproject.toml` simply mirrors the authoritative lists. **Do not
   propose deleting the `packages.txt`/`local-packages.txt` side to
   "fix" the overlap** — they are the source of truth.
-- **`packages4` has begun as the `Packages3` class inside dralithus**
-  (`src/dralithus/project/packages3.py`), not as another standalone
+- **`packages4` has begun as the `Packages` class inside dralithus**
+  (`src/dralithus/project/packages.py`), not as another standalone
   script. It still reads `packages.txt`/`local-packages.txt` but
   **intentionally deviates** from `packages3.sh` in three ways (treat
   these as deliberate design, not drift): (1) a ` [dev]` line-suffix

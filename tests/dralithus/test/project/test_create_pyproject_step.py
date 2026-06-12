@@ -29,7 +29,7 @@ import unittest
 from dralithus.project.context import ProjectContext
 from dralithus.project.create_pyproject_step import CreatePyProjectStep
 from dralithus.project.error import DralithusProjectError
-from dralithus.project.packages3 import Packages3
+from dralithus.project.packages import Packages
 from dralithus.project.pyproject_toml import PyProjectToml
 
 
@@ -49,16 +49,16 @@ class TestCreatePyProjectStep(unittest.TestCase):
     dev_dependencies: list[str] | None = None,
     local_dependencies: list[str] | None = None,
     local_dev_dependencies: list[str] | None = None
-  ) -> Packages3:
+  ) -> Packages:
     """
-      Write package artifacts and return their Packages3 model.
+      Write package artifacts and return their Packages model.
 
       :param project_root: The project root directory
       :param dependencies: The packages.txt dependencies
       :param dev_dependencies: The full expected dev dependency list
       :param local_dependencies: The local-packages.txt dependencies
       :param local_dev_dependencies: The local dev dependencies
-      :return: The Packages3 model
+      :return: The Packages model
     """
     if dependencies is None:
       dependencies = []
@@ -79,14 +79,14 @@ class TestCreatePyProjectStep(unittest.TestCase):
       *local_dependencies,
       *[f'{dependency} [dev]'
         for dependency in local_dev_dependencies]]
-    (project_root / Packages3.PACKAGES_FILENAME).write_text(
+    (project_root / Packages.PACKAGES_FILENAME).write_text(
       '\n'.join(package_lines),
       encoding='utf-8')
     if local_lines:
-      (project_root / Packages3.LOCAL_PACKAGES_FILENAME).write_text(
+      (project_root / Packages.LOCAL_PACKAGES_FILENAME).write_text(
         '\n'.join(local_lines),
         encoding='utf-8')
-    return Packages3(project_root)
+    return Packages(project_root)
 
   @staticmethod
   def _python_requirement() -> str:
@@ -191,7 +191,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
       cwd=project_root,
       check=True)
     if create_packages_txt:
-      (project_root / Packages3.PACKAGES_FILENAME).write_text('', encoding='utf-8')
+      (project_root / Packages.PACKAGES_FILENAME).write_text('', encoding='utf-8')
 
   # pylint: disable-next=too-many-arguments,too-many-positional-arguments
   def _validate_pyproject(
@@ -261,7 +261,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
       project_root = Path(temp_directory)
       context = ProjectContext(project_root=project_root)
       self._create_venv(project_root)
-      (project_root / Packages3.PACKAGES_FILENAME).write_text(
+      (project_root / Packages.PACKAGES_FILENAME).write_text(
         '# third-party packages\n'
         '\n'
         'requests\n'
@@ -288,11 +288,11 @@ class TestCreatePyProjectStep(unittest.TestCase):
       project_root = Path(temp_directory)
       context = ProjectContext(project_root=project_root)
       self._create_venv(project_root)
-      (project_root / Packages3.PACKAGES_FILENAME).write_text(
+      (project_root / Packages.PACKAGES_FILENAME).write_text(
         'requests\n'
         'pytest [dev]\n',
         encoding='utf-8')
-      (project_root / Packages3.LOCAL_PACKAGES_FILENAME).write_text(
+      (project_root / Packages.LOCAL_PACKAGES_FILENAME).write_text(
         '../common-lib\n'
         '../test-lib [dev]\n',
         encoding='utf-8')
@@ -305,7 +305,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
 
       pyproject = PyProjectToml.from_file(
         project_root / 'pyproject.toml',
-        Packages3(project_root))
+        Packages(project_root))
       self.assertEqual(
         pyproject.packages.production_dependencies,
         ['requests'])
@@ -326,7 +326,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
       project_root = Path(temp_directory)
       context = ProjectContext(project_root=project_root)
       self._create_venv(project_root)
-      (project_root / Packages3.LOCAL_PACKAGES_FILENAME).write_text(
+      (project_root / Packages.LOCAL_PACKAGES_FILENAME).write_text(
         '../common-lib\n',
         encoding='utf-8')
       step = CreatePyProjectStep(
@@ -338,7 +338,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
 
       parsed = PyProjectToml.from_file(
         project_root / 'pyproject.toml',
-        Packages3(project_root))
+        Packages(project_root))
       self.assertEqual(parsed.packages.production_dependencies, [])
       self.assertEqual(parsed.packages.local_dependencies, ['../common-lib'])
 
@@ -592,7 +592,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
       project_root = Path(temp_directory)
       context = ProjectContext(project_root=project_root)
       self._create_venv(project_root)
-      (project_root / Packages3.PACKAGES_FILENAME).write_text(
+      (project_root / Packages.PACKAGES_FILENAME).write_text(
         'requests\n',
         encoding='utf-8')
       text = self._pyproject_text(dependencies=[])
