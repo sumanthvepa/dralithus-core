@@ -25,7 +25,7 @@ from pathlib import Path
 import shutil
 import subprocess
 
-from typing_extensions import override
+from typing import override
 
 from dralithus.project.context import ProjectContext
 from dralithus.project.execution_step import ExecutionStep

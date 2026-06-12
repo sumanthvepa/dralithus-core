@@ -33,7 +33,7 @@ class Packages:
     This models the Packages System artifacts: packages.txt,
     local-packages.txt, and the implicit Milestone 42 development
     dependencies (mypy, pylint, parameterized). The Packages System
-    is dralithus's successor to the legacy packages3.sh shell script.
+    is Dralithus's successor to the legacy packages3.sh shell script.
   """
   PACKAGES_FILENAME = 'packages.txt'
   LOCAL_PACKAGES_FILENAME = 'local-packages.txt'
@@ -118,16 +118,17 @@ class Packages:
   @classmethod
   def create(cls, project_root: Path) -> Packages:
     """
-      Create a new packages configuration in the project root.
+      Create any missing packages configuration in the project root.
 
-      Writes a fresh packages.txt and local-packages.txt, each seeded
-      with a header comment, then returns a Packages over them. Use
-      the constructor instead to read an already-initialized project.
+      Writes whichever of packages.txt and local-packages.txt does
+      not already exist, seeded with a header comment. Existing
+      dependency files are left untouched. Returns a Packages over
+      the resulting files.
 
       :param project_root: The root directory of the Python project
-      :return: The newly created Packages model
-      :raises DralithusProjectError: When the project is already
-        initialized, or a dependency file cannot be written
+      :return: The Packages model over the dependency files
+      :raises DralithusProjectError: When a missing dependency file
+        cannot be written, or an existing one cannot be read
     """
     packages_header = (
       '# Third-party packages, one per line.\n'
@@ -137,13 +138,12 @@ class Packages:
       '# Append " [dev]" to mark a development-only dependency.\n')
     packages_txt = project_root / cls.PACKAGES_FILENAME
     local_packages_txt = project_root / cls.LOCAL_PACKAGES_FILENAME
-    if packages_txt.exists():
-      raise DralithusProjectError(
-        f'Packages already initialized: {packages_txt}')
     try:
-      packages_txt.write_text(packages_header, encoding='utf-8')
-      local_packages_txt.write_text(
-        local_packages_header, encoding='utf-8')
+      if not packages_txt.exists():
+        packages_txt.write_text(packages_header, encoding='utf-8')
+      if not local_packages_txt.exists():
+        local_packages_txt.write_text(
+          local_packages_header, encoding='utf-8')
     except OSError as error:
       raise DralithusProjectError(
         f'Could not write dependency file: {project_root}') from error

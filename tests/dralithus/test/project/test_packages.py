@@ -231,9 +231,10 @@ class TestPackages(unittest.TestCase, CaseExecutor):
       self.assertTrue(packages_text.startswith('#'))
       self.assertTrue(local_text.startswith('#'))
 
-  def test_create_raises_when_already_initialized(self) -> None:
+  def test_create_keeps_existing_packages_txt(self) -> None:
     """
-      Verify create refuses to overwrite an existing packages.txt.
+      Verify create leaves an existing packages.txt untouched and
+      creates only the missing local-packages.txt.
 
       :return: None
     """
@@ -242,10 +243,79 @@ class TestPackages(unittest.TestCase, CaseExecutor):
       packages_txt = project_root / Packages.PACKAGES_FILENAME
       packages_txt.write_text('requests\n', encoding='utf-8')
 
+      packages = Packages.create(project_root)
+
+      self.assertEqual(
+        'requests\n', packages_txt.read_text(encoding='utf-8'))
+      self.assertTrue(
+        (project_root / Packages.LOCAL_PACKAGES_FILENAME).is_file())
+      self.assertEqual(['requests'], packages.production_dependencies)
+
+  def test_create_keeps_existing_local_packages_txt(self) -> None:
+    """
+      Verify create leaves an existing local-packages.txt untouched
+      and creates only the missing packages.txt.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      local_packages_txt = (
+        project_root / Packages.LOCAL_PACKAGES_FILENAME)
+      local_packages_txt.write_text('../common-lib\n', encoding='utf-8')
+
+      packages = Packages.create(project_root)
+
+      self.assertEqual(
+        '../common-lib\n',
+        local_packages_txt.read_text(encoding='utf-8'))
+      packages_txt = project_root / Packages.PACKAGES_FILENAME
+      self.assertTrue(packages_txt.is_file())
+      self.assertTrue(
+        packages_txt.read_text(encoding='utf-8').startswith('#'))
+      self.assertEqual(['../common-lib'], packages.local_dependencies)
+
+  def test_create_keeps_both_existing_files(self) -> None:
+    """
+      Verify create leaves both existing dependency files untouched
+      and reads dependencies from them.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      packages_txt = project_root / Packages.PACKAGES_FILENAME
+      local_packages_txt = (
+        project_root / Packages.LOCAL_PACKAGES_FILENAME)
+      packages_txt.write_text('requests\n', encoding='utf-8')
+      local_packages_txt.write_text('../common-lib\n', encoding='utf-8')
+
+      packages = Packages.create(project_root)
+
+      self.assertEqual(
+        'requests\n', packages_txt.read_text(encoding='utf-8'))
+      self.assertEqual(
+        '../common-lib\n',
+        local_packages_txt.read_text(encoding='utf-8'))
+      self.assertEqual(['requests'], packages.production_dependencies)
+      self.assertEqual(['../common-lib'], packages.local_dependencies)
+
+  def test_create_raises_when_packages_txt_unreadable(self) -> None:
+    """
+      Verify create raises when an existing packages.txt cannot be
+      read.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      packages_txt = project_root / Packages.PACKAGES_FILENAME
+      packages_txt.mkdir()
+
       with self.assertRaises(DralithusProjectError) as context:
         Packages.create(project_root)
       self.assertEqual(
-        f'Packages already initialized: {packages_txt}',
+        f'Could not read dependency file: {packages_txt}',
         str(context.exception))
 
   @parameterized.expand(basic_cases())

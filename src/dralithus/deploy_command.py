@@ -21,7 +21,7 @@
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
 from __future__ import annotations
-from typing_extensions import override
+from typing import override
 
 from dralithus.command import Command
 from dralithus.command_line.command_line import CommandLine
