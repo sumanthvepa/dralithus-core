@@ -1,6 +1,6 @@
 # Dralithus
 
-Dralithus is intended to be a command line tool to "hydrate" a network of
+Dralithus is intended to be a command-line tool to "hydrate" a network of
 virtual machines and containers in order to deploy applications across
 various environments. The CLI binary is `drl`.
 
@@ -42,7 +42,7 @@ packages3.sh
 This should be done if you have just checked out a new branch and want
 to create a venv with the latest versions of the dependencies.
 
-Sometimes this is not desirable, for example if you want to recreate a
+Sometimes this is not desirable, for example, if you want to recreate a
 known-good environment using the dependencies pinned in
 `requirements.txt`. In that case, install from `requirements.txt`:
 
@@ -80,7 +80,7 @@ development environment first by re-running `packages3.sh`.
 
 `pyproject.toml` is used to specify the project metadata and
 dependencies in a standardized way. It is used by `pip` to install the
-project and its dependencies. Currently you are required to manually
+project and its dependencies. Currently, you are required to manually
 keep `pyproject.toml` in sync with `packages.txt`; a future version of
 the package management script (planned `packages4`) will read
 dependencies directly from `pyproject.toml` and remove this duplication.
@@ -102,8 +102,8 @@ Run the unit tests with:
 PYTHONPATH=tests python -m unittest discover -s tests/dralithus/test
 ```
 
-The `PYTHONPATH=tests` setting lets the tests import shared helper
-defined in `tests/tdralithus/test/__init__.py` as the dralithus.test
+The `PYTHONPATH=tests` setting lets the tests import shared helpers
+defined in `tests/dralithus/test/__init__.py` as the `dralithus.test`
 package.
 
 ### Alternate workflow without editable install
