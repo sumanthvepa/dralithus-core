@@ -20,6 +20,7 @@
 # along with this program.  If not, see
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
+import os
 from pathlib import Path
 
 from dralithus.project.error import DralithusProjectError
@@ -78,7 +79,10 @@ class Packages:
     production, production_dev = self._read_dependencies(packages_txt)
     local: list[str] = []
     local_dev: list[str] = []
-    if local_packages_txt.exists():
+    # os.path.lexists detects the entry without following the final
+    # symlink, so a dangling local-packages.txt symlink is read (and
+    # fails loudly) rather than being mistaken for an absent file.
+    if os.path.lexists(local_packages_txt):
       local, local_dev = self._read_dependencies(local_packages_txt)
     self._production_dependencies = production
     self._dev_dependencies = [
