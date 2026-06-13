@@ -25,6 +25,7 @@
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
+from unittest import mock
 
 from dralithus.project.context import ProjectContext
 from dralithus.project.create_source_and_test_tree_step import (
@@ -332,6 +333,144 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
       step.run(context)
       step.run(context)
       step.rollback(context)
+
+      self.assertFalse((project_root / 'src').exists())
+      self.assertFalse((project_root / 'tests').exists())
+
+  # run: strict typing of pre-existing seeded paths
+
+  def test_run_raises_when_init_py_path_is_a_directory(self) -> None:
+    """
+      Verify that run fails loudly when the __init__.py path already
+      exists as a directory rather than a regular file.
+
+      A directory where the seeded regular file belongs is not state
+      the step could have produced, so it must fail loudly (the
+      convergent-step rule) and clean up the source tree it created.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      test_package = self._test_package(project_root)
+      test_package.mkdir(parents=True)
+      init_dir = test_package / '__init__.py'
+      init_dir.mkdir()
+      step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
+
+      with self.assertRaises(DralithusProjectError):
+        step.run(context)
+
+      self.assertTrue(init_dir.is_dir())
+      self.assertFalse((project_root / 'src').exists())
+
+  def test_run_raises_on_dangling_init_py_symlink(self) -> None:
+    """
+      Verify that run fails loudly when the __init__.py path is a
+      dangling symlink rather than a regular file.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      test_package = self._test_package(project_root)
+      test_package.mkdir(parents=True)
+      init_link = test_package / '__init__.py'
+      init_link.symlink_to(project_root / 'does-not-exist')
+      step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
+
+      with self.assertRaises(DralithusProjectError):
+        step.run(context)
+
+      self.assertTrue(init_link.is_symlink())
+      self.assertFalse((project_root / 'src').exists())
+
+  def test_run_raises_when_init_py_is_a_symlink_to_file(self) -> None:
+    """
+      Verify that run fails loudly when the __init__.py path is a
+      symlink to a regular file rather than a regular file itself.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      test_package = self._test_package(project_root)
+      test_package.mkdir(parents=True)
+      target = project_root / 'target.txt'
+      target.write_text('content\n', encoding='utf-8')
+      init_link = test_package / '__init__.py'
+      init_link.symlink_to(target)
+      step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
+
+      with self.assertRaises(DralithusProjectError):
+        step.run(context)
+
+      self.assertTrue(init_link.is_symlink())
+      self.assertFalse((project_root / 'src').exists())
+
+  # run: transactional cleanup on failure
+
+  def test_run_cleans_up_when_test_tree_creation_fails(self) -> None:
+    """
+      Verify that a run whose test-tree creation fails after the
+      source tree was created removes the source tree before raising.
+
+      A file placed at the tests path makes the test-tree MkdirStep
+      fail after the source tree has already been created. The failed
+      run must not leave the source tree behind, because the
+      orchestrator never rolls back a step whose own run raised.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      tests_path = project_root / 'tests'
+      tests_path.write_text('not a directory\n', encoding='utf-8')
+      step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
+
+      with self.assertRaises(DralithusProjectError):
+        step.run(context)
+
+      self.assertFalse((project_root / 'src').exists())
+      self.assertTrue(tests_path.is_file())
+
+  def test_run_cleans_up_when_seeding_fails(self) -> None:
+    """
+      Verify that a run whose seed write fails removes the trees and
+      files it created and raises DralithusProjectError.
+
+      The first seeded file (__init__.py) is written for real; the
+      write of the source .gitignore is forced to fail. The failed
+      run must wrap the raw OSError as DralithusProjectError (so the
+      orchestrator can roll back earlier steps) and leave nothing
+      behind.
+
+      :return: None
+    """
+    real_create_file = (
+      CreateSourceAndTestTreeStep._create_file)  # pylint: disable=protected-access
+
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
+
+      def fail_src_gitignore(path: Path, content: str) -> None:
+        if (path.name == '.gitignore'
+            and path.parent.name == self._PACKAGE_NAME):
+          raise OSError('simulated write failure')
+        real_create_file(step, path, content)
+
+      with mock.patch.object(
+        CreateSourceAndTestTreeStep, '_create_file',
+        side_effect=fail_src_gitignore
+      ):
+        with self.assertRaises(DralithusProjectError):
+          step.run(context)
 
       self.assertFalse((project_root / 'src').exists())
       self.assertFalse((project_root / 'tests').exists())
