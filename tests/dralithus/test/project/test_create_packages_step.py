@@ -424,13 +424,16 @@ class TestCreatePackagesStep(unittest.TestCase):
       self.assertFalse(
         (project_root / Packages.LOCAL_PACKAGES_FILENAME).exists())
 
-  def test_rollback_preserves_dangling_symlink(self) -> None:
+  def test_run_raises_on_dangling_local_packages_symlink(self) -> None:
     """
-      Verify rollback does not delete a user-owned dangling symlink.
+      Verify run fails loudly on a dangling local-packages.txt
+      symlink rather than silently accepting it.
 
-      A dangling symlink fails Path.exists, so ownership tracking
-      based on an existence check would wrongly claim it. The step
-      must not remove it on rollback.
+      The step refuses to claim the existing symlink, so it creates
+      only the missing packages.txt. Validation then constructs a
+      Packages model, which cannot read the dangling symlink and
+      raises. The failed run removes the packages.txt it created and
+      leaves the user-owned symlink in place.
 
       :return: None
     """
@@ -442,8 +445,11 @@ class TestCreatePackagesStep(unittest.TestCase):
       local_packages_txt.symlink_to(project_root / 'does-not-exist')
       step = CreatePackagesStep()
 
-      step.run(context)
-      step.rollback(context)
+      with self.assertRaisesRegex(
+        DralithusProjectError,
+        'Could not read dependency file'
+      ):
+        step.run(context)
 
       self.assertTrue(local_packages_txt.is_symlink())
       self.assertFalse(

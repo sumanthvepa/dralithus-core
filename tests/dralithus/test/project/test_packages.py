@@ -193,6 +193,33 @@ class TestPackages(unittest.TestCase, CaseExecutor):
         f'Could not read dependency file: {packages_txt}',
         str(context.exception))
 
+  def test_dangling_local_packages_symlink_raises(self) -> None:
+    """
+      Verify constructing over a dangling local-packages.txt symlink
+      raises DralithusProjectError instead of silently treating the
+      optional file as absent.
+
+      Path.exists follows symlinks and reports False for a dangling
+      symlink, so the constructor must detect the entry without
+      following the link and then attempt to read it, failing loudly.
+      The symlink is left in place; it simply cannot be read.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      (project_root / Packages.PACKAGES_FILENAME).write_text(
+        '', encoding='utf-8')
+      local_packages_txt = (
+        project_root / Packages.LOCAL_PACKAGES_FILENAME)
+      local_packages_txt.symlink_to(project_root / 'does-not-exist')
+      with self.assertRaises(DralithusProjectError) as context:
+        Packages(project_root)
+      self.assertEqual(
+        f'Could not read dependency file: {local_packages_txt}',
+        str(context.exception))
+      self.assertTrue(local_packages_txt.is_symlink())
+
   @parameterized.expand(basic_cases())
   def test_basic_cases(self, _name: str, case: CaseData) -> None:
     """
