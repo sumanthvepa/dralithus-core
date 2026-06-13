@@ -98,17 +98,22 @@ class CreateSourceAndTestTreeStep(ExecutionStep):
 
   def _create_file(self, path: Path, content: str) -> None:
     """
-      Create path with content unless the path already exists.
+      Create path with content unless a regular file already exists.
 
-      Creation is exclusive, so a pre-existing file (including a
-      dangling symlink) is never overwritten or claimed. Ownership
-      is recorded the instant exclusive creation succeeds, before
-      the content write, so a write failure cannot leave an
-      untracked partial file behind.
+      Creation is exclusive, so a pre-existing file is never
+      overwritten or claimed. A pre-existing regular file is accepted
+      and left untouched (convergent); any other pre-existing path -
+      a directory, a symlink (including a dangling one), or any other
+      non-regular file - fails loudly. Ownership is recorded the
+      instant exclusive creation succeeds, before the content write,
+      so a write failure cannot leave an untracked partial file
+      behind.
 
       :param path: The file to create
       :param content: The content to write
       :return: None
+      :raises DralithusProjectError: When path already exists but is
+        not a regular, non-symlink file
       :raises OSError: When the file cannot be created or written
     """
     try:
@@ -116,7 +121,7 @@ class CreateSourceAndTestTreeStep(ExecutionStep):
       # pylint: disable-next=consider-using-with
       file = path.open('x', encoding='utf-8')
     except FileExistsError:
-      pass
+      self._verify_regular_file(path)
     else:
       self._created_files.append(path)
       with file:
@@ -128,15 +133,21 @@ class CreateSourceAndTestTreeStep(ExecutionStep):
 
       :param project_root: The project root directory
       :return: None
-      :raises OSError: When a seeded file cannot be created or written
+      :raises DralithusProjectError: When a seeded path already
+        exists but is not a regular file, or a seeded file cannot be
+        created or written
     """
     src_package = project_root / 'src' / self._package_name
     test_package = (
       project_root / 'tests' / self._package_name / 'test')
-    self._create_file(
-      test_package / '__init__.py', self._init_py_content())
-    self._create_file(src_package / '.gitignore', '')
-    self._create_file(test_package / '.gitignore', '')
+    try:
+      self._create_file(
+        test_package / '__init__.py', self._init_py_content())
+      self._create_file(src_package / '.gitignore', '')
+      self._create_file(test_package / '.gitignore', '')
+    except OSError as error:
+      raise DralithusProjectError(
+        f'Could not write seeded file in: {project_root}') from error
 
   def _remove_created_files(self) -> None:
     """
@@ -155,6 +166,26 @@ class CreateSourceAndTestTreeStep(ExecutionStep):
         raise DralithusProjectError(
           f'Could not remove seeded file: {path}') from error
     self._created_files = []
+
+  @staticmethod
+  def _verify_regular_file(path: Path) -> None:
+    """
+      Verify that an existing seeded path is a regular file.
+
+      Called when exclusive creation reports the path already exists.
+      A regular, non-symlink file is accepted (convergent: the step
+      leaves it untouched); anything else - a directory, a symlink
+      (including a dangling one), or any other non-regular file - is
+      state the step could not have produced and fails loudly.
+
+      :param path: The existing path to verify
+      :return: None
+      :raises DralithusProjectError: When path is not a regular,
+        non-symlink file
+    """
+    if path.is_symlink() or not path.is_file():
+      raise DralithusProjectError(
+        f'Seeded path is not a regular file: {path}')
 
   @staticmethod
   def _validate_package_name(package_name: str) -> None:
@@ -199,16 +230,24 @@ class CreateSourceAndTestTreeStep(ExecutionStep):
     """
       Run the source and test tree creation step.
 
+      On any failure this step cleans up its own partial work before
+      re-raising, because the orchestrator never rolls back a step
+      whose own run raised.
+
       :param context: The shared project creation context
       :param dry_run: True if the step should report what it would
         do without changing the file system
       :return: None
       :raises DralithusProjectError: When tree or file creation fails
     """
-    self._src_mkdir.run(context, dry_run)
-    self._tests_mkdir.run(context, dry_run)
-    if not dry_run:
-      self._seed_files(context.project_root)
+    try:
+      self._src_mkdir.run(context, dry_run)
+      self._tests_mkdir.run(context, dry_run)
+      if not dry_run:
+        self._seed_files(context.project_root)
+    except DralithusProjectError:
+      self.rollback(context, dry_run)
+      raise
 
   @override
   def rollback(self, context: ProjectContext, dry_run: bool = False) -> None:
