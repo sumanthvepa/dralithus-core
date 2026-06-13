@@ -40,6 +40,22 @@ class CreatePackagesStep(ExecutionStep):
     rollback are owned entirely by this step: it records exactly
     the files its own exclusive writes created, and rollback
     removes only those.
+
+    Known limitation (deferred, not fixed): ownership is tracked by
+    path only, so cleanup unlinks whatever currently occupies a
+    created path without checking it is still the file this step
+    created. If a created file is removed and replaced by a
+    different file before failure cleanup or rollback runs, the
+    replacement is deleted - contradicting the contract above. The
+    window is small within a single process, but is realistic under
+    the concurrent, multi-agent filesystem access dralithus is
+    intended to support. When it becomes a real problem, gate
+    deletion on file identity: preserve the path unless its current
+    content still matches the seed this step wrote. A content match
+    (unlike inode identity) also avoids deleting a file another
+    actor has since written real data into; a residual
+    check-to-unlink TOCTOU would remain, since name-based unlink
+    cannot be made atomic with the check.
   """
   _PACKAGES_HEADER = (
     '# Third-party packages, one per line.\n'
