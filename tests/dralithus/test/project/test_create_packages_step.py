@@ -231,15 +231,15 @@ class TestCreatePackagesStep(unittest.TestCase):
     real_create_file = (
       CreatePackagesStep._create_file)  # pylint: disable=protected-access
 
-    def fail_local(path: Path, content: str) -> bool:
-      if path.name == Packages.LOCAL_PACKAGES_FILENAME:
-        raise OSError('simulated write failure')
-      return real_create_file(path, content)
-
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
       context = ProjectContext(project_root=project_root)
       step = CreatePackagesStep()
+
+      def fail_local(path: Path, content: str) -> None:
+        if path.name == Packages.LOCAL_PACKAGES_FILENAME:
+          raise OSError('simulated write failure')
+        real_create_file(step, path, content)
 
       with mock.patch.object(
         CreatePackagesStep, '_create_file', side_effect=fail_local

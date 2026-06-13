@@ -88,37 +88,39 @@ class CreatePackagesStep(ExecutionStep):
        self._LOCAL_PACKAGES_HEADER))
     try:
       for path, content in targets:
-        if self._create_file(path, content):
-          self._created_files.append(path)
+        self._create_file(path, content)
     except OSError as error:
       self._remove_created_files()
       raise DralithusProjectError(
         f'Could not write dependency file: {project_root}') from error
 
-  @staticmethod
-  def _create_file(path: Path, content: str) -> bool:
+  def _create_file(self, path: Path, content: str) -> None:
     """
-      Write content to path unless the path already exists.
+      Create path with content unless the path already exists.
 
       Creation is exclusive, so a file that appears between any
       earlier existence check and the write is never overwritten,
-      and the return value reports true ownership: True only when
-      this call created the file.
+      and a path that already exists (including as a dangling
+      symlink) is neither replaced nor claimed. Ownership is
+      recorded the instant exclusive creation succeeds, before the
+      content write, so a write failure cannot leave an untracked
+      partial file behind.
 
       :param path: The dependency file to create
       :param content: The content to write
-      :return: True if this call created the file, False if the
-        path already existed (including as a dangling symlink)
-      :raises OSError: When the file cannot be written
+      :return: None
+      :raises OSError: When the file cannot be created or written
     """
-    created = False
     try:
-      with path.open('x', encoding='utf-8') as file:
-        file.write(content)
-      created = True
+      # The with statement starts only after ownership is recorded.
+      # pylint: disable-next=consider-using-with
+      file = path.open('x', encoding='utf-8')
     except FileExistsError:
       pass
-    return created
+    else:
+      self._created_files.append(path)
+      with file:
+        file.write(content)
 
   def __init__(self) -> None:
     """
