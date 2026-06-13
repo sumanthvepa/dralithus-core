@@ -49,13 +49,12 @@ class CreatePackagesStep(ExecutionStep):
     replacement is deleted - contradicting the contract above. The
     window is small within a single process, but is realistic under
     the concurrent, multi-agent filesystem access dralithus is
-    intended to support. When it becomes a real problem, gate
-    deletion on file identity: preserve the path unless its current
-    content still matches the seed this step wrote. A content match
-    (unlike inode identity) also avoids deleting a file another
-    actor has since written real data into; a residual
-    check-to-unlink TOCTOU would remain, since name-based unlink
-    cannot be made atomic with the check.
+    intended to support. Any future fix must preserve immediate
+    cleanup of empty or partially written files after a write
+    failure, while preventing later rollback from deleting a
+    replacement file. A residual check-to-unlink TOCTOU may remain,
+    since name-based unlink cannot be made atomic with an identity
+    or content check.
   """
   _PACKAGES_HEADER = (
     '# Third-party packages, one per line.\n'
