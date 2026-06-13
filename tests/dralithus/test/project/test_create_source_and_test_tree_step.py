@@ -1,0 +1,341 @@
+"""
+  test_create_source_and_test_tree_step.py: Unit tests for
+  create_source_and_test_tree_step.
+"""
+# -------------------------------------------------------------------
+# test_create_source_and_test_tree_step.py: Unit tests for
+# create_source_and_test_tree_step.
+#
+# Copyright (C) 2026 Sumanth Vepa.
+#
+# This program is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License a
+# published by the Free Software Foundation, either version 3 of the
+# License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see
+# <https://www.gnu.org/licenses/>.
+# -------------------------------------------------------------------
+from pathlib import Path
+from tempfile import TemporaryDirectory
+import unittest
+
+from dralithus.project.context import ProjectContext
+from dralithus.project.create_source_and_test_tree_step import (
+  CreateSourceAndTestTreeStep)
+from dralithus.project.error import DralithusProjectError
+
+
+class TestCreateSourceAndTestTreeStep(unittest.TestCase):
+  """
+    Unit tests for the CreateSourceAndTestTreeStep class.
+  """
+  _PACKAGE_NAME = 'mypkg'
+
+  def _src_package(self, project_root: Path) -> Path:
+    """
+      Return the source package directory for the test package.
+
+      :param project_root: The project root directory
+      :return: The src/<package_name> directory path
+    """
+    return project_root / 'src' / self._PACKAGE_NAME
+
+  def _test_package(self, project_root: Path) -> Path:
+    """
+      Return the test package directory for the test package.
+
+      :param project_root: The project root directory
+      :return: The tests/<package_name>/test directory path
+    """
+    return project_root / 'tests' / self._PACKAGE_NAME / 'test'
+
+  # Constructor validation
+
+  def test_init_rejects_empty_package_name(self) -> None:
+    """
+      Verify that the constructor rejects an empty package name.
+
+      :return: None
+    """
+    with self.assertRaises(DralithusProjectError):
+      CreateSourceAndTestTreeStep('')
+
+  def test_init_rejects_non_identifier_package_name(self) -> None:
+    """
+      Verify that the constructor rejects a package name that is not
+      a valid Python identifier.
+
+      :return: None
+    """
+    with self.assertRaises(DralithusProjectError):
+      CreateSourceAndTestTreeStep('my-pkg')
+    with self.assertRaises(DralithusProjectError):
+      CreateSourceAndTestTreeStep('my.pkg')
+
+  def test_init_rejects_keyword_package_name(self) -> None:
+    """
+      Verify that the constructor rejects a Python keyword as a
+      package name.
+
+      :return: None
+    """
+    with self.assertRaises(DralithusProjectError):
+      CreateSourceAndTestTreeStep('class')
+
+  def test_init_rejects_uppercase_package_name(self) -> None:
+    """
+      Verify that the constructor rejects a package name that
+      contains uppercase letters.
+
+      :return: None
+    """
+    with self.assertRaises(DralithusProjectError):
+      CreateSourceAndTestTreeStep('MyPkg')
+
+  # run
+
+  def test_run_creates_trees_and_seeded_files(self) -> None:
+    """
+      Verify that run creates both package trees and the seeded
+      files in an empty project root.
+
+      The source package is a namespace package (no __init__.py); the
+      test package has a seeded __init__.py with a docstring and the
+      copyleft header; both directories get an empty .gitignore.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      src_package = self._src_package(project_root)
+      test_package = self._test_package(project_root)
+      step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
+
+      step.run(context)
+
+      self.assertTrue(src_package.is_dir())
+      self.assertTrue(test_package.is_dir())
+      self.assertFalse((src_package / '__init__.py').exists())
+      init_text = (
+        test_package / '__init__.py').read_text(encoding='utf-8')
+      self.assertTrue(init_text.startswith('"""'))
+      self.assertIn(self._PACKAGE_NAME, init_text)
+      self.assertIn('GNU General Public License', init_text)
+      src_gitignore = src_package / '.gitignore'
+      test_gitignore = test_package / '.gitignore'
+      self.assertTrue(src_gitignore.is_file())
+      self.assertTrue(test_gitignore.is_file())
+      self.assertEqual('', src_gitignore.read_text(encoding='utf-8'))
+      self.assertEqual('', test_gitignore.read_text(encoding='utf-8'))
+
+  def test_run_accepts_preexisting_directories(self) -> None:
+    """
+      Verify that run accepts pre-existing package directories
+      without error (convergent).
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      src_package = self._src_package(project_root)
+      test_package = self._test_package(project_root)
+      src_package.mkdir(parents=True)
+      test_package.mkdir(parents=True)
+      step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
+
+      step.run(context)
+
+      self.assertTrue(src_package.is_dir())
+      self.assertTrue(test_package.is_dir())
+      self.assertTrue((test_package / '__init__.py').is_file())
+
+  def test_run_keeps_existing_init_py(self) -> None:
+    """
+      Verify that run leaves a pre-existing __init__.py untouched.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      test_package = self._test_package(project_root)
+      test_package.mkdir(parents=True)
+      init_py = test_package / '__init__.py'
+      init_py.write_text('# existing\n', encoding='utf-8')
+      step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
+
+      step.run(context)
+
+      self.assertEqual(
+        '# existing\n', init_py.read_text(encoding='utf-8'))
+
+  def test_run_keeps_existing_gitignore(self) -> None:
+    """
+      Verify that run leaves a pre-existing .gitignore untouched.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      src_package = self._src_package(project_root)
+      src_package.mkdir(parents=True)
+      gitignore = src_package / '.gitignore'
+      gitignore.write_text('*.pyc\n', encoding='utf-8')
+      step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
+
+      step.run(context)
+
+      self.assertEqual(
+        '*.pyc\n', gitignore.read_text(encoding='utf-8'))
+
+  def test_run_raises_when_path_component_not_a_directory(self) -> None:
+    """
+      Verify that run raises when a tree path component exists but is
+      not a directory.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      (project_root / 'src').mkdir()
+      (project_root / 'src' / self._PACKAGE_NAME).write_text(
+        'not a directory\n', encoding='utf-8')
+      step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
+
+      with self.assertRaises(DralithusProjectError):
+        step.run(context)
+
+  def test_run_dry_run_creates_nothing(self) -> None:
+    """
+      Verify that dry-run mode does not create any directories or
+      files.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
+
+      step.run(context, dry_run=True)
+
+      self.assertFalse((project_root / 'src').exists())
+      self.assertFalse((project_root / 'tests').exists())
+
+  # rollback
+
+  def test_rollback_removes_everything_run_created(self) -> None:
+    """
+      Verify that rollback removes everything run created in an empty
+      project root.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
+
+      step.run(context)
+      step.rollback(context)
+
+      self.assertFalse((project_root / 'src').exists())
+      self.assertFalse((project_root / 'tests').exists())
+
+  def test_rollback_keeps_preexisting_directories_and_files(self) -> None:
+    """
+      Verify that rollback leaves pre-existing directories and files
+      in place, removing only what the step created.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      test_package = self._test_package(project_root)
+      test_package.mkdir(parents=True)
+      init_py = test_package / '__init__.py'
+      init_py.write_text('# existing\n', encoding='utf-8')
+      step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
+
+      step.run(context)
+      step.rollback(context)
+
+      self.assertTrue(test_package.is_dir())
+      self.assertEqual(
+        '# existing\n', init_py.read_text(encoding='utf-8'))
+      self.assertFalse((project_root / 'src').exists())
+
+  def test_rollback_dry_run_keeps_everything(self) -> None:
+    """
+      Verify that rollback dry-run mode leaves everything in place.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      src_package = self._src_package(project_root)
+      test_package = self._test_package(project_root)
+      step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
+
+      step.run(context)
+      step.rollback(context, dry_run=True)
+
+      self.assertTrue(src_package.is_dir())
+      self.assertTrue(test_package.is_dir())
+      self.assertTrue((test_package / '__init__.py').is_file())
+
+  def test_rollback_accepts_externally_removed_file(self) -> None:
+    """
+      Verify that rollback succeeds when a seeded file has already
+      been removed externally (convergent).
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      test_package = self._test_package(project_root)
+      step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
+
+      step.run(context)
+      (test_package / '__init__.py').unlink()
+      step.rollback(context)
+
+      self.assertFalse((project_root / 'src').exists())
+      self.assertFalse((project_root / 'tests').exists())
+
+  def test_rollback_removes_trees_after_multiple_runs(self) -> None:
+    """
+      Verify that rollback removes the created trees after multiple
+      run calls.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
+
+      step.run(context)
+      step.run(context)
+      step.rollback(context)
+
+      self.assertFalse((project_root / 'src').exists())
+      self.assertFalse((project_root / 'tests').exists())
+
+
+if __name__ == '__main__':
+  unittest.main()
