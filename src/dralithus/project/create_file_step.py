@@ -34,6 +34,8 @@ class CreateFileStep(ExecutionStep):
   """
     Represent a project creation step that creates one file.
   """
+  _created_file: bool
+
   def _remove_created_file(self, path: Path) -> None:
     """
       Remove the file owned by this step.
@@ -50,52 +52,6 @@ class CreateFileStep(ExecutionStep):
       raise DralithusProjectError(
         f'Could not remove file: {path}') from error
     self._created_file = False
-
-  @staticmethod
-  def _verify_parent(path: Path) -> None:
-    """
-      Verify that the target parent is a usable directory.
-
-      :param path: The target file path
-      :return: None
-      :raises DralithusProjectError: When the parent is not a usable
-        directory
-    """
-    try:
-      parent_is_directory = path.parent.is_dir()
-    except OSError as error:
-      raise DralithusProjectError(
-        f'Could not inspect parent directory: {path.parent}') from error
-    if not parent_is_directory:
-      raise DralithusProjectError(
-        f'Parent is not a directory: {path.parent}')
-
-  @staticmethod
-  def _verify_existing_file(path: Path) -> None:
-    """
-      Verify that an existing target is a readable regular file.
-
-      Valid symlinks to readable regular files are accepted.
-
-      :param path: The target file path
-      :return: None
-      :raises DralithusProjectError: When the target is not a
-        readable regular file
-    """
-    try:
-      regular_file = path.is_file()
-    except OSError as error:
-      raise DralithusProjectError(
-        f'Could not inspect file: {path}') from error
-    if not regular_file:
-      raise DralithusProjectError(
-        f'Path is not a regular file: {path}')
-    try:
-      with path.open('r', encoding='utf-8'):
-        pass
-    except OSError as error:
-      raise DralithusProjectError(
-        f'Could not read file: {path}') from error
 
   def _create_file(self, path: Path) -> None:
     """
@@ -124,6 +80,55 @@ class CreateFileStep(ExecutionStep):
         self._remove_created_file(path)
         raise DralithusProjectError(
           f'Could not write file: {path}') from error
+
+  @staticmethod
+  def _verify_parent(path: Path) -> None:
+    """
+      Verify that the target parent is a usable directory.
+
+      :param path: The target file path
+      :return: None
+      :raises DralithusProjectError: When the parent is not a usable
+        directory
+    """
+    try:
+      parent_is_directory = path.parent.is_dir()
+    except OSError as error:
+      raise DralithusProjectError(
+        f'Could not inspect parent directory: {path.parent}') from error
+    if not parent_is_directory:
+      if os.path.lexists(path.parent):
+        raise DralithusProjectError(
+          f'Parent path is not a directory: {path.parent}')
+      raise DralithusProjectError(
+        f'Parent directory does not exist: {path.parent}')
+
+  @staticmethod
+  def _verify_existing_file(path: Path) -> None:
+    """
+      Verify that an existing target is a readable regular file.
+
+      Valid symlinks to readable regular files are accepted.
+
+      :param path: The target file path
+      :return: None
+      :raises DralithusProjectError: When the target is not a
+        readable regular file
+    """
+    try:
+      regular_file = path.is_file()
+    except OSError as error:
+      raise DralithusProjectError(
+        f'Could not inspect file: {path}') from error
+    if not regular_file:
+      raise DralithusProjectError(
+        f'Path is not a regular file: {path}')
+    try:
+      with path.open('r', encoding='utf-8'):
+        pass
+    except OSError as error:
+      raise DralithusProjectError(
+        f'Could not read file: {path}') from error
 
   def __init__(self, filename: Path, content: str) -> None:
     """

@@ -215,6 +215,45 @@ class TestCreateFileStep(unittest.TestCase):
       with self.assertRaises(DralithusProjectError):
         step.run(context)
 
+  def test_run_reports_missing_parent_directory(self) -> None:
+    """
+      Verify run reports a missing parent directory precisely.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      filename = Path('missing') / self._FILENAME
+      step = CreateFileStep(filename, self._CONTENT)
+
+      with self.assertRaisesRegex(
+        DralithusProjectError,
+        f'Parent directory does not exist: {project_root / filename.parent}'
+      ):
+        step.run(context)
+
+  def test_run_reports_parent_path_that_is_not_directory(self) -> None:
+    """
+      Verify run reports a wrong-type parent path precisely.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      parent = project_root / 'parent'
+      parent.write_text('not a directory\n', encoding='utf-8')
+      step = CreateFileStep(
+        Path(parent.name) / self._FILENAME,
+        self._CONTENT)
+
+      with self.assertRaisesRegex(
+        DralithusProjectError,
+        f'Parent path is not a directory: {parent}'
+      ):
+        step.run(context)
+
   def test_run_accepts_valid_symlink_to_parent_directory(self) -> None:
     """
       Verify run accepts a parent symlink resolving to a directory.
