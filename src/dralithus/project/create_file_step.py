@@ -34,7 +34,7 @@ class CreateFileStep(ExecutionStep):
   """
     Represent a project creation step that creates one file.
   """
-  _created_file: bool
+  _file_created: bool
 
   def _remove_created_file(self, path: Path) -> None:
     """
@@ -51,7 +51,7 @@ class CreateFileStep(ExecutionStep):
     except OSError as error:
       raise DralithusProjectError(
         f'Could not remove file: {path}') from error
-    self._created_file = False
+    self._file_created = False
 
   def _create_file(self, path: Path) -> None:
     """
@@ -72,7 +72,7 @@ class CreateFileStep(ExecutionStep):
       raise DralithusProjectError(
         f'Could not create file: {path}') from error
     else:
-      self._created_file = True
+      self._file_created = True
       try:
         with file:
           file.write(self._content)
@@ -144,7 +144,7 @@ class CreateFileStep(ExecutionStep):
         f'Filename must be relative: {filename}')
     self._filename = filename
     self._content = content
-    self._created_file = False
+    self._file_created = False
 
   @override
   def run(self, context: ProjectContext, dry_run: bool = False) -> None:
@@ -177,7 +177,7 @@ class CreateFileStep(ExecutionStep):
       :raises DralithusProjectError: When the owned file cannot be
         removed
     """
-    if not dry_run and self._created_file:
+    if not dry_run and self._file_created:
       self._remove_created_file(context.project_root / self._filename)
 
   @classmethod
