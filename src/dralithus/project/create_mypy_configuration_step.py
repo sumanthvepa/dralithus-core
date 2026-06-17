@@ -23,7 +23,7 @@
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
 from pathlib import Path
-from typing import override
+from typing import NamedTuple, override
 
 from dralithus.project.context import ProjectContext
 from dralithus.project.create_file_step import CreateFileStep
@@ -37,6 +37,16 @@ class CreateMypyConfigurationStep(ExecutionStep):
     Represent a project creation step that creates mypy configuration
     for a new Milestone 42 Python project.
   """
+  class ExecutionSteps(NamedTuple):
+    """
+      Represent the contained mypy configuration creation steps.
+    """
+    mypy_ini: ExecutionStep
+    stubs_directory: ExecutionStep
+    stubs_gitignore: ExecutionStep
+    parameterized_gitignore: ExecutionStep
+    parameterized_stub: ExecutionStep
+
   def _run_dry_run(self, context: ProjectContext) -> None:
     """
       Validate existing mypy configuration state without changing it.
@@ -46,21 +56,25 @@ class CreateMypyConfigurationStep(ExecutionStep):
       :raises DralithusProjectError: When existing mypy configuration
         state cannot be accepted
     """
-    self._steps[0].run(context, dry_run=True)
-    self._steps[1].run(context, dry_run=True)
+    # Normal step iteration cannot be used here because dry-run
+    # directory steps validate without creating directories. Running
+    # child file steps when their parent directories are absent would
+    # fail validation for paths this composite step normally creates.
+    self._steps.mypy_ini.run(context, dry_run=True)
+    self._steps.stubs_directory.run(context, dry_run=True)
     if (context.project_root / 'stubs').is_dir():
-      self._steps[2].run(context, dry_run=True)
+      self._steps.stubs_gitignore.run(context, dry_run=True)
     if (context.project_root / 'stubs' / 'parameterized').is_dir():
-      self._steps[3].run(context, dry_run=True)
-      self._steps[4].run(context, dry_run=True)
+      self._steps.parameterized_gitignore.run(context, dry_run=True)
+      self._steps.parameterized_stub.run(context, dry_run=True)
 
   def __init__(self) -> None:
     """
       Initialize the mypy configuration creation step.
 
-    :return: None
+      :return: None
     """
-    self._steps: list[ExecutionStep] = [
+    self._steps = self.ExecutionSteps(
       CreateFileStep.from_resource(
         Path('mypy.ini'),
         'dralithus.project.templates',
@@ -74,7 +88,7 @@ class CreateMypyConfigurationStep(ExecutionStep):
         Path('stubs') / 'parameterized' / '__init__.pyi',
         'dralithus.project.templates.parameterized',
         '__init__.pyi')
-    ]
+    )
 
   @override
   def run(self, context: ProjectContext, dry_run: bool = False) -> None:
