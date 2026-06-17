@@ -22,10 +22,14 @@
 # along with this program.  If not, see
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
+from pathlib import Path
 from typing import override
 
 from dralithus.project.context import ProjectContext
+from dralithus.project.create_file_step import CreateFileStep
+from dralithus.project.error import DralithusProjectError
 from dralithus.project.execution_step import ExecutionStep
+from dralithus.project.mkdir_step import MkdirStep
 
 
 class CreateMypyConfigurationStep(ExecutionStep):
@@ -33,12 +37,44 @@ class CreateMypyConfigurationStep(ExecutionStep):
     Represent a project creation step that creates mypy configuration
     for a new Milestone 42 Python project.
   """
+  def _run_dry_run(self, context: ProjectContext) -> None:
+    """
+      Validate existing mypy configuration state without changing it.
+
+      :param context: The shared project creation context
+      :return: None
+      :raises DralithusProjectError: When existing mypy configuration
+        state cannot be accepted
+    """
+    self._steps[0].run(context, dry_run=True)
+    self._steps[1].run(context, dry_run=True)
+    if (context.project_root / 'stubs').is_dir():
+      self._steps[2].run(context, dry_run=True)
+    if (context.project_root / 'stubs' / 'parameterized').is_dir():
+      self._steps[3].run(context, dry_run=True)
+      self._steps[4].run(context, dry_run=True)
+
   def __init__(self) -> None:
     """
       Initialize the mypy configuration creation step.
 
-      :return: None
+    :return: None
     """
+    self._steps: list[ExecutionStep] = [
+      CreateFileStep.from_resource(
+        Path('mypy.ini'),
+        'dralithus.project.templates',
+        'mypy.ini'),
+      MkdirStep(Path('stubs') / 'parameterized'),
+      CreateFileStep(Path('stubs') / '.gitignore', ''),
+      CreateFileStep(
+        Path('stubs') / 'parameterized' / '.gitignore',
+        ''),
+      CreateFileStep.from_resource(
+        Path('stubs') / 'parameterized' / '__init__.pyi',
+        'dralithus.project.templates.parameterized',
+        '__init__.pyi')
+    ]
 
   @override
   def run(self, context: ProjectContext, dry_run: bool = False) -> None:
@@ -49,10 +85,18 @@ class CreateMypyConfigurationStep(ExecutionStep):
       :param dry_run: True if the step should validate without
         changing the file system
       :return: None
-      :raises NotImplementedError: Until behavior is implemented
+      :raises DralithusProjectError: When mypy configuration cannot
+        be created or accepted
     """
-    raise NotImplementedError(
-      'CreateMypyConfigurationStep.run() is not implemented')
+    if dry_run:
+      self._run_dry_run(context)
+    else:
+      try:
+        for step in self._steps:
+          step.run(context)
+      except DralithusProjectError:
+        self.rollback(context)
+        raise
 
   @override
   def rollback(self, context: ProjectContext, dry_run: bool = False) -> None:
@@ -62,7 +106,8 @@ class CreateMypyConfigurationStep(ExecutionStep):
       :param context: The shared project creation context
       :param dry_run: True if the step should change nothing
       :return: None
-      :raises NotImplementedError: Until behavior is implemented
+      :raises DralithusProjectError: When an owned mypy artifact
+        cannot be removed
     """
-    raise NotImplementedError(
-      'CreateMypyConfigurationStep.rollback() is not implemented')
+    for step in reversed(self._steps):
+      step.rollback(context, dry_run)
