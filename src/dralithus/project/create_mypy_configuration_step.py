@@ -103,6 +103,8 @@ class CreateMypyConfigurationStep(ExecutionStep):
         be created or accepted
     """
     if dry_run:
+      # See comment in _run_dry_run() for why dry_run needs to be
+      # handled separately.
       self._run_dry_run(context)
     else:
       try:
