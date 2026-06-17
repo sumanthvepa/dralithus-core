@@ -27,3 +27,5 @@ where = ["src"]
 include = ["dralithus*"]
 namespaces = true
 
+[tool.setuptools.package-data]
+"dralithus.project.templates" = ["pylintrc"]

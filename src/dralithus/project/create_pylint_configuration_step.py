@@ -22,9 +22,11 @@
 # along with this program.  If not, see
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
+from pathlib import Path
 from typing import override
 
 from dralithus.project.context import ProjectContext
+from dralithus.project.create_file_step import CreateFileStep
 from dralithus.project.execution_step import ExecutionStep
 
 
@@ -42,6 +44,10 @@ class CreatePylintConfigurationStep(ExecutionStep):
 
       :return: None
     """
+    self._pylintrc_step = CreateFileStep.from_resource(
+      Path('pylintrc'),
+      'dralithus.project.templates',
+      'pylintrc')
 
   @override
   def run(self, context: ProjectContext, dry_run: bool = False) -> None:
@@ -52,9 +58,10 @@ class CreatePylintConfigurationStep(ExecutionStep):
       :param dry_run: True if the step should validate without
         changing the file system
       :return: None
+      :raises DralithusProjectError: When pylintrc cannot be created
+        or accepted
     """
-    raise NotImplementedError(
-      'CreatePylintConfigurationStep.run() is not implemented yet')
+    self._pylintrc_step.run(context, dry_run)
 
   @override
   def rollback(self, context: ProjectContext, dry_run: bool = False) -> None:
@@ -64,6 +71,7 @@ class CreatePylintConfigurationStep(ExecutionStep):
       :param context: The shared project creation context
       :param dry_run: True if the step should change nothing
       :return: None
+      :raises DralithusProjectError: When an owned pylintrc cannot be
+        removed
     """
-    raise NotImplementedError(
-      'CreatePylintConfigurationStep.rollback() is not implemented yet')
+    self._pylintrc_step.rollback(context, dry_run)
