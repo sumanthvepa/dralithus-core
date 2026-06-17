@@ -1,6 +1,6 @@
 # Dralithus Vision
 
-Dralithus is intended to be "your IT department in a box" for
+Dralithus is intended to be "devops engineer in a box" for
 Milestone 42.
 
 Milestone 42 is currently a one-person operation, so dralithus should
