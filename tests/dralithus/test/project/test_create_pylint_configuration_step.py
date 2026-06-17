@@ -56,7 +56,7 @@ class TestCreatePylintConfigurationStep(unittest.TestCase):
     return project_root / 'pylintrc'
 
   @staticmethod
-  def _template_content() -> str:
+  def _pylintrc_template_content() -> str:
     """
       Read the packaged Pylint configuration template.
 
@@ -65,13 +65,13 @@ class TestCreatePylintConfigurationStep(unittest.TestCase):
     return resources.files('dralithus.project.templates').joinpath(
       'pylintrc').read_text(encoding='utf-8')
 
-  def test_resource_can_be_read(self) -> None:
+  def test_pylintrc_resource_can_be_read(self) -> None:
     """
       Verify that the packaged pylintrc resource can be read.
 
       :return: None
     """
-    self.assertNotEqual('', self._template_content())
+    self.assertNotEqual('', self._pylintrc_template_content())
 
   def test_run_creates_pylintrc_from_resource(self) -> None:
     """
@@ -87,7 +87,7 @@ class TestCreatePylintConfigurationStep(unittest.TestCase):
       step.run(context)
 
       self.assertEqual(
-        self._template_content(),
+        self._pylintrc_template_content(),
         self._pylintrc(project_root).read_text(encoding='utf-8'))
 
   def test_run_preserves_portable_init_hook(self) -> None:
@@ -107,7 +107,7 @@ class TestCreatePylintConfigurationStep(unittest.TestCase):
         self._INIT_HOOK,
         self._pylintrc(project_root).read_text(encoding='utf-8'))
 
-  def test_run_preserves_preexisting_regular_file(self) -> None:
+  def test_run_preserves_representative_preexisting_artifacts(self) -> None:
     """
       Verify run preserves a pre-existing regular pylintrc.
 
@@ -124,7 +124,7 @@ class TestCreatePylintConfigurationStep(unittest.TestCase):
 
       self.assertEqual('user config\n', pylintrc.read_text(encoding='utf-8'))
 
-  def test_rollback_removes_created_file(self) -> None:
+  def test_rollback_removes_created_artifacts(self) -> None:
     """
       Verify rollback removes a pylintrc created by the step.
 
@@ -140,7 +140,7 @@ class TestCreatePylintConfigurationStep(unittest.TestCase):
 
       self.assertFalse(self._pylintrc(project_root).exists())
 
-  def test_rollback_preserves_preexisting_regular_file(self) -> None:
+  def test_rollback_preserves_preexisting_artifacts(self) -> None:
     """
       Verify rollback preserves a pre-existing regular pylintrc.
 
