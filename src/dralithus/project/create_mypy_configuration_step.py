@@ -41,11 +41,11 @@ class CreateMypyConfigurationStep(ExecutionStep):
     """
       Represent the contained mypy configuration creation steps.
     """
-    mypy_ini: ExecutionStep
-    stubs_directory: ExecutionStep
-    stubs_gitignore: ExecutionStep
-    parameterized_gitignore: ExecutionStep
-    parameterized_stub: ExecutionStep
+    mypy_ini: CreateFileStep
+    stubs_parameterized_directory: MkdirStep
+    stubs_gitignore: CreateFileStep
+    parameterized_gitignore: CreateFileStep
+    parameterized_stub: CreateFileStep
 
   def _run_dry_run(self, context: ProjectContext) -> None:
     """
@@ -61,7 +61,7 @@ class CreateMypyConfigurationStep(ExecutionStep):
     # child file steps when their parent directories are absent would
     # fail validation for paths this composite step normally creates.
     self._steps.mypy_ini.run(context, dry_run=True)
-    self._steps.stubs_directory.run(context, dry_run=True)
+    self._steps.stubs_parameterized_directory.run(context, dry_run=True)
     if (context.project_root / 'stubs').is_dir():
       self._steps.stubs_gitignore.run(context, dry_run=True)
     if (context.project_root / 'stubs' / 'parameterized').is_dir():
