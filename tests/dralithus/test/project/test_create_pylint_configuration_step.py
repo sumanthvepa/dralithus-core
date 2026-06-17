@@ -45,7 +45,8 @@ class TestCreatePylintConfigurationStep(unittest.TestCase):
     'os.path.dirname(__file__), os.pardir, os.pardir, os.pardir, '
     'os.pardir, os.pardir, os.pardir, "tests")))\'')
 
-  def _pylintrc(self, project_root: Path) -> Path:
+  @staticmethod
+  def _pylintrc(project_root: Path) -> Path:
     """
       Return the project Pylint configuration path.
 
@@ -54,7 +55,8 @@ class TestCreatePylintConfigurationStep(unittest.TestCase):
     """
     return project_root / 'pylintrc'
 
-  def _template_content(self) -> str:
+  @staticmethod
+  def _template_content() -> str:
     """
       Read the packaged Pylint configuration template.
 
