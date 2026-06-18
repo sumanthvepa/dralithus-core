@@ -20,6 +20,7 @@
 # along with this program.  If not, see
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
+import contextlib
 import os
 from pathlib import Path
 import subprocess
@@ -134,14 +135,18 @@ class InstallDependenciesStep(ExecutionStep):
       'Could not read installed dependencies')
     requirements = project_root / self.REQUIREMENTS_FILENAME
     existed = requirements.exists()
-    descriptor, temporary_name = tempfile.mkstemp(dir=project_root)
-    temporary_path = Path(temporary_name)
     try:
-      with os.fdopen(descriptor, 'w', encoding='utf-8') as handle:
-        handle.write(result.stdout)
-      os.replace(temporary_path, requirements)
+      descriptor, temporary_name = tempfile.mkstemp(dir=project_root)
+      temporary_path = Path(temporary_name)
+      try:
+        with os.fdopen(descriptor, 'w', encoding='utf-8') as handle:
+          handle.write(result.stdout)
+        os.replace(temporary_path, requirements)
+      except OSError:
+        with contextlib.suppress(OSError):
+          temporary_path.unlink(missing_ok=True)
+        raise
     except OSError as error:
-      temporary_path.unlink(missing_ok=True)
       raise DralithusProjectError(
         f'Could not write dependency file: {requirements}') from error
     if not existed:
@@ -275,3 +280,4 @@ class InstallDependenciesStep(ExecutionStep):
     """
     if not dry_run and self._requirements_created:
       self._remove_requirements(context.project_root)
+      self._requirements_created = False

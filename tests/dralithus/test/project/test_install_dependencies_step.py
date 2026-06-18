@@ -254,6 +254,29 @@ class TestInstallDependenciesStep(unittest.TestCase):
          '-e', './libs/a', '-e', './libs/b'],
         commands)
 
+  def test_run_installs_local_dev_dependency_non_editable(self) -> None:
+    """
+      Document a known, deferred limitation: a local-packages.txt entry
+      marked [dev] is routed by Packages into the dev dependencies and
+      installed non-editable, not via pip install -e. See the deferred
+      note in status.md.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      self._make_venv(project_root)
+      self._write_packages(project_root, 'requests\n')
+      self._write_local_packages(project_root, '../test-lib [dev]\n')
+      context = ProjectContext(project_root=project_root)
+      step = InstallDependenciesStep()
+      with mock.patch('subprocess.run') as run_mock:
+        run_mock.return_value = self._ok_result()
+        step.run(context)
+      commands = self._commands(run_mock)
+      self.assertFalse(any('-e' in command for command in commands))
+      self.assertIn('../test-lib', commands[1])
+
   def test_run_uses_text_mode_for_subprocess(self) -> None:
     """
       Verify that every subprocess call uses text mode so the freeze
@@ -338,6 +361,28 @@ class TestInstallDependenciesStep(unittest.TestCase):
       self.assertEqual(
         {entry.name for entry in project_root.iterdir()},
         {'venv', Packages.PACKAGES_FILENAME})
+
+  def test_run_wraps_temp_file_creation_failure(self) -> None:
+    """
+      Verify that a failure creating the temporary snapshot file is
+      wrapped as a DralithusProjectError rather than escaping raw, so
+      the orchestrator can roll back earlier steps.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      self._make_venv(project_root)
+      self._write_packages(project_root, 'requests\n')
+      context = ProjectContext(project_root=project_root)
+      step = InstallDependenciesStep()
+      with mock.patch('subprocess.run') as run_mock, \
+          mock.patch('tempfile.mkstemp', side_effect=OSError('no temp')):
+        run_mock.return_value = self._ok_result()
+        with self.assertRaises(DralithusProjectError):
+          step.run(context)
+      requirements = project_root / InstallDependenciesStep.REQUIREMENTS_FILENAME
+      self.assertFalse(requirements.exists())
 
   def test_run_preserves_existing_requirements_on_write_failure(
     self
@@ -496,6 +541,33 @@ class TestInstallDependenciesStep(unittest.TestCase):
         step.run(context)
         step.rollback(context)
       self.assertTrue(requirements.exists())
+
+  def test_rollback_preserves_externally_recreated_requirements(
+    self
+  ) -> None:
+    """
+      Verify that ownership is released after rollback: once this step
+      has removed the requirements.txt it created, a later rollback
+      does not delete a newly recreated file it no longer owns.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      self._make_venv(project_root)
+      self._write_packages(project_root, 'requests\n')
+      context = ProjectContext(project_root=project_root)
+      step = InstallDependenciesStep()
+      requirements = project_root / InstallDependenciesStep.REQUIREMENTS_FILENAME
+      with mock.patch('subprocess.run') as run_mock:
+        run_mock.return_value = self._ok_result()
+        step.run(context)
+        step.rollback(context)
+        requirements.write_text(self._PRE_CONTENT, encoding='utf-8')
+        step.rollback(context)
+      self.assertTrue(requirements.exists())
+      self.assertEqual(
+        requirements.read_text(encoding='utf-8'), self._PRE_CONTENT)
 
   def test_rollback_removes_requirements_after_repeated_run(self) -> None:
     """
