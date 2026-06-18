@@ -63,7 +63,8 @@ class CreateVenvStep(ExecutionStep):
     """
     if venv_name == '':
       raise DralithusProjectError('Venv name must not be empty')
-    if Path(venv_name).name != venv_name:
+    parts = Path(venv_name).parts
+    if len(parts) != 1 or parts[0] == '..':
       raise DralithusProjectError(
         f'Venv name must not contain path components: {venv_name}')
 
