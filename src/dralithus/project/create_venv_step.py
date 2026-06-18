@@ -36,37 +36,18 @@ class CreateVenvStep(ExecutionStep):
   """
     Represent a project creation step that creates a Python venv.
   """
-  def __init__(self, python_executable: Path, venv_name: str = 'venv') -> None:
+  def __init__(self, python_executable: Path) -> None:
     """
       Initialize the Python venv creation step.
 
       :param python_executable: The path to the Python executable
-      :param venv_name: The name of the venv directory to create
       :return: None
-      :raises DralithusProjectError: When venv_name is not a name
+      :raises DralithusProjectError: When python_executable is not a
+        runnable Python executable
     """
-    self._validate_venv(venv_name)
     self._python_version = self._validate_python(python_executable)
     self._python_executable = python_executable
-    self._venv_name = venv_name
     self._created_venv = False
-
-  @staticmethod
-  def _validate_venv(venv_name: str) -> None:
-    """
-      Validate that venv_name is a single directory name.
-
-      :param venv_name: The venv name to validate
-      :return: None
-      :raises DralithusProjectError: When venv_name is empty or has
-        path components
-    """
-    if venv_name == '':
-      raise DralithusProjectError('Venv name must not be empty')
-    parts = Path(venv_name).parts
-    if len(parts) != 1 or parts[0] == '..':
-      raise DralithusProjectError(
-        f'Venv name must not contain path components: {venv_name}')
 
   @staticmethod
   def _validate_python_version(python_executable: Path) -> str:
@@ -129,15 +110,14 @@ class CreateVenvStep(ExecutionStep):
     """
     return (path / 'pyvenv.cfg').is_file()
 
-  def _venv_exists(self, project_root: Path) -> bool:
+  def _venv_exists(self, venv_dir: Path) -> bool:
     """
       Check that a specified venv exists.
 
-      :param project_root: The project root directory
+      :param venv_dir: The project virtual environment directory
       :return: True if path exists and is a venv, False otherwise.
       :raises DralithusProjectError: When path exists but is not a venv
     """
-    venv_dir = project_root / self._venv_name
     if not venv_dir.exists():
       return False
     if not venv_dir.is_dir():
@@ -146,11 +126,11 @@ class CreateVenvStep(ExecutionStep):
       raise DralithusProjectError(f'Path is not a venv: {venv_dir}')
     return True
 
-  def _create_venv(self, project_root: Path, dry_run: bool) -> bool:
+  def _create_venv(self, venv_dir: Path, dry_run: bool) -> bool:
     """
       Create the virtual environment.
 
-      :param project_root: The project root directory
+      :param venv_dir: The project virtual environment directory
       :param dry_run: True if the step should report what it would
         do without changing the file system
       :return: True if the venv was created, False otherwise
@@ -158,32 +138,32 @@ class CreateVenvStep(ExecutionStep):
     """
     try:
       command: list[str] = [
-        str(self._python_executable), '-m', 'venv', self._venv_name]
+        str(self._python_executable), '-m', 'venv', str(venv_dir)]
       if not dry_run:
-        # print(f'Creating venv: {self._venv_name}: {" ".join(command)}')
-        subprocess.run(command, cwd=project_root, check=True)
+        # print(f'Creating venv: {venv_dir}: {" ".join(command)}')
+        subprocess.run(command, check=True)
         return True  # successfully created the venv
     except OSError as error:
       raise DralithusProjectError(
-        f'Could not create venv: {self._venv_name}') from error
+        f'Could not create venv: {venv_dir}') from error
     except subprocess.CalledProcessError as error:
       raise DralithusProjectError(
-        f'Could not create venv: {self._venv_name}') from error
+        f'Could not create venv: {venv_dir}') from error
     return False
 
-  def _delete_venv(self, project_root: Path) -> bool:
+  def _delete_venv(self, venv_dir: Path) -> bool:
     """
       Delete the virtual environment.
-      :param project_root: The project root directory
+
+      :param venv_dir: The project virtual environment directory
       :return: None
     """
     try:
-      venv_dir = project_root / self._venv_name
       shutil.rmtree(venv_dir)
       return True
     except OSError as error:
       raise DralithusProjectError(
-        f'Could not remove venv: {self._venv_name}') from error
+        f'Could not remove venv: {venv_dir}') from error
 
   @override
   def run(self, context: ProjectContext, dry_run: bool = False) -> None:
@@ -196,8 +176,8 @@ class CreateVenvStep(ExecutionStep):
       :return: None
       :raises DralithusProjectError: When venv creation fails
     """
-    if not self._venv_exists(context.project_root):
-      self._created_venv = self._create_venv(context.project_root, dry_run)
+    if not self._venv_exists(context.venv_path):
+      self._created_venv = self._create_venv(context.venv_path, dry_run)
 
   @override
   def rollback(self, context: ProjectContext, dry_run: bool = False) -> None:
@@ -211,4 +191,4 @@ class CreateVenvStep(ExecutionStep):
       :raises DralithusProjectError: When venv removal fails
     """
     if self._created_venv and not dry_run:
-      self._created_venv = self._delete_venv(context.project_root)
+      self._created_venv = self._delete_venv(context.venv_path)

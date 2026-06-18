@@ -48,15 +48,6 @@ class InstallDependenciesStep(ExecutionStep):
 
   _requirements_created: bool
 
-  def _venv_python(self, project_root: Path) -> Path:
-    """
-      Return the venv interpreter path for the project.
-
-      :param project_root: The project root directory
-      :return: The path to the venv's Python interpreter
-    """
-    return project_root / self._venv_name / 'bin' / 'python'
-
   def _install_and_snapshot(self, context: ProjectContext) -> None:
     """
       Install the dependency closure and snapshot requirements.txt.
@@ -67,7 +58,7 @@ class InstallDependenciesStep(ExecutionStep):
         installation or snapshotting fails
     """
     project_root = context.project_root
-    venv_python = self._venv_python(project_root)
+    venv_python = context.venv_python
     if not venv_python.is_file() or not os.access(venv_python, os.X_OK):
       raise DralithusProjectError(
         f'Virtual environment not found: {venv_python}')
@@ -168,25 +159,6 @@ class InstallDependenciesStep(ExecutionStep):
         f'Could not remove dependency file: {requirements}') from error
 
   @staticmethod
-  def _validate_venv_name(venv_name: str) -> None:
-    """
-      Validate that venv_name is a single, non-traversing path
-      component.
-
-      A name-based rule is insufficient because Path('..').name is
-      '..', so this uses a parts-based rule that rejects empty, '.',
-      '..', absolute, and separator-containing names.
-
-      :param venv_name: The venv name to validate
-      :return: None
-      :raises DralithusProjectError: When venv_name is not a single,
-        non-traversing path component
-    """
-    parts = Path(venv_name).parts
-    if len(parts) != 1 or parts[0] == '..':
-      raise DralithusProjectError(f'Invalid venv name: {venv_name!r}')
-
-  @staticmethod
   def _verify_regular_file_or_absent(path: Path) -> None:
     """
       Verify that a path is absent or an existing regular file.
@@ -234,17 +206,12 @@ class InstallDependenciesStep(ExecutionStep):
     except (OSError, subprocess.CalledProcessError) as error:
       raise DralithusProjectError(error_message) from error
 
-  def __init__(self, venv_name: str = 'venv') -> None:
+  def __init__(self) -> None:
     """
       Initialize the dependency installation step.
 
-      :param venv_name: The name of the project venv directory
       :return: None
-      :raises DralithusProjectError: When venv_name is not a single,
-        non-traversing path component
     """
-    self._validate_venv_name(venv_name)
-    self._venv_name = venv_name
     self._requirements_created = False
 
   @override
