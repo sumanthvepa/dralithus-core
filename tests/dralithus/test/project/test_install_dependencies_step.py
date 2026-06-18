@@ -22,6 +22,7 @@
 # along with this program.  If not, see
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
+# pylint: disable=duplicate-code
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import subprocess
@@ -44,28 +45,25 @@ class TestInstallDependenciesStep(unittest.TestCase):
   _PRE_CONTENT = 'old-pinned==0.0.0\n'
 
   @staticmethod
-  def _venv_python(project_root: Path, venv_name: str = 'venv') -> Path:
+  def _venv_python(context: ProjectContext) -> Path:
     """
       Return the venv interpreter path for a project.
 
-      :param project_root: The project root directory
-      :param venv_name: The venv directory name
+      :param context: The project context
       :return: The path to the venv's Python interpreter
     """
-    return project_root / venv_name / 'bin' / 'python'
+    return context.venv_python
 
   @staticmethod
-  def _make_venv(project_root: Path, venv_name: str = 'venv') -> None:
+  def _make_venv(context: ProjectContext) -> None:
     """
       Create a fake venv with a runnable interpreter file.
 
-      :param project_root: The project root directory
-      :param venv_name: The venv directory name
+      :param context: The project context
       :return: None
     """
-    bin_dir = project_root / venv_name / 'bin'
-    bin_dir.mkdir(parents=True)
-    interpreter = bin_dir / 'python'
+    context.venv_python.parent.mkdir(parents=True)
+    interpreter = context.venv_python
     interpreter.write_text('', encoding='utf-8')
     interpreter.chmod(0o755)
 
@@ -138,8 +136,8 @@ class TestInstallDependenciesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      self._make_venv(project_root)
       context = ProjectContext(project_root=project_root)
+      self._make_venv(context)
       step = InstallDependenciesStep()
       with mock.patch('subprocess.run'):
         with self.assertRaises(DralithusProjectError):
@@ -156,11 +154,11 @@ class TestInstallDependenciesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      self._make_venv(project_root)
-      self._write_packages(project_root, 'requests\n')
       context = ProjectContext(project_root=project_root)
+      self._make_venv(context)
+      self._write_packages(project_root, 'requests\n')
       step = InstallDependenciesStep()
-      python = str(self._venv_python(project_root))
+      python = str(self._venv_python(context))
       packages = Packages(project_root)
       with mock.patch('subprocess.run') as run_mock:
         run_mock.return_value = self._ok_result()
@@ -187,7 +185,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
       context = ProjectContext(project_root=project_root, venv_name='env')
-      self._make_venv(project_root, context.venv_name)
+      self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
       step = InstallDependenciesStep()
       python = str(context.venv_python)
@@ -208,9 +206,9 @@ class TestInstallDependenciesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      self._make_venv(project_root)
-      self._write_packages(project_root, 'requests\n')
       context = ProjectContext(project_root=project_root)
+      self._make_venv(context)
+      self._write_packages(project_root, 'requests\n')
       step = InstallDependenciesStep()
       with mock.patch('subprocess.run') as run_mock:
         run_mock.return_value = self._ok_result()
@@ -227,12 +225,12 @@ class TestInstallDependenciesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      self._make_venv(project_root)
+      context = ProjectContext(project_root=project_root)
+      self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
       self._write_local_packages(project_root, './libs/a\n./libs/b\n')
-      context = ProjectContext(project_root=project_root)
       step = InstallDependenciesStep()
-      python = str(self._venv_python(project_root))
+      python = str(self._venv_python(context))
       with mock.patch('subprocess.run') as run_mock:
         run_mock.return_value = self._ok_result()
         step.run(context)
@@ -253,10 +251,10 @@ class TestInstallDependenciesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      self._make_venv(project_root)
+      context = ProjectContext(project_root=project_root)
+      self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
       self._write_local_packages(project_root, '../test-lib [dev]\n')
-      context = ProjectContext(project_root=project_root)
       step = InstallDependenciesStep()
       with mock.patch('subprocess.run') as run_mock:
         run_mock.return_value = self._ok_result()
@@ -274,9 +272,9 @@ class TestInstallDependenciesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      self._make_venv(project_root)
-      self._write_packages(project_root, 'requests\n')
       context = ProjectContext(project_root=project_root)
+      self._make_venv(context)
+      self._write_packages(project_root, 'requests\n')
       step = InstallDependenciesStep()
       with mock.patch('subprocess.run') as run_mock:
         run_mock.return_value = self._ok_result()
@@ -296,9 +294,9 @@ class TestInstallDependenciesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      self._make_venv(project_root)
-      self._write_packages(project_root, 'requests\n')
       context = ProjectContext(project_root=project_root)
+      self._make_venv(context)
+      self._write_packages(project_root, 'requests\n')
       step = InstallDependenciesStep()
       error = subprocess.CalledProcessError(1, ['pip'], stderr='boom')
       with mock.patch('subprocess.run') as run_mock:
@@ -317,9 +315,9 @@ class TestInstallDependenciesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      self._make_venv(project_root)
-      self._write_packages(project_root, 'requests\n')
       context = ProjectContext(project_root=project_root)
+      self._make_venv(context)
+      self._write_packages(project_root, 'requests\n')
       step = InstallDependenciesStep()
       with mock.patch('subprocess.run') as run_mock:
         run_mock.side_effect = OSError('cannot run')
@@ -335,9 +333,9 @@ class TestInstallDependenciesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      self._make_venv(project_root)
-      self._write_packages(project_root, 'requests\n')
       context = ProjectContext(project_root=project_root)
+      self._make_venv(context)
+      self._write_packages(project_root, 'requests\n')
       step = InstallDependenciesStep()
       with mock.patch('subprocess.run') as run_mock, \
           mock.patch('os.replace', side_effect=OSError('disk full')):
@@ -360,9 +358,9 @@ class TestInstallDependenciesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      self._make_venv(project_root)
-      self._write_packages(project_root, 'requests\n')
       context = ProjectContext(project_root=project_root)
+      self._make_venv(context)
+      self._write_packages(project_root, 'requests\n')
       step = InstallDependenciesStep()
       with mock.patch('subprocess.run') as run_mock, \
           mock.patch('tempfile.mkstemp', side_effect=OSError('no temp')):
@@ -383,11 +381,11 @@ class TestInstallDependenciesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      self._make_venv(project_root)
+      context = ProjectContext(project_root=project_root)
+      self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
       requirements = project_root / InstallDependenciesStep.REQUIREMENTS_FILENAME
       requirements.write_text(self._PRE_CONTENT, encoding='utf-8')
-      context = ProjectContext(project_root=project_root)
       step = InstallDependenciesStep()
       with mock.patch('subprocess.run') as run_mock, \
           mock.patch('os.replace', side_effect=OSError('disk full')):
@@ -425,11 +423,11 @@ class TestInstallDependenciesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      self._make_venv(project_root)
+      context = ProjectContext(project_root=project_root)
+      self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
       requirements = project_root / InstallDependenciesStep.REQUIREMENTS_FILENAME
       requirements.write_text(self._PRE_CONTENT, encoding='utf-8')
-      context = ProjectContext(project_root=project_root)
       step = InstallDependenciesStep()
       with mock.patch('subprocess.run') as run_mock:
         run_mock.return_value = self._ok_result()
@@ -448,13 +446,13 @@ class TestInstallDependenciesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      self._make_venv(project_root)
+      context = ProjectContext(project_root=project_root)
+      self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
       external = project_root / 'external.txt'
       external.write_text(self._PRE_CONTENT, encoding='utf-8')
       requirements = project_root / InstallDependenciesStep.REQUIREMENTS_FILENAME
       requirements.symlink_to(external)
-      context = ProjectContext(project_root=project_root)
       step = InstallDependenciesStep()
       with mock.patch('subprocess.run') as run_mock:
         run_mock.return_value = self._ok_result()
@@ -473,11 +471,11 @@ class TestInstallDependenciesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      self._make_venv(project_root)
+      context = ProjectContext(project_root=project_root)
+      self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
       requirements = project_root / InstallDependenciesStep.REQUIREMENTS_FILENAME
       requirements.mkdir()
-      context = ProjectContext(project_root=project_root)
       step = InstallDependenciesStep()
       with mock.patch('subprocess.run') as run_mock:
         run_mock.return_value = self._ok_result()
@@ -497,9 +495,9 @@ class TestInstallDependenciesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      self._make_venv(project_root)
-      self._write_packages(project_root, 'requests\n')
       context = ProjectContext(project_root=project_root)
+      self._make_venv(context)
+      self._write_packages(project_root, 'requests\n')
       step = InstallDependenciesStep()
       requirements = project_root / InstallDependenciesStep.REQUIREMENTS_FILENAME
       with mock.patch('subprocess.run') as run_mock:
@@ -507,7 +505,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
         step.run(context)
         step.rollback(context)
       self.assertFalse(requirements.exists())
-      self.assertTrue((project_root / 'venv').is_dir())
+      self.assertTrue(context.venv_path.is_dir())
 
   def test_rollback_preserves_pre_existing_requirements(self) -> None:
     """
@@ -518,11 +516,11 @@ class TestInstallDependenciesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      self._make_venv(project_root)
+      context = ProjectContext(project_root=project_root)
+      self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
       requirements = project_root / InstallDependenciesStep.REQUIREMENTS_FILENAME
       requirements.write_text(self._PRE_CONTENT, encoding='utf-8')
-      context = ProjectContext(project_root=project_root)
       step = InstallDependenciesStep()
       with mock.patch('subprocess.run') as run_mock:
         run_mock.return_value = self._ok_result()
@@ -542,9 +540,9 @@ class TestInstallDependenciesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      self._make_venv(project_root)
-      self._write_packages(project_root, 'requests\n')
       context = ProjectContext(project_root=project_root)
+      self._make_venv(context)
+      self._write_packages(project_root, 'requests\n')
       step = InstallDependenciesStep()
       requirements = project_root / InstallDependenciesStep.REQUIREMENTS_FILENAME
       with mock.patch('subprocess.run') as run_mock:
@@ -567,9 +565,9 @@ class TestInstallDependenciesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      self._make_venv(project_root)
-      self._write_packages(project_root, 'requests\n')
       context = ProjectContext(project_root=project_root)
+      self._make_venv(context)
+      self._write_packages(project_root, 'requests\n')
       step = InstallDependenciesStep()
       requirements = project_root / InstallDependenciesStep.REQUIREMENTS_FILENAME
       with mock.patch('subprocess.run') as run_mock:

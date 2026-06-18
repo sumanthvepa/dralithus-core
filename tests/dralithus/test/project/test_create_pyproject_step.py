@@ -97,17 +97,16 @@ class TestCreatePyProjectStep(unittest.TestCase):
     """
     return f'>={sys.version_info.major}.{sys.version_info.minor}'
 
-  def _venv_python_requirement(self, project_root: Path) -> str:
+  def _venv_python_requirement(self, context: ProjectContext) -> str:
     """
       Return the Python requirement from the test project's venv.
 
-      :param project_root: The project root directory
+      :param context: The project context
       :return: The Python major/minor version requirement
     """
-    venv_path = project_root / 'venv'
-    pyvenv_cfg = venv_path / 'pyvenv.cfg'
-    if not venv_path.is_dir():
-      self.fail(f'Test venv does not exist: {venv_path}')
+    pyvenv_cfg = context.venv_path / 'pyvenv.cfg'
+    if not context.venv_path.is_dir():
+      self.fail(f'Test venv does not exist: {context.venv_path}')
     if not pyvenv_cfg.is_file():
       self.fail(f'Test venv has no pyvenv.cfg: {pyvenv_cfg}')
     values: dict[str, str] = {}
@@ -173,30 +172,28 @@ class TestCreatePyProjectStep(unittest.TestCase):
 
   @staticmethod
   def _create_venv(
-    project_root: Path,
-    venv_name: str = 'venv',
+    context: ProjectContext,
     create_packages_txt: bool = True
   ) -> None:
     """
       Create a real Python virtual environment for tests.
 
-      :param project_root: The project root directory
-      :param venv_name: The venv directory name
+      :param context: The project context
       :param create_packages_txt: True if packages.txt should be
         seeded
       :return: None
     """
     subprocess.run(
-      [sys.executable, '-m', 'venv', venv_name],
-      cwd=project_root,
+      [sys.executable, '-m', 'venv', str(context.venv_path)],
       check=True)
     if create_packages_txt:
-      (project_root / Packages.PACKAGES_FILENAME).write_text('', encoding='utf-8')
+      (context.project_root / Packages.PACKAGES_FILENAME).write_text(
+        '', encoding='utf-8')
 
   # pylint: disable-next=too-many-arguments,too-many-positional-arguments
   def _validate_pyproject(
     self,
-    project_root: Path,
+    context: ProjectContext,
     project_name: str = 'sample-project',
     project_description: str = 'Sample project',
     package_name: str = 'sample_project',
@@ -209,7 +206,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
       Loads the file via PyProjectToml.from_file and delegates the
       field comparison to PyProjectToml.matches.
 
-      :param project_root: The project root directory
+      :param context: The project context
       :param project_name: The expected project distribution name
       :param project_description: The expected project description
       :param package_name: The expected Python package name
@@ -217,6 +214,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
       :param dependencies: The expected project dependencies
       :return: None
     """
+    project_root = context.project_root
     expected_packages = self._packages(
       project_root,
       dependencies or [])
@@ -224,7 +222,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
       name=project_name,
       description=project_description,
       package_name=package_name,
-      python_requirement=self._venv_python_requirement(project_root),
+      python_requirement=self._venv_python_requirement(context),
       packages=expected_packages,
       version=project_version)
     actual = PyProjectToml.from_file(
@@ -241,7 +239,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
       context = ProjectContext(project_root=project_root)
-      self._create_venv(project_root)
+      self._create_venv(context)
       step = CreatePyProjectStep(
         project_name='sample-project',
         project_description='Sample project',
@@ -249,7 +247,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
 
       step.run(context)
 
-      self._validate_pyproject(project_root)
+      self._validate_pyproject(context)
 
   def test_run_reads_context_venv_path(self) -> None:
     """
@@ -260,7 +258,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
       context = ProjectContext(project_root=project_root, venv_name='env')
-      self._create_venv(project_root, context.venv_name)
+      self._create_venv(context)
       step = CreatePyProjectStep(
         project_name='sample-project',
         project_description='Sample project',
@@ -283,7 +281,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
       context = ProjectContext(project_root=project_root)
-      self._create_venv(project_root)
+      self._create_venv(context)
       (project_root / Packages.PACKAGES_FILENAME).write_text(
         '# third-party packages\n'
         '\n'
@@ -298,7 +296,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
       step.run(context)
 
       self._validate_pyproject(
-        project_root,
+        context,
         dependencies=['requests', 'rich'])
 
   def test_run_creates_pyproject_with_dev_marked_dependencies(self) -> None:
@@ -310,7 +308,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
       context = ProjectContext(project_root=project_root)
-      self._create_venv(project_root)
+      self._create_venv(context)
       (project_root / Packages.PACKAGES_FILENAME).write_text(
         'requests\n'
         'pytest [dev]\n',
@@ -348,7 +346,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
       context = ProjectContext(project_root=project_root)
-      self._create_venv(project_root)
+      self._create_venv(context)
       (project_root / Packages.LOCAL_PACKAGES_FILENAME).write_text(
         '../common-lib\n',
         encoding='utf-8')
@@ -374,7 +372,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
       context = ProjectContext(project_root=project_root)
-      self._create_venv(project_root)
+      self._create_venv(context)
       step = CreatePyProjectStep(
         'sample-project',
         'Sample project',
@@ -393,7 +391,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
       context = ProjectContext(project_root=project_root)
-      self._create_venv(project_root, create_packages_txt=False)
+      self._create_venv(context, create_packages_txt=False)
       step = CreatePyProjectStep(
         'sample-project',
         'Sample project',
@@ -428,7 +426,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
       context = ProjectContext(project_root=project_root)
-      (project_root / 'venv').mkdir()
+      context.venv_path.mkdir()
       step = CreatePyProjectStep(
         'sample-project',
         'Sample project',
@@ -446,9 +444,8 @@ class TestCreatePyProjectStep(unittest.TestCase):
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
       context = ProjectContext(project_root=project_root)
-      venv_path = project_root / 'venv'
-      venv_path.mkdir()
-      (venv_path / 'pyvenv.cfg').write_text(
+      context.venv_path.mkdir()
+      (context.venv_path / 'pyvenv.cfg').write_text(
         'home = /usr/bin\n',
         encoding='utf-8')
       step = CreatePyProjectStep(
@@ -468,7 +465,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
       context = ProjectContext(project_root=project_root)
-      self._create_venv(project_root)
+      self._create_venv(context)
       pyproject = project_root / 'pyproject.toml'
       text = self._pyproject_text()
       pyproject.write_text(text, encoding='utf-8')
@@ -490,7 +487,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
       context = ProjectContext(project_root=project_root)
-      self._create_venv(project_root)
+      self._create_venv(context)
       (project_root / 'pyproject.toml').mkdir()
       step = CreatePyProjectStep(
         'sample-project',
@@ -509,7 +506,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
       context = ProjectContext(project_root=project_root)
-      self._create_venv(project_root)
+      self._create_venv(context)
       (project_root / 'pyproject.toml').write_text(
         '[project\n',
         encoding='utf-8')
@@ -530,7 +527,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
       context = ProjectContext(project_root=project_root)
-      self._create_venv(project_root)
+      self._create_venv(context)
       text = self._pyproject_text().replace(
         'name = "sample-project"\n',
         '')
@@ -552,7 +549,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
       context = ProjectContext(project_root=project_root)
-      self._create_venv(project_root)
+      self._create_venv(context)
       text = self._pyproject_text(project_name='other-project')
       (project_root / 'pyproject.toml').write_text(text, encoding='utf-8')
       step = CreatePyProjectStep(
@@ -572,7 +569,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
       context = ProjectContext(project_root=project_root)
-      self._create_venv(project_root)
+      self._create_venv(context)
       text = self._pyproject_text(python_requirement='>=2.7')
       (project_root / 'pyproject.toml').write_text(text, encoding='utf-8')
       step = CreatePyProjectStep(
@@ -592,7 +589,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
       context = ProjectContext(project_root=project_root)
-      self._create_venv(project_root)
+      self._create_venv(context)
       text = self._pyproject_text().replace(
         '["mypy", "pylint", "parameterized"]',
         '["mypy", "pylint"]')
@@ -614,7 +611,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
       context = ProjectContext(project_root=project_root)
-      self._create_venv(project_root)
+      self._create_venv(context)
       (project_root / Packages.PACKAGES_FILENAME).write_text(
         'requests\n',
         encoding='utf-8')
@@ -637,7 +634,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
       context = ProjectContext(project_root=project_root)
-      self._create_venv(project_root)
+      self._create_venv(context)
       text = self._pyproject_text().replace(
         'where = ["src"]',
         'where = ["."]')
@@ -659,7 +656,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
       context = ProjectContext(project_root=project_root)
-      self._create_venv(project_root)
+      self._create_venv(context)
       text = self._pyproject_text(package_name='other_package')
       (project_root / 'pyproject.toml').write_text(text, encoding='utf-8')
       step = CreatePyProjectStep(
@@ -679,7 +676,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
       context = ProjectContext(project_root=project_root)
-      self._create_venv(project_root)
+      self._create_venv(context)
       step = CreatePyProjectStep(
         'sample-project',
         'Sample project',
@@ -699,7 +696,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
       context = ProjectContext(project_root=project_root)
-      self._create_venv(project_root)
+      self._create_venv(context)
       step = CreatePyProjectStep(
         'sample-project',
         'Sample project',
@@ -720,7 +717,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
       context = ProjectContext(project_root=project_root)
-      self._create_venv(project_root)
+      self._create_venv(context)
       pyproject = project_root / 'pyproject.toml'
       pyproject.write_text(self._pyproject_text(), encoding='utf-8')
       step = CreatePyProjectStep(
@@ -742,7 +739,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
       context = ProjectContext(project_root=project_root)
-      self._create_venv(project_root)
+      self._create_venv(context)
       step = CreatePyProjectStep(
         'sample-project',
         'Sample project',
