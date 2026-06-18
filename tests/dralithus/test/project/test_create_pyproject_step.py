@@ -251,6 +251,29 @@ class TestCreatePyProjectStep(unittest.TestCase):
 
       self._validate_pyproject(project_root)
 
+  def test_run_reads_context_venv_path(self) -> None:
+    """
+      Verify run reads the venv path from ProjectContext.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root, venv_name='env')
+      self._create_venv(project_root, context.venv_name)
+      step = CreatePyProjectStep(
+        project_name='sample-project',
+        project_description='Sample project',
+        package_name='sample_project')
+
+      step.run(context)
+
+      pyproject = PyProjectToml.from_file(
+        project_root / 'pyproject.toml',
+        Packages(project_root))
+      self.assertEqual(self._python_requirement(),
+                       pyproject.python_requirement)
+
   def test_run_creates_pyproject_with_packages_txt_dependencies(self) -> None:
     """
       Verify run copies packages.txt names into dependencies.

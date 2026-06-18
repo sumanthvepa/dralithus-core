@@ -112,39 +112,6 @@ class TestInstallDependenciesStep(unittest.TestCase):
     """
     return [call.args[0] for call in run_mock.call_args_list]
 
-  # Constructor validation
-
-  def test_init_rejects_empty_venv_name(self) -> None:
-    """
-      Verify that the constructor rejects an empty venv name.
-
-      :return: None
-    """
-    with self.assertRaises(DralithusProjectError):
-      InstallDependenciesStep('')
-
-  def test_init_rejects_venv_name_with_path_components(self) -> None:
-    """
-      Verify that the constructor rejects a venv name that contains
-      separators or is absolute.
-
-      :return: None
-    """
-    with self.assertRaises(DralithusProjectError):
-      InstallDependenciesStep('a/b')
-    with self.assertRaises(DralithusProjectError):
-      InstallDependenciesStep('/abs')
-
-  def test_init_rejects_parent_dir_venv_name(self) -> None:
-    """
-      Verify that the constructor rejects the bare '..' venv name,
-      which a name-based rule would wrongly accept.
-
-      :return: None
-    """
-    with self.assertRaises(DralithusProjectError):
-      InstallDependenciesStep('..')
-
   # run(): prerequisites
 
   def test_run_fails_when_venv_missing(self) -> None:
@@ -210,6 +177,27 @@ class TestInstallDependenciesStep(unittest.TestCase):
       requirements = project_root / InstallDependenciesStep.REQUIREMENTS_FILENAME
       self.assertEqual(
         requirements.read_text(encoding='utf-8'), self._FREEZE_OUTPUT)
+
+  def test_run_uses_context_venv_python(self) -> None:
+    """
+      Verify that run uses the venv Python path from ProjectContext.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root, venv_name='env')
+      self._make_venv(project_root, context.venv_name)
+      self._write_packages(project_root, 'requests\n')
+      step = InstallDependenciesStep()
+      python = str(context.venv_python)
+      with mock.patch('subprocess.run') as run_mock:
+        run_mock.return_value = self._ok_result()
+        step.run(context)
+      commands = self._commands(run_mock)
+      self.assertEqual(
+        commands[0], [python, '-m', 'pip', 'install', '--upgrade', 'pip'])
+      self.assertEqual(commands[-1], [python, '-m', 'pip', 'freeze'])
 
   def test_run_skips_editable_install_without_local_deps(self) -> None:
     """

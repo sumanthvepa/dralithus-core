@@ -65,15 +65,15 @@ class TestCreateVenvStep(unittest.TestCase):
 
   def test_run_creates_named_venv_directory(self) -> None:
     """
-      Verify that run creates the configured venv directory.
+      Verify that run creates the context-named venv directory.
 
       :return: None
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
-      step = CreateVenvStep(self._python_executable(), 'env')
-      target = project_root / 'env'
+      context = ProjectContext(project_root=project_root, venv_name='env')
+      step = CreateVenvStep(self._python_executable())
+      target = context.venv_path
 
       step.run(context)
 
@@ -199,69 +199,6 @@ class TestCreateVenvStep(unittest.TestCase):
         step.run(context)
 
       self.assertTrue(target.is_dir())
-
-  def test_run_rejects_empty_venv_name(self) -> None:
-    """
-      Verify that empty venv names are rejected.
-
-      :return: None
-    """
-    with self.assertRaisesRegex(
-      DralithusProjectError,
-      'Venv name must not be empty'
-    ):
-      CreateVenvStep(self._python_executable(), '')
-
-  def test_run_rejects_parent_directory_venv_name(self) -> None:
-    """
-      Verify that parent-directory venv names are rejected.
-
-      :return: None
-    """
-    with self.assertRaisesRegex(
-      DralithusProjectError,
-      'Venv name must not contain path components'
-    ):
-      CreateVenvStep(self._python_executable(), '..')
-
-  def test_run_rejects_current_directory_venv_name(self) -> None:
-    """
-      Verify that current-directory venv names are rejected.
-
-      :return: None
-    """
-    with self.assertRaisesRegex(
-      DralithusProjectError,
-      'Venv name must not contain path components'
-    ):
-      CreateVenvStep(self._python_executable(), '.')
-
-  def test_run_rejects_absolute_venv_path(self) -> None:
-    """
-      Verify that absolute venv paths are rejected.
-
-      :return: None
-    """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-
-      with self.assertRaisesRegex(
-        DralithusProjectError,
-        'Venv name must not contain path components'
-      ):
-        CreateVenvStep(self._python_executable(), str(project_root / 'venv'))
-
-  def test_run_rejects_nested_venv_name(self) -> None:
-    """
-      Verify that nested venv names are rejected.
-
-      :return: None
-    """
-    with self.assertRaisesRegex(
-      DralithusProjectError,
-      'Venv name must not contain path components'
-    ):
-      CreateVenvStep(self._python_executable(), 'env/venv')
 
   def test_init_rejects_missing_python_executable(self) -> None:
     """
