@@ -23,6 +23,8 @@
 from dataclasses import dataclass
 from pathlib import Path
 
+from dralithus.project.error import DralithusProjectError
+
 
 @dataclass
 class ProjectContext:
@@ -30,6 +32,33 @@ class ProjectContext:
     Hold shared state for project creation steps.
   """
   project_root: Path
+  venv_name: str = 'venv'
+
+  @staticmethod
+  def _validate_venv_name(venv_name: str) -> None:
+    """
+      Validate that venv_name is a single directory name.
+
+      :param venv_name: The venv name to validate
+      :return: None
+      :raises DralithusProjectError: When venv_name is empty or has
+        path components
+    """
+    if venv_name == '':
+      raise DralithusProjectError('Venv name must not be empty')
+    parts = Path(venv_name).parts
+    if len(parts) != 1 or parts[0] == '..':
+      raise DralithusProjectError(
+        f'Venv name must not contain path components: {venv_name}')
+
+  def __post_init__(self) -> None:
+    """
+      Validate the project context after dataclass initialization.
+
+      :return: None
+      :raises DralithusProjectError: When venv_name is invalid
+    """
+    self._validate_venv_name(self.venv_name)
 
   @property
   def venv_path(self) -> Path:
@@ -38,4 +67,15 @@ class ProjectContext:
 
       :return: The path to the project virtual environment
     """
-    return self.project_root / 'venv'
+    return self.project_root / self.venv_name
+
+  @property
+  def venv_python(self) -> Path:
+    """
+      Return the virtual environment Python executable path.
+
+      :return: The path to the project virtual environment's Python
+        executable
+    """
+    # POSIX-only for now; Windows venv layout support is deferred.
+    return self.venv_path / 'bin' / 'python'
