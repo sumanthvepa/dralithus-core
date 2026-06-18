@@ -55,3 +55,56 @@ pipelines, releases, and rollbacks.
 
 The immediate direction is to build the next useful piece of that
 system in a way that serves Milestone 42's real workflow.
+
+## Transactionality and the Project Lifecycle
+
+A defining ambition of dralithus is that its lifecycle operations -
+create a project, update a project, provision a machine, deploy a
+release - are **transactional**: each operation either completes fully
+or leaves the system exactly as it was before. A half-created project,
+a half-upgraded one, or a half-deployed release should never be a state
+the user is left in.
+
+The intended mechanism is a **two-phase commit** discipline over the
+ordered execution steps, rather than today's simpler run/rollback:
+
+- **prepare** - each step does its work but preserves whatever it
+  displaced, so the prior state can still be restored;
+- **commit** - run only after *every* step's prepare succeeds; it
+  discards the preserved prior state and finalizes;
+- **abort** - run if any step fails; it restores the preserved prior
+  state on the completed steps, in reverse.
+
+Resources that cannot be mutated reversibly in place (a virtual
+environment, an existing config file being overwritten, a deployed
+artifact) are handled by **backup-and-swap**: preserve the prior copy,
+build the new one at its canonical location, then on commit discard the
+backup or on abort restore it. This treats inherently *regenerable*
+artifacts - a venv is fully determined by its interpreter and its
+declared dependencies - as disposable and rebuildable rather than
+something to be surgically un-mutated.
+
+### Update without losing customizations - the differentiator
+
+The transactional foundation exists to enable what dralithus intends as
+its key differentiator: **updating an existing, customized project to
+the latest conventions without destroying the user's changes.** This is
+fundamentally a three-way merge between the defaults the project was
+originally generated from (*base*), the user's current project
+(*current*), and the latest defaults (*new*). Doing it well requires:
+
+- **provenance** - recording, inside each generated project, what
+  dralithus produced and from which version, so a later update knows the
+  *base* to diff against (conceptually like tracking the template a
+  project was generated from);
+- **structural / semantic merges** for known formats (TOML, INI,
+  `pyproject.toml`) rather than blind line-based patching; and
+- a **foundation-model fallback** for genuinely ambiguous
+  reconciliations - where the user customized a region the new defaults
+  also changed - to propose a merge that preserves intent.
+
+Every such update must itself be transactional and idempotent, which is
+why the two-phase-commit foundation is a prerequisite, not a polish
+item. This capability - transactional, customization-preserving,
+AI-assisted project update - is a strategic goal, not a near-term
+deliverable; the near-term work builds the simpler create path first.
