@@ -212,6 +212,18 @@ class TestCreateVenvStep(unittest.TestCase):
     ):
       CreateVenvStep(self._python_executable(), '')
 
+  def test_run_rejects_parent_directory_venv_name(self) -> None:
+    """
+      Verify that parent-directory venv names are rejected.
+
+      :return: None
+    """
+    with self.assertRaisesRegex(
+      DralithusProjectError,
+      'Venv name must not contain path components'
+    ):
+      CreateVenvStep(self._python_executable(), '..')
+
   def test_run_rejects_absolute_venv_path(self) -> None:
     """
       Verify that absolute venv paths are rejected.
