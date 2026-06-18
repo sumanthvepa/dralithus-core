@@ -20,10 +20,17 @@
 # along with this program.  If not, see
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
+import os
+from pathlib import Path
+import subprocess
+import tempfile
+
 from typing import override
 
 from dralithus.project.context import ProjectContext
+from dralithus.project.error import DralithusProjectError
 from dralithus.project.execution_step import ExecutionStep
+from dralithus.project.packages import Packages
 
 
 class InstallDependenciesStep(ExecutionStep):
@@ -40,6 +47,188 @@ class InstallDependenciesStep(ExecutionStep):
 
   _requirements_created: bool
 
+  def _venv_python(self, project_root: Path) -> Path:
+    """
+      Return the venv interpreter path for the project.
+
+      :param project_root: The project root directory
+      :return: The path to the venv's Python interpreter
+    """
+    return project_root / self._venv_name / 'bin' / 'python'
+
+  def _install_and_snapshot(self, context: ProjectContext) -> None:
+    """
+      Install the dependency closure and snapshot requirements.txt.
+
+      :param context: The shared project creation context
+      :return: None
+      :raises DralithusProjectError: When a prerequisite is missing or
+        installation or snapshotting fails
+    """
+    project_root = context.project_root
+    venv_python = self._venv_python(project_root)
+    if not venv_python.is_file() or not os.access(venv_python, os.X_OK):
+      raise DralithusProjectError(
+        f'Virtual environment not found: {venv_python}')
+    packages = Packages(project_root)
+    try:
+      requirements = project_root / self.REQUIREMENTS_FILENAME
+      self._verify_regular_file_or_absent(requirements)
+      self._install(venv_python, project_root, packages)
+      self._write_requirements(venv_python, project_root)
+    except DralithusProjectError:
+      self.rollback(context)
+      raise
+
+  def _install(
+    self,
+    venv_python: Path,
+    project_root: Path,
+    packages: Packages
+  ) -> None:
+    """
+      Install pip, the production and dev dependencies, and the
+      editable local dependencies, in that order.
+
+      :param venv_python: The venv Python interpreter
+      :param project_root: The project root directory
+      :param packages: The dependency model for the project
+      :return: None
+      :raises DralithusProjectError: When a pip install fails
+    """
+    python = str(venv_python)
+    commands = [
+      [python, '-m', 'pip', 'install', '--upgrade', 'pip'],
+      [python, '-m', 'pip', 'install',
+       *packages.production_dependencies,
+       *packages.dev_dependencies]]
+    if packages.local_dependencies:
+      editable = [python, '-m', 'pip', 'install']
+      for dependency in packages.local_dependencies:
+        editable.extend(['-e', dependency])
+      commands.append(editable)
+    for command in commands:
+      self._run(command, project_root, 'Could not install dependencies')
+
+  def _write_requirements(
+    self,
+    venv_python: Path,
+    project_root: Path
+  ) -> None:
+    """
+      Snapshot the installed dependencies to requirements.txt.
+
+      The file is written atomically, via a temporary file in the same
+      directory followed by os.replace, so a pre-existing file is never
+      left truncated or partially written. Ownership is recorded only
+      when the file was absent before this step created it.
+
+      :param venv_python: The venv Python interpreter
+      :param project_root: The project root directory
+      :return: None
+      :raises DralithusProjectError: When pip freeze or the write fails
+    """
+    result = self._run(
+      [str(venv_python), '-m', 'pip', 'freeze'],
+      project_root,
+      'Could not read installed dependencies')
+    requirements = project_root / self.REQUIREMENTS_FILENAME
+    existed = requirements.exists()
+    descriptor, temporary_name = tempfile.mkstemp(dir=project_root)
+    temporary_path = Path(temporary_name)
+    try:
+      with os.fdopen(descriptor, 'w', encoding='utf-8') as handle:
+        handle.write(result.stdout)
+      os.replace(temporary_path, requirements)
+    except OSError as error:
+      temporary_path.unlink(missing_ok=True)
+      raise DralithusProjectError(
+        f'Could not write dependency file: {requirements}') from error
+    if not existed:
+      self._requirements_created = True
+
+  def _remove_requirements(self, project_root: Path) -> None:
+    """
+      Remove a requirements.txt that this step created.
+
+      :param project_root: The project root directory
+      :return: None
+      :raises DralithusProjectError: When removal fails
+    """
+    requirements = project_root / self.REQUIREMENTS_FILENAME
+    try:
+      requirements.unlink(missing_ok=True)
+    except OSError as error:
+      raise DralithusProjectError(
+        f'Could not remove dependency file: {requirements}') from error
+
+  @staticmethod
+  def _validate_venv_name(venv_name: str) -> None:
+    """
+      Validate that venv_name is a single, non-traversing path
+      component.
+
+      A name-based rule is insufficient because Path('..').name is
+      '..', so this uses a parts-based rule that rejects empty, '.',
+      '..', absolute, and separator-containing names.
+
+      :param venv_name: The venv name to validate
+      :return: None
+      :raises DralithusProjectError: When venv_name is not a single,
+        non-traversing path component
+    """
+    parts = Path(venv_name).parts
+    if len(parts) != 1 or parts[0] == '..':
+      raise DralithusProjectError(f'Invalid venv name: {venv_name!r}')
+
+  @staticmethod
+  def _verify_regular_file_or_absent(path: Path) -> None:
+    """
+      Verify that a path is absent or an existing regular file.
+
+      A symlink (valid, dangling, or wrong-type), a directory, or any
+      other non-regular entry is rejected: requirements.txt is a
+      regenerated artifact, so the step never writes through, replaces,
+      or deletes such a thing.
+
+      :param path: The path to verify
+      :return: None
+      :raises DralithusProjectError: When path is a symlink or an
+        existing non-regular file
+    """
+    if path.is_symlink():
+      raise DralithusProjectError(
+        f'Requirements path is a symlink: {path}')
+    if path.exists() and not path.is_file():
+      raise DralithusProjectError(
+        f'Requirements path is not a regular file: {path}')
+
+  @staticmethod
+  def _run(
+    command: list[str],
+    project_root: Path,
+    error_message: str
+  ) -> 'subprocess.CompletedProcess[str]':
+    """
+      Run a subprocess in the project root, wrapping failures.
+
+      :param command: The command and arguments to run
+      :param project_root: The working directory for the command
+      :param error_message: The message for a wrapped failure
+      :return: The completed process, with text streams
+      :raises DralithusProjectError: When the command cannot be run or
+        exits non-zero
+    """
+    try:
+      return subprocess.run(
+        command,
+        cwd=project_root,
+        check=True,
+        capture_output=True,
+        text=True)
+    except (OSError, subprocess.CalledProcessError) as error:
+      raise DralithusProjectError(error_message) from error
+
   def __init__(self, venv_name: str = 'venv') -> None:
     """
       Initialize the dependency installation step.
@@ -49,6 +238,7 @@ class InstallDependenciesStep(ExecutionStep):
       :raises DralithusProjectError: When venv_name is not a single,
         non-traversing path component
     """
+    self._validate_venv_name(venv_name)
     self._venv_name = venv_name
     self._requirements_created = False
 
@@ -64,12 +254,17 @@ class InstallDependenciesStep(ExecutionStep):
       :raises DralithusProjectError: When installation or snapshotting
         fails
     """
-    raise NotImplementedError('run() is not yet implemented')
+    if not dry_run:
+      self._install_and_snapshot(context)
 
   @override
   def rollback(self, context: ProjectContext, dry_run: bool = False) -> None:
     """
       Roll back the dependency installation step.
+
+      Removes only a requirements.txt this step created. The installed
+      packages are not uninstalled here; the venv is owned by
+      CreateVenvStep.
 
       :param context: The shared project creation context
       :param dry_run: True if the step should report what it would
@@ -78,4 +273,5 @@ class InstallDependenciesStep(ExecutionStep):
       :raises DralithusProjectError: When removing requirements.txt
         fails
     """
-    raise NotImplementedError('rollback() is not yet implemented')
+    if not dry_run and self._requirements_created:
+      self._remove_requirements(context.project_root)
