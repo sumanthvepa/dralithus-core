@@ -523,6 +523,31 @@ class TestCreateFileStep(unittest.TestCase):
         with self.assertRaises(DralithusProjectError):
           step.rollback(context)
 
+  def test_rollback_clears_ownership_and_preserves_recreated_file(
+    self
+  ) -> None:
+    """
+      Verify rollback clears ownership so a second rollback preserves
+      a recreated file.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      target = self._target(project_root)
+      step = CreateFileStep(self._FILENAME, self._CONTENT)
+
+      step.run(context)
+      step.rollback(context)
+
+      target.write_text('foreign user content\n', encoding='utf-8')
+      step.rollback(context)
+
+      self.assertTrue(target.exists())
+      self.assertEqual(
+        'foreign user content\n', target.read_text(encoding='utf-8'))
+
   def test_failed_run_clears_ownership_and_can_be_retried(self) -> None:
     """
       Verify a failed run clears ownership and can be retried.
