@@ -39,7 +39,7 @@ class CreateSourceAndTestTreeStep(ExecutionStep):
     test package trees for a new Milestone 42 Python project.
 
     Creates src/<package_name>/ (a namespace package, no __init__.py)
-    and tests/<package_name>/test/ (a real package with a seeded
+    and tests/<package_name>/test/ (a real package with a generated
     __init__.py), plus an empty .gitignore in every directory the step
     is responsible for (src/, src/<package_name>/, tests/,
     tests/<package_name>/, and tests/<package_name>/test/) so the
@@ -54,13 +54,13 @@ class CreateSourceAndTestTreeStep(ExecutionStep):
 
   def _init_py_content(self) -> str:
     """
-      Build the seed content for the test package __init__.py.
+      Build the content for the test package __init__.py.
 
       The content is a module docstring followed by the copyleft
       header in the Milestone 42 house style. The copyright year is
       taken from the current date at creation time.
 
-      :return: The text to write to the seeded __init__.py
+      :return: The text to write to the __init__.py
     """
     description = (
       f'{self._package_name}/test/__init__.py: '
@@ -131,9 +131,9 @@ class CreateSourceAndTestTreeStep(ExecutionStep):
       with file:
         file.write(content)
 
-  def _seed_files(self, project_root: Path) -> None:
+  def _create_initial_files(self, project_root: Path) -> None:
     """
-      Seed the test package __init__.py and a .gitignore in every
+      Create the test package __init__.py and a .gitignore in every
       directory this step is responsible for.
 
       The .gitignore files are written into all five directories - the
@@ -144,8 +144,8 @@ class CreateSourceAndTestTreeStep(ExecutionStep):
 
       :param project_root: The project root directory
       :return: None
-      :raises DralithusProjectError: When a seeded path already
-        exists but is not a regular file, or a seeded file cannot be
+      :raises DralithusProjectError: When a path already
+        exists but is not a regular file, or a file cannot be
         created or written
     """
     src_directory = project_root / 'src'
@@ -153,26 +153,29 @@ class CreateSourceAndTestTreeStep(ExecutionStep):
     tests_directory = project_root / 'tests'
     tests_parent = tests_directory / self._package_name
     test_package = tests_parent / 'test'
-    try:
-      self._create_file(
-        test_package / '__init__.py', self._init_py_content())
-      self._create_file(src_directory / '.gitignore', '')
-      self._create_file(src_package / '.gitignore', '')
-      self._create_file(tests_directory / '.gitignore', '')
-      self._create_file(tests_parent / '.gitignore', '')
-      self._create_file(test_package / '.gitignore', '')
-    except OSError as error:
-      raise DralithusProjectError(
-        f'Could not write seeded file in: {project_root}') from error
+    files = [
+      (test_package / '__init__.py', self._init_py_content()),
+      (src_directory / '.gitignore', ''),
+      (src_package / '.gitignore', ''),
+      (tests_directory / '.gitignore', ''),
+      (tests_parent / '.gitignore', ''),
+      (test_package / '.gitignore', ''),
+    ]
+    for path, content in files:
+      try:
+        self._create_file(path, content)
+      except OSError as error:
+        raise DralithusProjectError(
+          f'Could not write {path.name} in: {path.parent}') from error
 
   def _remove_created_files(self) -> None:
     """
-      Remove the seeded files created by this step.
+      Remove the files created by this step.
 
       Files already removed externally are accepted silently.
 
       :return: None
-      :raises DralithusProjectError: When a created seeded file
+      :raises DralithusProjectError: When a created file
         cannot be removed
     """
     for path in self._created_files:
@@ -180,13 +183,13 @@ class CreateSourceAndTestTreeStep(ExecutionStep):
         path.unlink(missing_ok=True)
       except OSError as error:
         raise DralithusProjectError(
-          f'Could not remove seeded file: {path}') from error
+          f'Could not remove file: {path}') from error
     self._created_files = []
 
   @staticmethod
   def _verify_regular_file(path: Path) -> None:
     """
-      Verify that an existing seeded path resolves to a regular file.
+      Verify that an existing path resolves to a regular file.
 
       Called when exclusive creation reports the path already exists.
       A regular file is accepted, including a valid symlink that
@@ -203,7 +206,7 @@ class CreateSourceAndTestTreeStep(ExecutionStep):
     """
     if not path.is_file():
       raise DralithusProjectError(
-        f'Seeded path is not a regular file: {path}')
+        f'Path is not a regular file: {path}')
 
   @staticmethod
   def _validate_package_name(package_name: str) -> None:
@@ -262,7 +265,7 @@ class CreateSourceAndTestTreeStep(ExecutionStep):
       self._src_mkdir.run(context, dry_run)
       self._tests_mkdir.run(context, dry_run)
       if not dry_run:
-        self._seed_files(context.project_root)
+        self._create_initial_files(context.project_root)
     except DralithusProjectError:
       self.rollback(context, dry_run)
       raise
