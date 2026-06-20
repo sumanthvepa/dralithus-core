@@ -103,13 +103,13 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
 
   # run
 
-  def test_run_creates_trees_and_seeded_files(self) -> None:
+  def test_run_creates_trees_and_files(self) -> None:
     """
-      Verify that run creates both package trees and the seeded
+      Verify that run creates both package trees and the
       files in an empty project root.
 
       The source package is a namespace package (no __init__.py); the
-      test package has a seeded __init__.py with a docstring and the
+      test package has a generated __init__.py with a docstring and the
       copyleft header; both directories get an empty .gitignore.
 
       :return: None
@@ -352,7 +352,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
 
   def test_rollback_accepts_externally_removed_file(self) -> None:
     """
-      Verify that rollback succeeds when a seeded file has already
+      Verify that rollback succeeds when a file has already
       been removed externally (convergent).
 
       :return: None
@@ -419,14 +419,14 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
       self.assertFalse((project_root / 'src').exists())
       self.assertFalse((project_root / 'tests').exists())
 
-  # run: strict typing of pre-existing seeded paths
+  # run: strict typing of pre-existing paths
 
   def test_run_raises_when_init_py_path_is_a_directory(self) -> None:
     """
       Verify that run fails loudly when the __init__.py path already
       exists as a directory rather than a regular file.
 
-      A directory where the seeded regular file belongs is not state
+      A directory where the regular file belongs is not state
       the step could have produced, so it must fail loudly (the
       convergent-step rule) and clean up the source tree it created.
 
@@ -503,7 +503,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
       Verify that run fails loudly when the __init__.py path is a
       symlink resolving to a directory rather than a regular file.
 
-      A symlink to the wrong type is not a usable seeded file, so the
+      A symlink to the wrong type is not a usable file, so the
       step must fail loudly and clean up the source tree it created.
 
       :return: None
@@ -552,12 +552,12 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
       self.assertFalse((project_root / 'src').exists())
       self.assertTrue(tests_path.is_file())
 
-  def test_run_cleans_up_when_seeding_fails(self) -> None:
+  def test_run_cleans_up_when_file_write_fails(self) -> None:
     """
-      Verify that a run whose seed write fails removes the trees and
+      Verify that a run whose file write fails removes the trees and
       files it created and raises DralithusProjectError.
 
-      The first seeded file (__init__.py) is written for real; the
+      The first file (__init__.py) is written for real; the
       write of the source .gitignore is forced to fail. The failed
       run must wrap the raw OSError as DralithusProjectError (so the
       orchestrator can roll back earlier steps) and leave nothing
