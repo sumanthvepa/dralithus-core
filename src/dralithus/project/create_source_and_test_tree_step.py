@@ -40,7 +40,10 @@ class CreateSourceAndTestTreeStep(ExecutionStep):
 
     Creates src/<package_name>/ (a namespace package, no __init__.py)
     and tests/<package_name>/test/ (a real package with a seeded
-    __init__.py), plus an empty .gitignore in each. Existing
+    __init__.py), plus an empty .gitignore in every directory the step
+    is responsible for (src/, src/<package_name>/, tests/,
+    tests/<package_name>/, and tests/<package_name>/test/) so the
+    generated project follows the tracked-directory principle. Existing
     directories and files are left untouched (convergent, never
     overwrite). Creation and rollback are owned entirely by this
     step: it records exactly the files its own run created, and
@@ -130,7 +133,14 @@ class CreateSourceAndTestTreeStep(ExecutionStep):
 
   def _seed_files(self, project_root: Path) -> None:
     """
-      Seed the test package __init__.py and the two .gitignore files.
+      Seed the test package __init__.py and a .gitignore in every
+      directory this step is responsible for.
+
+      The .gitignore files are written into all five directories - the
+      src and tests parents, the src package, the tests/<package_name>
+      parent, and the test package - so the generated project follows
+      the tracked-directory principle (every durable directory carries
+      a .gitignore).
 
       :param project_root: The project root directory
       :return: None
@@ -138,13 +148,18 @@ class CreateSourceAndTestTreeStep(ExecutionStep):
         exists but is not a regular file, or a seeded file cannot be
         created or written
     """
-    src_package = project_root / 'src' / self._package_name
-    test_package = (
-      project_root / 'tests' / self._package_name / 'test')
+    src_directory = project_root / 'src'
+    src_package = src_directory / self._package_name
+    tests_directory = project_root / 'tests'
+    tests_parent = tests_directory / self._package_name
+    test_package = tests_parent / 'test'
     try:
       self._create_file(
         test_package / '__init__.py', self._init_py_content())
+      self._create_file(src_directory / '.gitignore', '')
       self._create_file(src_package / '.gitignore', '')
+      self._create_file(tests_directory / '.gitignore', '')
+      self._create_file(tests_parent / '.gitignore', '')
       self._create_file(test_package / '.gitignore', '')
     except OSError as error:
       raise DralithusProjectError(

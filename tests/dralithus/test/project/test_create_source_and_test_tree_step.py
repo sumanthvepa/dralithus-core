@@ -138,6 +138,57 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
       self.assertEqual('', src_gitignore.read_text(encoding='utf-8'))
       self.assertEqual('', test_gitignore.read_text(encoding='utf-8'))
 
+  def test_run_creates_gitignore_in_every_created_directory(self) -> None:
+    """
+      Verify that run creates an empty .gitignore in every directory
+      it is responsible for, not only the two leaf package directories.
+
+      The tracked-directory principle requires every durable directory
+      created for a tracked project - including the parent src, tests,
+      and tests/<package_name> directories - to carry a .gitignore.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
+
+      step.run(context)
+
+      directories = [
+        project_root / 'src',
+        project_root / 'src' / self._PACKAGE_NAME,
+        project_root / 'tests',
+        project_root / 'tests' / self._PACKAGE_NAME,
+        project_root / 'tests' / self._PACKAGE_NAME / 'test',
+      ]
+      for directory in directories:
+        gitignore = directory / '.gitignore'
+        self.assertTrue(
+          gitignore.is_file(), f'missing .gitignore in {directory}')
+        self.assertEqual('', gitignore.read_text(encoding='utf-8'))
+
+  def test_run_keeps_existing_parent_gitignore(self) -> None:
+    """
+      Verify that run leaves a pre-existing parent .gitignore
+      untouched (convergent).
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      tests_dir = project_root / 'tests'
+      tests_dir.mkdir()
+      gitignore = tests_dir / '.gitignore'
+      gitignore.write_text('*.log\n', encoding='utf-8')
+      step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
+
+      step.run(context)
+
+      self.assertEqual('*.log\n', gitignore.read_text(encoding='utf-8'))
+
   def test_run_accepts_preexisting_directories(self) -> None:
     """
       Verify that run accepts pre-existing package directories
