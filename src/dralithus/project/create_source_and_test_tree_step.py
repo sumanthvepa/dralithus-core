@@ -101,19 +101,20 @@ class CreateSourceAndTestTreeStep(ExecutionStep):
       Create path with content unless a regular file already exists.
 
       Creation is exclusive, so a pre-existing file is never
-      overwritten or claimed. A pre-existing regular file is accepted
-      and left untouched (convergent); any other pre-existing path -
-      a directory, a symlink (including a dangling one), or any other
-      non-regular file - fails loudly. Ownership is recorded the
-      instant exclusive creation succeeds, before the content write,
-      so a write failure cannot leave an untracked partial file
-      behind.
+      overwritten or claimed. A pre-existing regular file - including a
+      valid symlink that resolves to one - is accepted and left
+      untouched (convergent); any path that does not resolve to a
+      regular file - a directory, a dangling symlink, a symlink to a
+      non-regular target, or any other non-regular file - fails loudly.
+      Ownership is recorded the instant exclusive creation succeeds,
+      before the content write, so a write failure cannot leave an
+      untracked partial file behind.
 
       :param path: The file to create
       :param content: The content to write
       :return: None
-      :raises DralithusProjectError: When path already exists but is
-        not a regular, non-symlink file
+      :raises DralithusProjectError: When path already exists but does
+        not resolve to a regular file
       :raises OSError: When the file cannot be created or written
     """
     try:
@@ -170,20 +171,22 @@ class CreateSourceAndTestTreeStep(ExecutionStep):
   @staticmethod
   def _verify_regular_file(path: Path) -> None:
     """
-      Verify that an existing seeded path is a regular file.
+      Verify that an existing seeded path resolves to a regular file.
 
       Called when exclusive creation reports the path already exists.
-      A regular, non-symlink file is accepted (convergent: the step
-      leaves it untouched); anything else - a directory, a symlink
-      (including a dangling one), or any other non-regular file - is
-      state the step could not have produced and fails loudly.
+      A regular file is accepted, including a valid symlink that
+      resolves to one (convergent: the step leaves it untouched and
+      never claims or removes it). Anything that does not resolve to a
+      regular file - a directory, a dangling symlink, a symlink to a
+      non-regular target, or any other non-regular file - is state the
+      step could not have produced and fails loudly.
 
       :param path: The existing path to verify
       :return: None
-      :raises DralithusProjectError: When path is not a regular,
-        non-symlink file
+      :raises DralithusProjectError: When path does not resolve to a
+        regular file
     """
-    if path.is_symlink() or not path.is_file():
+    if not path.is_file():
       raise DralithusProjectError(
         f'Seeded path is not a regular file: {path}')
 

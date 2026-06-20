@@ -33,6 +33,7 @@ from dralithus.project.create_source_and_test_tree_step import (
 from dralithus.project.error import DralithusProjectError
 
 
+# pylint: disable-next=too-many-public-methods
 class TestCreateSourceAndTestTreeStep(unittest.TestCase):
   """
     Unit tests for the CreateSourceAndTestTreeStep class.
@@ -318,6 +319,36 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
       self.assertFalse((project_root / 'src').exists())
       self.assertFalse((project_root / 'tests').exists())
 
+  def test_rollback_preserves_preexisting_init_py_symlink(self) -> None:
+    """
+      Verify that rollback preserves a pre-existing valid symlink at
+      the __init__.py path, removing only what the step created.
+
+      The step never claimed the symlink, so rollback must leave it
+      (and its target) in place while removing the source tree it did
+      create.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      test_package = self._test_package(project_root)
+      test_package.mkdir(parents=True)
+      target = project_root / 'target.txt'
+      target.write_text('linked content\n', encoding='utf-8')
+      init_link = test_package / '__init__.py'
+      init_link.symlink_to(target)
+      step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
+
+      step.run(context)
+      step.rollback(context)
+
+      self.assertTrue(init_link.is_symlink())
+      self.assertEqual(
+        'linked content\n', init_link.read_text(encoding='utf-8'))
+      self.assertFalse((project_root / 'src').exists())
+
   def test_rollback_removes_trees_after_multiple_runs(self) -> None:
     """
       Verify that rollback removes the created trees after multiple
@@ -387,10 +418,14 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
       self.assertTrue(init_link.is_symlink())
       self.assertFalse((project_root / 'src').exists())
 
-  def test_run_raises_when_init_py_is_a_symlink_to_file(self) -> None:
+  def test_run_accepts_init_py_symlink_to_regular_file(self) -> None:
     """
-      Verify that run fails loudly when the __init__.py path is a
-      symlink to a regular file rather than a regular file itself.
+      Verify that run accepts a valid symlink to a regular file at the
+      __init__.py path and leaves it untouched (convergent).
+
+      A symlink resolving to a regular file is a usable artifact, so
+      the step must accept it without claiming or replacing it, the
+      same valid-symlink policy MkdirStep and CreateFileStep follow.
 
       :return: None
     """
@@ -400,9 +435,37 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
       test_package = self._test_package(project_root)
       test_package.mkdir(parents=True)
       target = project_root / 'target.txt'
-      target.write_text('content\n', encoding='utf-8')
+      target.write_text('linked content\n', encoding='utf-8')
       init_link = test_package / '__init__.py'
       init_link.symlink_to(target)
+      step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
+
+      step.run(context)
+
+      self.assertTrue(init_link.is_symlink())
+      self.assertEqual(
+        'linked content\n', init_link.read_text(encoding='utf-8'))
+      self.assertTrue(self._src_package(project_root).is_dir())
+
+  def test_run_raises_on_init_py_symlink_to_directory(self) -> None:
+    """
+      Verify that run fails loudly when the __init__.py path is a
+      symlink resolving to a directory rather than a regular file.
+
+      A symlink to the wrong type is not a usable seeded file, so the
+      step must fail loudly and clean up the source tree it created.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+      test_package = self._test_package(project_root)
+      test_package.mkdir(parents=True)
+      target_dir = project_root / 'target-dir'
+      target_dir.mkdir()
+      init_link = test_package / '__init__.py'
+      init_link.symlink_to(target_dir)
       step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
 
       with self.assertRaises(DralithusProjectError):
