@@ -35,7 +35,7 @@ class CreatePackagesStep(ExecutionStep):
     System dependency files (packages.txt and local-packages.txt)
 
     Creates whichever of packages.txt and local-packages.txt is
-    missing from the project root, seeded with a header comment.
+    missing from the project root, initialized with a header comment.
     Existing dependency files are left untouched. Creation and
     rollback are owned entirely by this step: it records exactly
     the files its own exclusive writes created, and rollback
