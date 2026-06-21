@@ -180,7 +180,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
 
       :param context: The project context
       :param create_packages_txt: True if packages.txt should be
-        seeded
+        created
       :return: None
     """
     subprocess.run(
