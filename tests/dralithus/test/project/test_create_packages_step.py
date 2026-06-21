@@ -82,7 +82,7 @@ class TestCreatePackagesStep(unittest.TestCase):
   """
   def test_run_creates_packages_files(self) -> None:
     """
-      Verify that run seeds both dependency files in an empty
+      Verify that run creates both dependency files in an empty
       project root.
 
       :return: None
@@ -186,9 +186,9 @@ class TestCreatePackagesStep(unittest.TestCase):
       ):
         step.run(context)
 
-  def test_run_seeds_header_content(self) -> None:
+  def test_run_writes_header_content(self) -> None:
     """
-      Verify the created dependency files contain exactly the seed
+      Verify the created dependency files contain exactly the
       header comments.
 
       :return: None
@@ -304,8 +304,8 @@ class TestCreatePackagesStep(unittest.TestCase):
       created before failing.
 
       An unreadable packages.txt is detected only after the missing
-      local-packages.txt has been seeded; the failed run must not
-      leave the seeded file behind.
+      local-packages.txt has been created; the failed run must not
+      leave the created file behind.
 
       :return: None
     """
