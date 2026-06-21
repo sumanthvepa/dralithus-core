@@ -496,6 +496,7 @@ class TestCreateFileStep(unittest.TestCase):
           step.run(context)
         step.run(context)
 
+      self.assertTrue(target.exists())
       step.rollback(context)
       self.assertFalse(target.exists())
 

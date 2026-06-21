@@ -128,6 +128,7 @@ class TestCreateVenvStep(unittest.TestCase):
       target = project_root / 'venv'
 
       step.run(context)
+      self.assertTrue(target.is_dir())
       step.run(context)
       step.rollback(context)
 
