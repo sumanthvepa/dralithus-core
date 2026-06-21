@@ -26,7 +26,7 @@ import stat
 import sys
 import unittest
 
-from dralithus.project.context import ProjectContext
+from dralithus.test import project_context
 from dralithus.project.create_venv_step import CreateVenvStep
 from dralithus.project.error import DralithusProjectError
 
@@ -52,9 +52,7 @@ class TestCreateVenvStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       step = CreateVenvStep(self._python_executable())
       target = project_root / 'venv'
 
@@ -69,9 +67,7 @@ class TestCreateVenvStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root, venv_name='env')
+    with project_context(venv_name='env') as (_project_root, context):
       step = CreateVenvStep(self._python_executable())
       target = context.venv_path
 
@@ -86,9 +82,7 @@ class TestCreateVenvStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       step = CreateVenvStep(self._python_executable())
 
       step.run(context, dry_run=True)
@@ -101,9 +95,7 @@ class TestCreateVenvStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       (project_root / 'venv').touch()
       step = CreateVenvStep(self._python_executable())
 
@@ -116,9 +108,7 @@ class TestCreateVenvStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       step = CreateVenvStep(self._python_executable())
       target = project_root / 'venv'
 
@@ -133,9 +123,7 @@ class TestCreateVenvStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       step = CreateVenvStep(self._python_executable())
       target = project_root / 'venv'
 
@@ -151,9 +139,7 @@ class TestCreateVenvStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       step = CreateVenvStep(self._python_executable())
       target = project_root / 'venv'
 
@@ -168,9 +154,7 @@ class TestCreateVenvStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       target = project_root / 'venv'
       step = CreateVenvStep(self._python_executable())
       step.run(context)
@@ -188,9 +172,7 @@ class TestCreateVenvStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       target = project_root / 'venv'
       target.mkdir()
       step = CreateVenvStep(self._python_executable())
@@ -276,9 +258,7 @@ class TestCreateVenvStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       (project_root / 'venv').touch()
       step = CreateVenvStep(self._python_executable())
 
@@ -312,9 +292,7 @@ class TestCreateVenvStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       step = CreateVenvStep(self._python_executable())
       target = project_root / 'venv'
 

@@ -26,7 +26,7 @@ from typing import IO
 import unittest
 from unittest import mock
 
-from dralithus.project.context import ProjectContext
+from dralithus.test import project_context
 from dralithus.project.create_file_step import CreateFileStep
 from dralithus.project.error import DralithusProjectError
 
@@ -105,9 +105,7 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       source = project_root / 'source.txt'
       source.write_text(self._CONTENT, encoding='utf-8')
       step = CreateFileStep.from_file(self._FILENAME, source)
@@ -136,9 +134,7 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       step = CreateFileStep.from_resource(
         self._FILENAME,
         'dralithus.project',
@@ -172,9 +168,7 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       step = CreateFileStep(self._FILENAME, self._CONTENT)
 
       step.run(context)
@@ -189,9 +183,7 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       content = 'first line\nsecond line\n'
       step = CreateFileStep(self._FILENAME, content)
 
@@ -207,9 +199,7 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (_project_root, context):
       step = CreateFileStep(Path('missing') / self._FILENAME, self._CONTENT)
 
       with self.assertRaises(DralithusProjectError):
@@ -221,9 +211,7 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       filename = Path('missing') / self._FILENAME
       step = CreateFileStep(filename, self._CONTENT)
 
@@ -239,9 +227,7 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       parent = project_root / 'parent'
       parent.write_text('not a directory\n', encoding='utf-8')
       step = CreateFileStep(
@@ -260,9 +246,7 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       real_parent = project_root / 'real-parent'
       real_parent.mkdir()
       (project_root / 'linked-parent').symlink_to(
@@ -282,9 +266,7 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       target = self._target(project_root)
       target.write_text('user content\n', encoding='utf-8')
       step = CreateFileStep(self._FILENAME, self._CONTENT)
@@ -300,9 +282,7 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       symlink_target = project_root / 'user-config.ini'
       symlink_target.write_text('user content\n', encoding='utf-8')
       target = self._target(project_root)
@@ -321,9 +301,7 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       self._target(project_root).mkdir()
       step = CreateFileStep(self._FILENAME, self._CONTENT)
 
@@ -336,9 +314,7 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       target = self._target(project_root)
       target.symlink_to(project_root / 'missing-target')
       step = CreateFileStep(self._FILENAME, self._CONTENT)
@@ -352,9 +328,7 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       directory = project_root / 'directory'
       directory.mkdir()
       self._target(project_root).symlink_to(
@@ -370,9 +344,7 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       target = self._target(project_root)
       target.write_text('user content\n', encoding='utf-8')
       step = CreateFileStep(self._FILENAME, self._CONTENT)
@@ -411,9 +383,7 @@ class TestCreateFileStep(unittest.TestCase):
         return FailingWriteFile(file)
       return file
 
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       step = CreateFileStep(self._FILENAME, self._CONTENT)
 
       with mock.patch.object(Path, 'open', failing_open):
@@ -428,9 +398,7 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       step = CreateFileStep(self._FILENAME, self._CONTENT)
 
       step.run(context)
@@ -444,9 +412,7 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       target = self._target(project_root)
       target.write_text('user content\n', encoding='utf-8')
       step = CreateFileStep(self._FILENAME, self._CONTENT)
@@ -463,9 +429,7 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       symlink_target = project_root / 'user-config.ini'
       symlink_target.write_text('user content\n', encoding='utf-8')
       target = self._target(project_root)
@@ -485,9 +449,7 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       target = self._target(project_root)
       step = CreateFileStep(self._FILENAME, self._CONTENT)
 
@@ -503,9 +465,7 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       target = self._target(project_root)
       step = CreateFileStep(self._FILENAME, self._CONTENT)
       step.run(context)
@@ -532,9 +492,7 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       target = self._target(project_root)
       step = CreateFileStep(self._FILENAME, self._CONTENT)
 
@@ -554,9 +512,7 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       target = self._target(project_root)
       step = CreateFileStep(self._FILENAME, self._CONTENT)
       real_open = Path.open
@@ -592,9 +548,7 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       target = self._target(project_root)
       step = CreateFileStep(self._FILENAME, self._CONTENT)
 
@@ -610,9 +564,7 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       step = CreateFileStep(self._FILENAME, self._CONTENT)
 
       step.run(context, dry_run=True)
@@ -625,9 +577,7 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       self._target(project_root).mkdir()
       step = CreateFileStep(self._FILENAME, self._CONTENT)
 
@@ -640,9 +590,7 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       target = self._target(project_root)
       step = CreateFileStep(self._FILENAME, self._CONTENT)
 

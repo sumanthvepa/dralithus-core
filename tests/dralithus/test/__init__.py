@@ -23,9 +23,13 @@ dralithus/test/__init__.py: Helper classes and functions for unit tests
 # You should have received a copy of the GNU General Public License
 # along with dralithus-core. If not, see <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import Any, Callable, Protocol
 
+from dralithus.project.context import ProjectContext
 from dralithus.project.packages import Packages
 
 
@@ -80,6 +84,23 @@ def write_package_artifacts(
       '\n'.join(local_lines),
       encoding='utf-8')
   return Packages(project_root)
+
+
+@contextmanager
+def project_context(
+  venv_name: str = 'venv'
+) -> Iterator[tuple[Path, ProjectContext]]:
+  """
+    Yield a temporary project root and matching ProjectContext.
+
+    :param venv_name: The virtual environment directory name
+    :return: An iterator yielding the project root and context
+  """
+  with TemporaryDirectory() as temp_directory:
+    project_root = Path(temp_directory)
+    yield project_root, ProjectContext(
+      project_root=project_root,
+      venv_name=venv_name)
 
 
 class CaseData:
