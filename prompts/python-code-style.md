@@ -17,6 +17,17 @@ ALWAYS use 2 spaces for indents.
 ALWAYS use single quoted strings wherever possible, EXCEPT for
 docstrings.
 
+## Naming
+
+Avoid the word `seed` (and its forms such as `seeded`, `seeding`) in
+the names of functions, methods, classes, and variables. Outside of
+biology, `seed` means a value used to initialize a random number
+generator or similar generator function; it is non-intuitive and
+unacceptable when referring to creating files or other artifacts. Any
+use of `seed` in a name requires explicit approval from the user and
+should be avoided wherever possible. Prefer plain alternatives such as
+`create`, `write`, `generate`, or `initialize`.
+
 ## Function Type Annotations
 
 ALWAYS use type annotations for functions and  methods. Here is an example:
