@@ -26,6 +26,8 @@ import sys
 from tempfile import TemporaryDirectory
 import unittest
 
+from parameterized import parameterized
+
 from dralithus.project.context import ProjectContext
 from dralithus.project.create_pyproject_step import CreatePyProjectStep
 from dralithus.project.error import DralithusProjectError
@@ -121,6 +123,39 @@ class TestCreatePyProjectStep(unittest.TestCase):
     if len(version_parts) < 2:
       self.fail(f'Test venv version is not major.minor: {version}')
     return f'>={version_parts[0]}.{version_parts[1]}'
+
+  @classmethod
+  def _malformed_pyproject_text(cls, malformed_case: str) -> str:
+    """
+      Return malformed pyproject.toml text for rejection tests.
+
+      :param malformed_case: The malformed pyproject variant
+      :return: The pyproject.toml text
+    """
+    text = cls._pyproject_text()
+    match malformed_case:
+      case 'invalid_toml':
+        text = '[project\n'
+      case 'missing_required_project_name':
+        text = text.replace('name = "sample-project"\n', '')
+      case 'project_name_mismatch':
+        text = cls._pyproject_text(project_name='other-project')
+      case 'python_version_mismatch':
+        text = cls._pyproject_text(python_requirement='>=2.7')
+      case 'missing_standard_dev_dependency':
+        text = text.replace(
+          '["mypy", "pylint", "parameterized"]',
+          '["mypy", "pylint"]')
+      case 'packages_txt_dependency_mismatch':
+        text = cls._pyproject_text(dependencies=[])
+      case 'package_find_where_mismatch':
+        text = text.replace('where = ["src"]', 'where = ["."]')
+      case 'package_find_include_mismatch':
+        text = cls._pyproject_text(package_name='other_package')
+      case _:
+        raise AssertionError(
+          f'Unknown malformed pyproject case: {malformed_case}')
+    return text
 
   @classmethod
   # pylint: disable-next=too-many-arguments,too-many-positional-arguments
@@ -497,167 +532,45 @@ class TestCreatePyProjectStep(unittest.TestCase):
       with self.assertRaises(DralithusProjectError):
         step.run(context)
 
-  def test_run_rejects_invalid_toml(self) -> None:
+  # noinspection PyUnusedLocal
+  # pylint: disable=unused-argument
+  @parameterized.expand([
+    ('invalid_toml', 'invalid_toml', ''),
+    ('missing_required_project_name', 'missing_required_project_name', ''),
+    ('project_name_mismatch', 'project_name_mismatch', ''),
+    ('python_version_mismatch', 'python_version_mismatch', ''),
+    ('missing_standard_dev_dependency',
+     'missing_standard_dev_dependency',
+     ''),
+    ('packages_txt_dependency_mismatch',
+     'packages_txt_dependency_mismatch',
+     'requests\n'),
+    ('package_find_where_mismatch', 'package_find_where_mismatch', ''),
+    ('package_find_include_mismatch', 'package_find_include_mismatch', '')
+  ])
+  def test_run_rejects_malformed_pyproject(
+    self,
+    name: str,
+    malformed_case: str,
+    packages_text: str
+  ) -> None:
     """
-      Verify run rejects pyproject.toml with invalid TOML syntax.
+      Verify run rejects malformed pyproject.toml content.
 
+      :param name: The parameterized case name
+      :param malformed_case: The malformed pyproject variant
+      :param packages_text: Optional packages.txt content override
       :return: None
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
       context = ProjectContext(project_root=project_root)
       self._create_venv(context)
-      (project_root / 'pyproject.toml').write_text(
-        '[project\n',
-        encoding='utf-8')
-      step = CreatePyProjectStep(
-        'sample-project',
-        'Sample project',
-        'sample_project')
-
-      with self.assertRaises(DralithusProjectError):
-        step.run(context)
-
-  def test_run_rejects_missing_required_project_name(self) -> None:
-    """
-      Verify run rejects pyproject.toml missing project.name.
-
-      :return: None
-    """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
-      self._create_venv(context)
-      text = self._pyproject_text().replace(
-        'name = "sample-project"\n',
-        '')
-      (project_root / 'pyproject.toml').write_text(text, encoding='utf-8')
-      step = CreatePyProjectStep(
-        'sample-project',
-        'Sample project',
-        'sample_project')
-
-      with self.assertRaises(DralithusProjectError):
-        step.run(context)
-
-  def test_run_rejects_project_name_mismatch(self) -> None:
-    """
-      Verify run rejects pyproject.toml with the wrong project name.
-
-      :return: None
-    """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
-      self._create_venv(context)
-      text = self._pyproject_text(project_name='other-project')
-      (project_root / 'pyproject.toml').write_text(text, encoding='utf-8')
-      step = CreatePyProjectStep(
-        'sample-project',
-        'Sample project',
-        'sample_project')
-
-      with self.assertRaises(DralithusProjectError):
-        step.run(context)
-
-  def test_run_rejects_python_version_mismatch(self) -> None:
-    """
-      Verify run rejects pyproject.toml with the wrong Python version.
-
-      :return: None
-    """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
-      self._create_venv(context)
-      text = self._pyproject_text(python_requirement='>=2.7')
-      (project_root / 'pyproject.toml').write_text(text, encoding='utf-8')
-      step = CreatePyProjectStep(
-        'sample-project',
-        'Sample project',
-        'sample_project')
-
-      with self.assertRaises(DralithusProjectError):
-        step.run(context)
-
-  def test_run_rejects_missing_standard_dev_dependency(self) -> None:
-    """
-      Verify run rejects pyproject.toml missing standard dev packages.
-
-      :return: None
-    """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
-      self._create_venv(context)
-      text = self._pyproject_text().replace(
-        '["mypy", "pylint", "parameterized"]',
-        '["mypy", "pylint"]')
-      (project_root / 'pyproject.toml').write_text(text, encoding='utf-8')
-      step = CreatePyProjectStep(
-        'sample-project',
-        'Sample project',
-        'sample_project')
-
-      with self.assertRaises(DralithusProjectError):
-        step.run(context)
-
-  def test_run_rejects_packages_txt_dependency_mismatch(self) -> None:
-    """
-      Verify run rejects dependencies out of sync with packages.txt.
-
-      :return: None
-    """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
-      self._create_venv(context)
-      (project_root / Packages.PACKAGES_FILENAME).write_text(
-        'requests\n',
-        encoding='utf-8')
-      text = self._pyproject_text(dependencies=[])
-      (project_root / 'pyproject.toml').write_text(text, encoding='utf-8')
-      step = CreatePyProjectStep(
-        'sample-project',
-        'Sample project',
-        'sample_project')
-
-      with self.assertRaises(DralithusProjectError):
-        step.run(context)
-
-  def test_run_rejects_package_find_where_mismatch(self) -> None:
-    """
-      Verify run rejects package discovery not rooted at src.
-
-      :return: None
-    """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
-      self._create_venv(context)
-      text = self._pyproject_text().replace(
-        'where = ["src"]',
-        'where = ["."]')
-      (project_root / 'pyproject.toml').write_text(text, encoding='utf-8')
-      step = CreatePyProjectStep(
-        'sample-project',
-        'Sample project',
-        'sample_project')
-
-      with self.assertRaises(DralithusProjectError):
-        step.run(context)
-
-  def test_run_rejects_package_find_include_mismatch(self) -> None:
-    """
-      Verify run rejects package discovery with the wrong include.
-
-      :return: None
-    """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
-      self._create_venv(context)
-      text = self._pyproject_text(package_name='other_package')
+      if packages_text:
+        (project_root / Packages.PACKAGES_FILENAME).write_text(
+          packages_text,
+          encoding='utf-8')
+      text = self._malformed_pyproject_text(malformed_case)
       (project_root / 'pyproject.toml').write_text(text, encoding='utf-8')
       step = CreatePyProjectStep(
         'sample-project',
