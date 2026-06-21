@@ -23,11 +23,10 @@
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
 from pathlib import Path
-from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
 
-from dralithus.project.context import ProjectContext
+from dralithus.test import project_context
 from dralithus.project.create_source_and_test_tree_step import (
   CreateSourceAndTestTreeStep)
 from dralithus.project.error import DralithusProjectError
@@ -114,9 +113,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       src_package = self._src_package(project_root)
       test_package = self._test_package(project_root)
       step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
@@ -149,9 +146,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
 
       step.run(context)
@@ -176,9 +171,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       tests_dir = project_root / 'tests'
       tests_dir.mkdir()
       gitignore = tests_dir / '.gitignore'
@@ -196,9 +189,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       src_package = self._src_package(project_root)
       test_package = self._test_package(project_root)
       src_package.mkdir(parents=True)
@@ -217,9 +208,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       test_package = self._test_package(project_root)
       test_package.mkdir(parents=True)
       init_py = test_package / '__init__.py'
@@ -237,9 +226,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       src_package = self._src_package(project_root)
       src_package.mkdir(parents=True)
       gitignore = src_package / '.gitignore'
@@ -258,9 +245,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       (project_root / 'src').mkdir()
       (project_root / 'src' / self._PACKAGE_NAME).write_text(
         'not a directory\n', encoding='utf-8')
@@ -276,9 +261,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
 
       step.run(context, dry_run=True)
@@ -295,9 +278,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
 
       step.run(context)
@@ -313,9 +294,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       test_package = self._test_package(project_root)
       test_package.mkdir(parents=True)
       init_py = test_package / '__init__.py'
@@ -336,9 +315,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       src_package = self._src_package(project_root)
       test_package = self._test_package(project_root)
       step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
@@ -357,9 +334,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       test_package = self._test_package(project_root)
       step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
 
@@ -381,9 +356,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       test_package = self._test_package(project_root)
       test_package.mkdir(parents=True)
       target = project_root / 'target.txt'
@@ -407,9 +380,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
 
       step.run(context)
@@ -432,9 +403,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       test_package = self._test_package(project_root)
       test_package.mkdir(parents=True)
       init_dir = test_package / '__init__.py'
@@ -454,9 +423,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       test_package = self._test_package(project_root)
       test_package.mkdir(parents=True)
       init_link = test_package / '__init__.py'
@@ -480,9 +447,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       test_package = self._test_package(project_root)
       test_package.mkdir(parents=True)
       target = project_root / 'target.txt'
@@ -508,9 +473,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       test_package = self._test_package(project_root)
       test_package.mkdir(parents=True)
       target_dir = project_root / 'target-dir'
@@ -539,9 +502,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       tests_path = project_root / 'tests'
       tests_path.write_text('not a directory\n', encoding='utf-8')
       step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
@@ -568,9 +529,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
     real_create_file = (
       CreateSourceAndTestTreeStep._create_file)  # pylint: disable=protected-access
 
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
 
       def fail_src_gitignore(path: Path, content: str) -> None:

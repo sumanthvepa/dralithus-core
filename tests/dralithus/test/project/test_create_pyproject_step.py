@@ -28,7 +28,7 @@ import unittest
 
 from parameterized import parameterized
 
-from dralithus.test import write_package_artifacts
+from dralithus.test import project_context, write_package_artifacts
 from dralithus.project.context import ProjectContext
 from dralithus.project.create_pyproject_step import CreatePyProjectStep
 from dralithus.project.error import DralithusProjectError
@@ -251,9 +251,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (_project_root, context):
       self._create_venv(context)
       step = CreatePyProjectStep(
         project_name='sample-project',
@@ -270,9 +268,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root, venv_name='env')
+    with project_context(venv_name='env') as (project_root, context):
       self._create_venv(context)
       step = CreatePyProjectStep(
         project_name='sample-project',
@@ -293,9 +289,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       self._create_venv(context)
       (project_root / Packages.PACKAGES_FILENAME).write_text(
         '# third-party packages\n'
@@ -320,9 +314,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       self._create_venv(context)
       (project_root / Packages.PACKAGES_FILENAME).write_text(
         'requests\n'
@@ -358,9 +350,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       self._create_venv(context)
       (project_root / Packages.LOCAL_PACKAGES_FILENAME).write_text(
         '../common-lib\n',
@@ -384,9 +374,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       self._create_venv(context)
       step = CreatePyProjectStep(
         'sample-project',
@@ -403,9 +391,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (_project_root, context):
       self._create_venv(context, create_packages_txt=False)
       step = CreatePyProjectStep(
         'sample-project',
@@ -421,9 +407,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (_project_root, context):
       step = CreatePyProjectStep(
         'sample-project',
         'Sample project',
@@ -438,9 +422,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (_project_root, context):
       context.venv_path.mkdir()
       step = CreatePyProjectStep(
         'sample-project',
@@ -456,9 +438,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (_project_root, context):
       context.venv_path.mkdir()
       (context.venv_path / 'pyvenv.cfg').write_text(
         'home = /usr/bin\n',
@@ -477,9 +457,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       self._create_venv(context)
       pyproject = project_root / 'pyproject.toml'
       text = self._pyproject_text()
@@ -499,9 +477,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       self._create_venv(context)
       (project_root / 'pyproject.toml').mkdir()
       step = CreatePyProjectStep(
@@ -542,9 +518,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
       :param packages_text: Optional packages.txt content override
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       self._create_venv(context)
       if packages_text:
         (project_root / Packages.PACKAGES_FILENAME).write_text(
@@ -566,9 +540,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       self._create_venv(context)
       step = CreatePyProjectStep(
         'sample-project',
@@ -586,9 +558,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       self._create_venv(context)
       step = CreatePyProjectStep(
         'sample-project',
@@ -607,9 +577,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       self._create_venv(context)
       pyproject = project_root / 'pyproject.toml'
       pyproject.write_text(self._pyproject_text(), encoding='utf-8')
@@ -629,9 +597,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+    with project_context() as (project_root, context):
       self._create_venv(context)
       step = CreatePyProjectStep(
         'sample-project',
