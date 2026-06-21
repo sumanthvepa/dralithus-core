@@ -22,58 +22,14 @@
 # -------------------------------------------------------------------
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import IO
 import unittest
 from unittest import mock
 
+from dralithus.test import FailingWriteFile
 from dralithus.project.context import ProjectContext
 from dralithus.project.create_packages_step import CreatePackagesStep
 from dralithus.project.error import DralithusProjectError
 from dralithus.project.packages import Packages
-
-
-class FailingWriteFile:
-  """
-    Wrap a real open file and fail every write.
-
-    Simulates a write failure (such as a full disk) that strikes
-    after an exclusive open has already created the file on disk.
-  """
-  def __init__(self, file: IO[str]) -> None:
-    """
-      Initialize the failing write wrapper.
-
-      :param file: The real open file to wrap
-      :return: None
-    """
-    self._file = file
-
-  def __enter__(self) -> 'FailingWriteFile':
-    """
-      Enter the context manager.
-
-      :return: This wrapper
-    """
-    return self
-
-  def __exit__(self, *exc_info: object) -> None:
-    """
-      Close the wrapped file on context exit.
-
-      :param exc_info: The exception information, if any
-      :return: None
-    """
-    self._file.close()
-
-  def write(self, _content: str) -> int:
-    """
-      Fail the write.
-
-      :param _content: The content that would have been written
-      :return: Never returns
-      :raises OSError: Always
-    """
-    raise OSError('simulated write failure')
 
 
 class TestCreatePackagesStep(unittest.TestCase):

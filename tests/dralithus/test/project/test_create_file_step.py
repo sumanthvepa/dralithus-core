@@ -26,50 +26,9 @@ from typing import IO
 import unittest
 from unittest import mock
 
-from dralithus.test import project_context
+from dralithus.test import FailingWriteFile, project_context
 from dralithus.project.create_file_step import CreateFileStep
 from dralithus.project.error import DralithusProjectError
-
-
-class FailingWriteFile:
-  """
-    Wrap a real open file and fail every write.
-  """
-  def __init__(self, file: IO[str]) -> None:
-    """
-      Initialize the failing write wrapper.
-
-      :param file: The real open file to wrap
-      :return: None
-    """
-    self._file = file
-
-  def __enter__(self) -> 'FailingWriteFile':
-    """
-      Enter the context manager.
-
-      :return: This wrapper
-    """
-    return self
-
-  def __exit__(self, *exc_info: object) -> None:
-    """
-      Close the wrapped file on context exit.
-
-      :param exc_info: The exception information, if any
-      :return: None
-    """
-    self._file.close()
-
-  def write(self, _content: str) -> int:
-    """
-      Fail the write.
-
-      :param _content: The content that would have been written
-      :return: Never returns
-      :raises OSError: Always
-    """
-    raise OSError('simulated write failure')
 
 
 # pylint: disable-next=too-many-public-methods

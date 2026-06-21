@@ -27,7 +27,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Any, Callable, Protocol
+from typing import Any, Callable, IO, Protocol
 
 from dralithus.project.context import ProjectContext
 from dralithus.project.packages import Packages
@@ -101,6 +101,50 @@ def project_context(
     yield project_root, ProjectContext(
       project_root=project_root,
       venv_name=venv_name)
+
+
+class FailingWriteFile:
+  """
+    Wrap a real open file and fail every write.
+
+    Simulates a write failure (such as a full disk) that strikes
+    after an exclusive open has already created the file on disk.
+  """
+  def __init__(self, file: IO[str]) -> None:
+    """
+      Initialize the failing write wrapper.
+
+      :param file: The real open file to wrap
+      :return: None
+    """
+    self._file = file
+
+  def __enter__(self) -> 'FailingWriteFile':
+    """
+      Enter the context manager.
+
+      :return: This wrapper
+    """
+    return self
+
+  def __exit__(self, *exc_info: object) -> None:
+    """
+      Close the wrapped file on context exit.
+
+      :param exc_info: The exception information, if any
+      :return: None
+    """
+    self._file.close()
+
+  def write(self, _content: str) -> int:
+    """
+      Fail the write.
+
+      :param _content: The content that would have been written
+      :return: Never returns
+      :raises OSError: Always
+    """
+    raise OSError('simulated write failure')
 
 
 class CaseData:
