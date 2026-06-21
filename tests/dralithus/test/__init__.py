@@ -23,13 +23,63 @@ dralithus/test/__init__.py: Helper classes and functions for unit tests
 # You should have received a copy of the GNU General Public License
 # along with dralithus-core. If not, see <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
+from pathlib import Path
 from typing import Any, Callable, Protocol
+
+from dralithus.project.packages import Packages
 
 
 # Private sentinel used to detect whether a caller supplied an
 # expected value. It lets a literal None be a valid expected result,
 # distinct from "no expected value was given".
 _UNSET: Any = object()
+_IMPLICIT_DEV_DEPENDENCIES = ['mypy', 'pylint', 'parameterized']
+
+
+def write_package_artifacts(
+  project_root: Path,
+  production_dependencies: list[str] | None = None,
+  dev_dependencies: list[str] | None = None,
+  local_dependencies: list[str] | None = None,
+  local_dev_dependencies: list[str] | None = None
+) -> Packages:
+  """
+    Write package artifacts and return their Packages model.
+
+    :param project_root: The project root directory
+    :param production_dependencies: The packages.txt dependencies
+    :param dev_dependencies: The full expected dev dependency list
+    :param local_dependencies: The local-packages.txt dependencies
+    :param local_dev_dependencies: The local dev dependencies
+    :return: The Packages model
+  """
+  if production_dependencies is None:
+    production_dependencies = []
+  if dev_dependencies is None:
+    dev_dependencies = _IMPLICIT_DEV_DEPENDENCIES
+  if local_dependencies is None:
+    local_dependencies = []
+  if local_dev_dependencies is None:
+    local_dev_dependencies = []
+  extra_dev_dependencies = [
+    dependency for dependency in dev_dependencies
+    if dependency not in _IMPLICIT_DEV_DEPENDENCIES]
+  package_lines = [
+    *production_dependencies,
+    *[f'{dependency} [dev]'
+      for dependency in extra_dev_dependencies]]
+  local_lines = [
+    *local_dependencies,
+    *[f'{dependency} [dev]'
+      for dependency in local_dev_dependencies]]
+  (project_root / Packages.PACKAGES_FILENAME).write_text(
+    '\n'.join(package_lines),
+    encoding='utf-8')
+  if local_lines:
+    (project_root / Packages.LOCAL_PACKAGES_FILENAME).write_text(
+      '\n'.join(local_lines),
+      encoding='utf-8')
+  return Packages(project_root)
 
 
 class CaseData:

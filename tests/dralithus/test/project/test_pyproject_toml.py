@@ -20,12 +20,12 @@
 # along with this program.  If not, see
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
-# pylint: disable=duplicate-code
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import tomllib
 import unittest
 
+from dralithus.test import write_package_artifacts
 from dralithus.project.error import DralithusProjectError
 from dralithus.project.packages import Packages
 from dralithus.project.pyproject_toml import PyProjectToml
@@ -55,35 +55,13 @@ class TestPyProjectToml(unittest.TestCase):
       :param local_dev_dependencies: The local dev dependencies
       :return: The Packages fixture
     """
-    if production_dependencies is None:
-      production_dependencies = []
-    if dev_dependencies is None:
-      dev_dependencies = cls._implicit_dev_dependencies
-    if local_dependencies is None:
-      local_dependencies = []
-    if local_dev_dependencies is None:
-      local_dev_dependencies = []
-    extra_dev_dependencies = [
-      dependency for dependency in dev_dependencies
-      if dependency not in cls._implicit_dev_dependencies]
     with TemporaryDirectory() as tmpdir:
-      project_root = Path(tmpdir)
-      package_lines = [
-        *production_dependencies,
-        *[f'{dependency} [dev]'
-          for dependency in extra_dev_dependencies]]
-      local_lines = [
-        *local_dependencies,
-        *[f'{dependency} [dev]'
-          for dependency in local_dev_dependencies]]
-      (project_root / Packages.PACKAGES_FILENAME).write_text(
-        '\n'.join(package_lines),
-        encoding='utf-8')
-      if local_lines:
-        (project_root / Packages.LOCAL_PACKAGES_FILENAME).write_text(
-          '\n'.join(local_lines),
-          encoding='utf-8')
-      packages = Packages(project_root)
+      packages = write_package_artifacts(
+        project_root=Path(tmpdir),
+        production_dependencies=production_dependencies,
+        dev_dependencies=dev_dependencies,
+        local_dependencies=local_dependencies,
+        local_dev_dependencies=local_dev_dependencies)
     return packages
 
   @classmethod
