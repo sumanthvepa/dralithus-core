@@ -20,6 +20,7 @@
 # along with this program.  If not, see
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
+from importlib import resources
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import IO
@@ -27,6 +28,7 @@ import unittest
 from unittest import mock
 
 from dralithus.test import FailingWriteFile, project_context
+from dralithus.project.context import ProjectContext
 from dralithus.project.create_file_step import CreateFileStep
 from dralithus.project.error import DralithusProjectError
 
@@ -120,6 +122,60 @@ class TestCreateFileStep(unittest.TestCase):
         self._FILENAME,
         'dralithus.project',
         'missing-resource.txt')
+
+  def test_from_template_resource_renders_context_values(self) -> None:
+    """
+      Verify the template resource factory renders project context
+      values.
+
+      :return: None
+    """
+    with project_context() as (project_root, _context):
+      context = ProjectContext(
+        project_root=project_root,
+        venv_name='env',
+        copyright_holder='Milestone 42',
+        copyright_year=2030)
+      template_directory = project_root / 'templates'
+      template_directory.mkdir()
+      template = template_directory / 'config.ini.j2'
+      template.write_text(
+        'root={{ project_root }}\n'
+        'venv={{ venv_name }}\n'
+        'holder={{ copyright_holder }}\n'
+        'year={{ copyright_year }}\n',
+        encoding='utf-8')
+      with mock.patch.object(
+        resources, 'files', return_value=template_directory
+      ):
+        step = CreateFileStep.from_template_resource(
+          self._FILENAME,
+          'example.templates',
+          'config.ini.j2',
+          context)
+
+      step.run(context)
+
+      self.assertEqual(
+        f'root={project_root}\n'
+        'venv=env\n'
+        'holder=Milestone 42\n'
+        'year=2030\n',
+        self._target(project_root).read_text(encoding='utf-8'))
+
+  def test_from_template_resource_wraps_resource_read_failure(self) -> None:
+    """
+      Verify the template resource factory wraps a read failure.
+
+      :return: None
+    """
+    with project_context() as (_project_root, context):
+      with self.assertRaises(DralithusProjectError):
+        CreateFileStep.from_template_resource(
+          self._FILENAME,
+          'dralithus.project',
+          'missing-resource.txt',
+          context)
 
   def test_run_creates_file_with_supplied_content(self) -> None:
     """

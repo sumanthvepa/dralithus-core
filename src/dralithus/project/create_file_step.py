@@ -20,10 +20,13 @@
 # along with this program.  If not, see
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
+from dataclasses import asdict
 from importlib import resources
 import os
 from pathlib import Path
 from typing import Self, override
+
+from jinja2 import Environment, TemplateError
 
 from dralithus.project.context import ProjectContext
 from dralithus.project.error import DralithusProjectError
@@ -130,6 +133,16 @@ class CreateFileStep(ExecutionStep):
       raise DralithusProjectError(
         f'Could not read file: {path}') from error
 
+  @staticmethod
+  def _template_context(context: ProjectContext) -> dict[str, object]:
+    """
+      Convert a project context into a Jinja2 template context.
+
+      :param context: The shared project creation context
+      :return: The template context dictionary
+    """
+    return asdict(context)
+
   def __init__(self, filename: Path, content: str) -> None:
     """
       Initialize the file creation step.
@@ -219,4 +232,39 @@ class CreateFileStep(ExecutionStep):
     except (ImportError, OSError, TypeError, UnicodeError) as error:
       raise DralithusProjectError(
         f'Could not read package resource: {package}/{resource}') from error
+    return cls(filename, content)
+
+  @classmethod
+  def from_template_resource(
+    cls,
+    filename: Path,
+    package: str,
+    resource: str,
+    context: ProjectContext
+  ) -> Self:
+    """
+      Create a step whose content is rendered from a package template.
+
+      :param filename: The project-relative file to create
+      :param package: The package containing the resource
+      :param resource: The package-relative resource name
+      :param context: The shared project creation context
+      :return: The configured file creation step
+      :raises DralithusProjectError: When the resource cannot be read
+    """
+    try:
+      template_text = resources.files(package).joinpath(
+        resource).read_text(encoding='utf-8')
+      content = Environment(keep_trailing_newline=True).from_string(
+        template_text).render(
+        cls._template_context(context))
+    except (
+      ImportError,
+      OSError,
+      TemplateError,
+      TypeError,
+      UnicodeError
+    ) as error:
+      raise DralithusProjectError(
+        f'Could not render package resource: {package}/{resource}') from error
     return cls(filename, content)
