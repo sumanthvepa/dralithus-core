@@ -20,10 +20,15 @@
 # along with this program.  If not, see
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
+from dataclasses import asdict
+from importlib import resources
 from pathlib import Path
 from typing import Literal, Self
 
+from jinja2 import Environment, TemplateError
+
 from dralithus.project.context import ProjectContext
+from dralithus.project.error import DralithusProjectError
 
 
 class CopyrightHeader:
@@ -34,6 +39,46 @@ class CopyrightHeader:
     renders that template for a target source language using values
     from the project context.
   """
+  @staticmethod
+  def _comment_prefix(language: str) -> str:
+    """
+      Return the line-comment prefix for a source language.
+
+      :param language: The target language
+      :return: The line-comment prefix
+      :raises DralithusProjectError: When language is unsupported
+    """
+    if language == 'python':
+      prefix = '#'
+    elif language == 'javascript':
+      prefix = '//'
+    else:
+      raise DralithusProjectError(
+        f'Unsupported copyright header language: {language}')
+    return prefix
+
+  @staticmethod
+  def _template_context(context: ProjectContext) -> dict[str, object]:
+    """
+      Convert a project context into a Jinja2 template context.
+
+      :param context: The shared project creation context
+      :return: The template context dictionary
+    """
+    return asdict(context)
+
+  @staticmethod
+  def _comment_text(text: str, prefix: str) -> str:
+    """
+      Convert rendered text to line-comment text.
+
+      :param text: The rendered template text
+      :param prefix: The comment prefix to put before each line
+      :return: The line-comment header text
+    """
+    lines = text.splitlines(keepends=True)
+    return ''.join(f'{prefix} {line}' for line in lines)
+
   def __init__(self, template: str) -> None:
     """
       Initialize the copyright header renderer.
@@ -41,7 +86,7 @@ class CopyrightHeader:
       :param template: The template string used to render the header
       :return: None
     """
-    raise NotImplementedError()
+    self._template = template
 
   def text(
     self,
@@ -59,7 +104,14 @@ class CopyrightHeader:
       :param context: The shared project creation context
       :return: The rendered copyright header text
     """
-    raise NotImplementedError()
+    prefix = self._comment_prefix(language)
+    try:
+      rendered = Environment(keep_trailing_newline=True).from_string(
+        self._template).render(self._template_context(context))
+    except TemplateError as error:
+      raise DralithusProjectError(
+        'Could not render copyright header template') from error
+    return self._comment_text(rendered, prefix)
 
   @classmethod
   def from_template_file(cls, template_filename: Path) -> Self:
@@ -69,7 +121,13 @@ class CopyrightHeader:
       :param template_filename: The template file to read
       :return: The configured copyright header renderer
     """
-    raise NotImplementedError()
+    try:
+      template = template_filename.read_text(encoding='utf-8')
+    except (OSError, UnicodeError) as error:
+      raise DralithusProjectError(
+        f'Could not read copyright header template: {template_filename}'
+      ) from error
+    return cls(template)
 
   @classmethod
   def from_template_resource(
@@ -86,4 +144,12 @@ class CopyrightHeader:
       :param context: The shared project creation context
       :return: The configured copyright header renderer
     """
-    raise NotImplementedError()
+    del context
+    try:
+      template = resources.files(package).joinpath(resource).read_text(
+        encoding='utf-8')
+    except (ImportError, OSError, TypeError, UnicodeError) as error:
+      raise DralithusProjectError(
+        f'Could not read copyright header resource: {package}/{resource}'
+      ) from error
+    return cls(template)
