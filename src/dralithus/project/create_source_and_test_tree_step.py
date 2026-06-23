@@ -23,8 +23,10 @@
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
 from datetime import date
+from importlib import resources
 import keyword
 from pathlib import Path
+from string import Template
 from typing import override
 
 from dralithus.project.context import ProjectContext
@@ -52,52 +54,43 @@ class CreateSourceAndTestTreeStep(ExecutionStep):
   """
   _created_files: list[Path]
 
-  def _init_py_content(self) -> str:
+  def _copyleft_header(self, context: ProjectContext) -> str:
+    """
+      Build the generated Python copyleft header.
+
+      :param context: The shared project creation context
+      :return: The generated copyleft header
+    """
+    description = (
+      f'{self._package_name}/test/__init__.py: '
+      f'Unit tests for {self._package_name}.')
+    year = context.copyright_year
+    if year is None:
+      year = date.today().year
+    template = Template(self._copyleft_header_template())
+    return template.substitute(
+      description=description,
+      year=year,
+      copyright_holder=context.copyright_holder)
+
+  def _init_py_content(self, context: ProjectContext) -> str:
     """
       Build the content for the test package __init__.py.
 
-      The content is a module docstring followed by the copyleft
-      header in the Milestone 42 house style. The copyright year is
-      taken from the current date at creation time.
+      The content is a module docstring followed by the generated
+      copyleft header.
 
+      :param context: The shared project creation context
       :return: The text to write to the __init__.py
     """
     description = (
       f'{self._package_name}/test/__init__.py: '
       f'Unit tests for {self._package_name}.')
-    year = date.today().year
     return (
       '"""\n'
       f'  {description}\n'
       '"""\n'
-      '# -----------------------------------------------------------'
-      '--------\n'
-      f'# {description}\n'
-      '#\n'
-      f'# Copyright (C) {year} Sumanth Vepa.\n'
-      '#\n'
-      '# This program is free software: you can redistribute it'
-      ' and/or\n'
-      '# modify it under the terms of the GNU General Public License'
-      ' a\n'
-      '# published by the Free Software Foundation, either version 3'
-      ' of the\n'
-      '# License, or (at your option) any later version.\n'
-      '#\n'
-      '# This program is distributed in the hope that it will be'
-      ' useful,\n'
-      '# but WITHOUT ANY WARRANTY; without even the implied warranty'
-      ' of\n'
-      '# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See'
-      ' the\n'
-      '# GNU General Public License for more details.\n'
-      '#\n'
-      '# You should have received a copy of the GNU General Public'
-      ' License\n'
-      '# along with this program.  If not, see\n'
-      '# <https://www.gnu.org/licenses/>.\n'
-      '# -----------------------------------------------------------'
-      '--------\n')
+      f'{self._copyleft_header(context)}\n')
 
   def _create_file(self, path: Path, content: str) -> None:
     """
@@ -131,7 +124,7 @@ class CreateSourceAndTestTreeStep(ExecutionStep):
       with file:
         file.write(content)
 
-  def _create_initial_files(self, project_root: Path) -> None:
+  def _create_initial_files(self, context: ProjectContext) -> None:
     """
       Create the test package __init__.py and a .gitignore in every
       directory this step is responsible for.
@@ -142,19 +135,20 @@ class CreateSourceAndTestTreeStep(ExecutionStep):
       the tracked-directory principle (every durable directory carries
       a .gitignore).
 
-      :param project_root: The project root directory
+      :param context: The shared project creation context
       :return: None
       :raises DralithusProjectError: When a path already
         exists but is not a regular file, or a file cannot be
         created or written
     """
+    project_root = context.project_root
     src_directory = project_root / 'src'
     src_package = src_directory / self._package_name
     tests_directory = project_root / 'tests'
     tests_parent = tests_directory / self._package_name
     test_package = tests_parent / 'test'
     files = [
-      (test_package / '__init__.py', self._init_py_content()),
+      (test_package / '__init__.py', self._init_py_content(context)),
       (src_directory / '.gitignore', ''),
       (src_package / '.gitignore', ''),
       (tests_directory / '.gitignore', ''),
@@ -185,6 +179,23 @@ class CreateSourceAndTestTreeStep(ExecutionStep):
         raise DralithusProjectError(
           f'Could not remove file: {path}') from error
     self._created_files = []
+
+  @staticmethod
+  def _copyleft_header_template() -> str:
+    """
+      Read the packaged Python copyleft header template.
+
+      :return: The copyleft header template text
+      :raises DralithusProjectError: When the template resource cannot
+        be read
+    """
+    try:
+      template = resources.files('dralithus.project.templates').joinpath(
+        'python-copyleft-header.txt').read_text(encoding='utf-8')
+    except (ImportError, OSError, UnicodeError) as error:
+      raise DralithusProjectError(
+        'Could not read Python copyleft header template') from error
+    return template
 
   @staticmethod
   def _verify_regular_file(path: Path) -> None:
@@ -265,7 +276,7 @@ class CreateSourceAndTestTreeStep(ExecutionStep):
       self._src_mkdir.run(context, dry_run)
       self._tests_mkdir.run(context, dry_run)
       if not dry_run:
-        self._create_initial_files(context.project_root)
+        self._create_initial_files(context)
     except DralithusProjectError:
       self.rollback(context, dry_run)
       raise

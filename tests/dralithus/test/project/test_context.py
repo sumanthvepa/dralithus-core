@@ -44,6 +44,46 @@ class TestProjectContext(unittest.TestCase):
 
       self.assertEqual('venv', context.venv_name)
 
+  def test_default_copyright_holder_is_sumanth_vepa(self) -> None:
+    """
+      Verify that the default copyright holder is Sumanth Vepa.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+
+      self.assertEqual('Sumanth Vepa', context.copyright_holder)
+
+  def test_default_copyright_year_is_none(self) -> None:
+    """
+      Verify that the default copyright year is unspecified.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+
+      self.assertIsNone(context.copyright_year)
+
+  def test_custom_copyright_settings_are_stored(self) -> None:
+    """
+      Verify that custom copyright settings are stored.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(
+        project_root=project_root,
+        copyright_holder='Milestone 42',
+        copyright_year=2030)
+
+      self.assertEqual('Milestone 42', context.copyright_holder)
+      self.assertEqual(2030, context.copyright_year)
+
   def test_default_venv_path_uses_venv_name(self) -> None:
     """
       Verify that the default venv path uses the default venv name.

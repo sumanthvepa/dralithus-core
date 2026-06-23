@@ -22,11 +22,13 @@
 # along with this program.  If not, see
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
+from importlib import resources
 from pathlib import Path
 import unittest
 from unittest import mock
 
 from dralithus.test import project_context
+from dralithus.project.context import ProjectContext
 from dralithus.project.create_source_and_test_tree_step import (
   CreateSourceAndTestTreeStep)
 from dralithus.project.error import DralithusProjectError
@@ -102,6 +104,19 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
 
   # run
 
+  def test_copyleft_header_template_resource_is_readable(self) -> None:
+    """
+      Verify that the copyleft header template resource is readable.
+
+      :return: None
+    """
+    template = resources.files('dralithus.project.templates').joinpath(
+      'python-copyleft-header.txt').read_text(encoding='utf-8')
+
+    self.assertIn('${description}', template)
+    self.assertIn('${copyright_holder}', template)
+    self.assertIn('${year}', template)
+
   def test_run_creates_trees_and_files(self) -> None:
     """
       Verify that run creates both package trees and the
@@ -127,6 +142,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
         test_package / '__init__.py').read_text(encoding='utf-8')
       self.assertTrue(init_text.startswith('"""'))
       self.assertIn(self._PACKAGE_NAME, init_text)
+      self.assertIn('Sumanth Vepa', init_text)
       self.assertIn('GNU General Public License', init_text)
       src_gitignore = src_package / '.gitignore'
       test_gitignore = test_package / '.gitignore'
@@ -134,6 +150,49 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
       self.assertTrue(test_gitignore.is_file())
       self.assertEqual('', src_gitignore.read_text(encoding='utf-8'))
       self.assertEqual('', test_gitignore.read_text(encoding='utf-8'))
+
+  def test_run_uses_custom_copyright_settings(self) -> None:
+    """
+      Verify that run writes the configured copyright holder and year.
+
+      :return: None
+    """
+    with project_context() as (project_root, _context):
+      context = ProjectContext(
+        project_root=project_root,
+        copyright_holder='Milestone 42',
+        copyright_year=2030)
+      test_package = self._test_package(project_root)
+      step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
+
+      step.run(context)
+
+      init_text = (
+        test_package / '__init__.py').read_text(encoding='utf-8')
+      self.assertIn('# Copyright (C) 2030 Milestone 42.', init_text)
+
+  def test_run_keeps_existing_init_py_with_custom_settings(self) -> None:
+    """
+      Verify that custom copyright settings do not overwrite an
+      existing __init__.py.
+
+      :return: None
+    """
+    with project_context() as (project_root, _context):
+      context = ProjectContext(
+        project_root=project_root,
+        copyright_holder='Milestone 42',
+        copyright_year=2030)
+      test_package = self._test_package(project_root)
+      test_package.mkdir(parents=True)
+      init_py = test_package / '__init__.py'
+      init_py.write_text('# existing\n', encoding='utf-8')
+      step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
+
+      step.run(context)
+
+      self.assertEqual(
+        '# existing\n', init_py.read_text(encoding='utf-8'))
 
   def test_run_creates_gitignore_in_every_created_directory(self) -> None:
     """

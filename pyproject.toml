@@ -28,5 +28,9 @@ include = ["dralithus*"]
 namespaces = true
 
 [tool.setuptools.package-data]
-"dralithus.project.templates" = ["pylintrc", "mypy.ini"]
+"dralithus.project.templates" = [
+  "pylintrc",
+  "mypy.ini",
+  "python-copyleft-header.txt",
+]
 "dralithus.project.templates.parameterized" = ["__init__.pyi"]

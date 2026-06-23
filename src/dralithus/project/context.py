@@ -33,6 +33,8 @@ class ProjectContext:
   """
   project_root: Path
   venv_name: str = 'venv'
+  copyright_holder: str = 'Sumanth Vepa'
+  copyright_year: int | None = None
 
   @staticmethod
   def _validate_venv_name(venv_name: str) -> None:
