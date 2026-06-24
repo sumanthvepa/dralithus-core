@@ -26,6 +26,7 @@ from pathlib import Path
 from typing import override
 
 from dralithus.project.context import ProjectContext
+from dralithus.project.copyright_header import CopyrightHeader
 from dralithus.project.execution_step import ExecutionStep
 
 
@@ -34,12 +35,18 @@ class CreatePythonInitFileStep(ExecutionStep):
     Represent a project creation step that creates an __init__.py file
     with a copyright notice in one project-relative directory.
   """
-  def __init__(self, directory: Path) -> None:
+  def __init__(
+    self,
+    directory: Path,
+    copyright_header: CopyrightHeader
+  ) -> None:
     """
       Initialize the Python __init__.py creation step.
 
       :param directory: The project-relative directory that should
         contain the __init__.py file
+      :param copyright_header: The copyright header renderer for the
+        generated __init__.py file
       :return: None
     """
     raise NotImplementedError()
