@@ -22,20 +22,78 @@
 # along with this program.  If not, see
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
+from pathlib import Path
+from tempfile import TemporaryDirectory
 import unittest
+
+from dralithus.project.context import ProjectContext
+from dralithus.project.copyright_header import CopyrightHeader
+from dralithus.project.create_python_init_file_step import (
+  CreatePythonInitFileStep)
+from dralithus.project.error import DralithusProjectError
 
 
 class TestCreatePythonInitFileStep(unittest.TestCase):
   """
     Unit tests for the CreatePythonInitFileStep class.
   """
+  _DIRECTORY = Path('tests') / 'mypkg' / 'test'
+  _TEMPLATE = (
+    'Copyright (C) {{ copyright_year }} {{ copyright_holder }}.\n'
+    'Released under the GPL.\n')
+
+  @classmethod
+  def _init_py(cls, project_root: Path) -> Path:
+    """
+      Return the generated __init__.py path.
+
+      :param project_root: The project root directory
+      :return: The __init__.py path
+    """
+    return project_root / cls._DIRECTORY / '__init__.py'
+
+  @staticmethod
+  def _copyright_header() -> CopyrightHeader:
+    """
+      Return the copyright header renderer for the tests.
+
+      :return: The copyright header renderer
+    """
+    return CopyrightHeader(TestCreatePythonInitFileStep._TEMPLATE)
+
+  @staticmethod
+  def _context(project_root: Path) -> ProjectContext:
+    """
+      Return a project context for init file tests.
+
+      :param project_root: The project root directory
+      :return: The project context
+    """
+    return ProjectContext(
+      project_root=project_root,
+      copyright_holder='Milestone 42',
+      copyright_year=2030)
+
   def test_run_creates_init_py_with_copyright_header(self) -> None:
     """
       Verify run creates __init__.py with the copyright header.
 
       :return: None
     """
-    raise NotImplementedError()
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = self._context(project_root)
+      (project_root / self._DIRECTORY).mkdir(parents=True)
+      step = CreatePythonInitFileStep(
+        self._DIRECTORY,
+        self._copyright_header())
+
+      step.run(context)
+
+      self.assertEqual(
+        '# Copyright (C) 2030 Milestone 42.\n'
+        '# Released under the GPL.\n',
+        self._init_py(project_root).read_text(encoding='utf-8'))
 
   def test_run_uses_project_context_for_header(self) -> None:
     """
@@ -43,7 +101,23 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError()
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(
+        project_root=project_root,
+        copyright_holder='Acme Tools',
+        copyright_year=2035)
+      (project_root / self._DIRECTORY).mkdir(parents=True)
+      step = CreatePythonInitFileStep(
+        self._DIRECTORY,
+        self._copyright_header())
+
+      step.run(context)
+
+      self.assertEqual(
+        '# Copyright (C) 2035 Acme Tools.\n'
+        '# Released under the GPL.\n',
+        self._init_py(project_root).read_text(encoding='utf-8'))
 
   def test_run_preserves_preexisting_init_py(self) -> None:
     """
@@ -51,7 +125,19 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError()
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = self._context(project_root)
+      (project_root / self._DIRECTORY).mkdir(parents=True)
+      init_py = self._init_py(project_root)
+      init_py.write_text('# existing\n', encoding='utf-8')
+      step = CreatePythonInitFileStep(
+        self._DIRECTORY,
+        self._copyright_header())
+
+      step.run(context)
+
+      self.assertEqual('# existing\n', init_py.read_text(encoding='utf-8'))
 
   def test_run_rejects_missing_directory(self) -> None:
     """
@@ -59,7 +145,14 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError()
+    with TemporaryDirectory() as temp_directory:
+      context = self._context(Path(temp_directory))
+      step = CreatePythonInitFileStep(
+        self._DIRECTORY,
+        self._copyright_header())
+
+      with self.assertRaises(DralithusProjectError):
+        step.run(context)
 
   def test_run_rejects_unusable_existing_init_py(self) -> None:
     """
@@ -67,7 +160,17 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError()
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = self._context(project_root)
+      (project_root / self._DIRECTORY).mkdir(parents=True)
+      self._init_py(project_root).mkdir()
+      step = CreatePythonInitFileStep(
+        self._DIRECTORY,
+        self._copyright_header())
+
+      with self.assertRaises(DralithusProjectError):
+        step.run(context)
 
   def test_rollback_removes_created_init_py(self) -> None:
     """
@@ -75,7 +178,18 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError()
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = self._context(project_root)
+      (project_root / self._DIRECTORY).mkdir(parents=True)
+      step = CreatePythonInitFileStep(
+        self._DIRECTORY,
+        self._copyright_header())
+
+      step.run(context)
+      step.rollback(context)
+
+      self.assertFalse(self._init_py(project_root).exists())
 
   def test_rollback_preserves_preexisting_init_py(self) -> None:
     """
@@ -83,7 +197,20 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError()
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = self._context(project_root)
+      (project_root / self._DIRECTORY).mkdir(parents=True)
+      init_py = self._init_py(project_root)
+      init_py.write_text('# existing\n', encoding='utf-8')
+      step = CreatePythonInitFileStep(
+        self._DIRECTORY,
+        self._copyright_header())
+
+      step.run(context)
+      step.rollback(context)
+
+      self.assertEqual('# existing\n', init_py.read_text(encoding='utf-8'))
 
   def test_run_dry_run_creates_nothing(self) -> None:
     """
@@ -91,7 +218,17 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError()
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = self._context(project_root)
+      (project_root / self._DIRECTORY).mkdir(parents=True)
+      step = CreatePythonInitFileStep(
+        self._DIRECTORY,
+        self._copyright_header())
+
+      step.run(context, dry_run=True)
+
+      self.assertFalse(self._init_py(project_root).exists())
 
   def test_run_dry_run_rejects_unusable_existing_init_py(self) -> None:
     """
@@ -99,7 +236,17 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError()
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = self._context(project_root)
+      (project_root / self._DIRECTORY).mkdir(parents=True)
+      self._init_py(project_root).mkdir()
+      step = CreatePythonInitFileStep(
+        self._DIRECTORY,
+        self._copyright_header())
+
+      with self.assertRaises(DralithusProjectError):
+        step.run(context, dry_run=True)
 
   def test_repeated_runs_are_convergent_and_rollback_removes_init_py(
     self
@@ -110,4 +257,16 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError()
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = self._context(project_root)
+      (project_root / self._DIRECTORY).mkdir(parents=True)
+      step = CreatePythonInitFileStep(
+        self._DIRECTORY,
+        self._copyright_header())
+
+      step.run(context)
+      step.run(context)
+      step.rollback(context)
+
+      self.assertFalse(self._init_py(project_root).exists())
