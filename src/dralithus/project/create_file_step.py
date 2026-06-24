@@ -24,7 +24,7 @@ from dataclasses import asdict
 from importlib import resources
 import os
 from pathlib import Path
-from typing import Self, override
+from typing import Protocol, Self, override
 
 from jinja2 import Environment, TemplateError
 
@@ -33,11 +33,39 @@ from dralithus.project.error import DralithusProjectError
 from dralithus.project.execution_step import ExecutionStep
 
 
+# pylint: disable-next=too-few-public-methods
+class FileContentProvider(Protocol):
+  """
+    Represent a callable that provides file content at run time.
+  """
+  def __call__(self, context: ProjectContext, /) -> str:
+    """
+      Return file content for a project context.
+
+      :param context: The shared project creation context
+      :return: The UTF-8 text to write
+    """
+    raise NotImplementedError()
+
+
 class CreateFileStep(ExecutionStep):
   """
     Represent a project creation step that creates one file.
   """
   _file_created: bool
+
+  def _content(self, context: ProjectContext) -> str:
+    """
+      Return the file content for a project context.
+
+      :param context: The shared project creation context
+      :return: The UTF-8 text to write
+    """
+    if isinstance(self._content_source, str):
+      content = self._content_source
+    else:
+      content = self._content_source(context)
+    return content
 
   def _remove_created_file(self, path: Path) -> None:
     """
@@ -56,10 +84,11 @@ class CreateFileStep(ExecutionStep):
         f'Could not remove file: {path}') from error
     self._file_created = False
 
-  def _create_file(self, path: Path) -> None:
+  def _create_file(self, context: ProjectContext, path: Path) -> None:
     """
       Create the target file exclusively.
 
+      :param context: The shared project creation context
       :param path: The target file path
       :return: None
       :raises DralithusProjectError: When the file cannot be created
@@ -78,7 +107,7 @@ class CreateFileStep(ExecutionStep):
       self._file_created = True
       try:
         with file:
-          file.write(self._content)
+          file.write(self._content(context))
       except OSError as error:
         self._remove_created_file(path)
         raise DralithusProjectError(
@@ -143,12 +172,17 @@ class CreateFileStep(ExecutionStep):
     """
     return asdict(context)
 
-  def __init__(self, filename: Path, content: str) -> None:
+  def __init__(
+    self,
+    filename: Path,
+    content: str | FileContentProvider
+  ) -> None:
     """
       Initialize the file creation step.
 
       :param filename: The project-relative file to create
-      :param content: The literal UTF-8 text to write
+      :param content: The literal UTF-8 text to write, or a provider
+        that returns text for the project context
       :return: None
       :raises DralithusProjectError: When filename is absolute
     """
@@ -156,7 +190,7 @@ class CreateFileStep(ExecutionStep):
       raise DralithusProjectError(
         f'Filename must be relative: {filename}')
     self._filename = filename
-    self._content = content
+    self._content_source = content
     self._file_created = False
 
   @override
@@ -177,7 +211,7 @@ class CreateFileStep(ExecutionStep):
       if os.path.lexists(path):
         self._verify_existing_file(path)
     else:
-      self._create_file(path)
+      self._create_file(context, path)
 
   @override
   def rollback(self, context: ProjectContext, dry_run: bool = False) -> None:

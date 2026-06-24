@@ -29,7 +29,9 @@ from unittest import mock
 
 from dralithus.test import FailingWriteFile, project_context
 from dralithus.project.context import ProjectContext
-from dralithus.project.create_file_step import CreateFileStep
+from dralithus.project.create_file_step import (
+  CreateFileStep,
+  FileContentProvider)
 from dralithus.project.error import DralithusProjectError
 
 
@@ -191,6 +193,84 @@ class TestCreateFileStep(unittest.TestCase):
       self.assertEqual(
         self._CONTENT,
         self._target(project_root).read_text(encoding='utf-8'))
+
+  def test_run_creates_file_with_provider_content(self) -> None:
+    """
+      Verify run creates a file with content from a provider.
+
+      :return: None
+    """
+    with project_context() as (project_root, _context):
+      context = ProjectContext(project_root=project_root, venv_name='env')
+
+      def make_content(provider_context: ProjectContext) -> str:
+        """
+          Return content derived from a project context.
+
+          :param provider_context: The project context for file content
+          :return: The generated file content
+        """
+        return f'venv = {provider_context.venv_name}\n'
+
+      content_provider: FileContentProvider = make_content
+      step = CreateFileStep(self._FILENAME, content_provider)
+
+      step.run(context)
+
+      self.assertEqual(
+        'venv = env\n',
+        self._target(project_root).read_text(encoding='utf-8'))
+
+  def test_run_does_not_call_provider_for_preexisting_file(self) -> None:
+    """
+      Verify run preserves an existing file without calling provider.
+
+      :return: None
+    """
+    with project_context() as (project_root, context):
+      target = self._target(project_root)
+      target.write_text('user content\n', encoding='utf-8')
+
+      def make_content(_context: ProjectContext) -> str:
+        """
+          Fail if content is requested for a pre-existing file.
+
+          :param _context: The project context for file content
+          :return: The generated file content
+        """
+        raise AssertionError('provider should not be called')
+
+      content_provider: FileContentProvider = make_content
+      step = CreateFileStep(self._FILENAME, content_provider)
+
+      step.run(context)
+
+      self.assertEqual(
+        'user content\n', target.read_text(encoding='utf-8'))
+
+  def test_run_dry_run_does_not_call_provider_for_missing_file(self) -> None:
+    """
+      Verify dry run over a missing file does not call provider.
+
+      :return: None
+    """
+    with project_context() as (project_root, context):
+
+      def make_content(_context: ProjectContext) -> str:
+        """
+          Fail if content is requested during dry run.
+
+          :param _context: The project context for file content
+          :return: The generated file content
+        """
+        raise AssertionError('provider should not be called')
+
+      content_provider: FileContentProvider = make_content
+      step = CreateFileStep(self._FILENAME, content_provider)
+
+      step.run(context, dry_run=True)
+
+      self.assertFalse(self._target(project_root).exists())
 
   def test_run_preserves_trailing_newline(self) -> None:
     """
@@ -372,6 +452,7 @@ class TestCreateFileStep(unittest.TestCase):
       ) -> IO[str]:
         if path == target and mode == 'r':
           raise OSError('simulated read failure')
+        # noinspection PyTypeChecker
         return real_open(path, mode, encoding=encoding)
 
       with mock.patch.object(Path, 'open', fail_target_read):
@@ -392,6 +473,7 @@ class TestCreateFileStep(unittest.TestCase):
       encoding: str | None = None
     ) -> object:
       # The wrapper (or the caller) is responsible for closing.
+      # noinspection PyTypeChecker
       # pylint: disable-next=consider-using-with
       file = real_open(path, mode, encoding=encoding)
       if mode == 'x':
@@ -492,6 +574,7 @@ class TestCreateFileStep(unittest.TestCase):
       ) -> None:
         if path == target:
           raise OSError('simulated removal failure')
+        # noinspection PyTypeChecker
         real_unlink(path, missing_ok=missing_ok)
 
       with mock.patch.object(Path, 'unlink', fail_target_unlink):
@@ -540,6 +623,7 @@ class TestCreateFileStep(unittest.TestCase):
       ) -> object:
         nonlocal fail_write
         # The wrapper (or the caller) is responsible for closing.
+        # noinspection PyTypeChecker
         # pylint: disable-next=consider-using-with
         file = real_open(path, mode, encoding=encoding)
         if mode == 'x' and fail_write:
