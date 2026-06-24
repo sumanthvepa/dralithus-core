@@ -27,6 +27,7 @@ from typing import override
 
 from dralithus.project.context import ProjectContext
 from dralithus.project.copyright_header import CopyrightHeader
+from dralithus.project.create_file_step import CreateFileStep
 from dralithus.project.execution_step import ExecutionStep
 
 
@@ -35,6 +36,15 @@ class CreatePythonInitFileStep(ExecutionStep):
     Represent a project creation step that creates an __init__.py file
     with a copyright notice in one project-relative directory.
   """
+  def _content(self, context: ProjectContext) -> str:
+    """
+      Return the generated __init__.py file content.
+
+      :param context: The shared project creation context
+      :return: The UTF-8 text to write
+    """
+    return self._copyright_header.text('python', context)
+
   def __init__(
     self,
     directory: Path,
@@ -49,7 +59,19 @@ class CreatePythonInitFileStep(ExecutionStep):
         generated __init__.py file
       :return: None
     """
-    raise NotImplementedError()
+    self._copyright_header = copyright_header
+    self._create_file_step = CreateFileStep(
+      directory / self.init_filename,
+      self._content)
+
+  @property
+  def init_filename(self) -> str:
+    """
+      Return the Python package initializer filename.
+
+      :return: The initializer filename
+    """
+    return '__init__.py'
 
   @override
   def run(self, context: ProjectContext, dry_run: bool = False) -> None:
@@ -61,7 +83,7 @@ class CreatePythonInitFileStep(ExecutionStep):
         changing the file system
       :return: None
     """
-    raise NotImplementedError()
+    self._create_file_step.run(context, dry_run)
 
   @override
   def rollback(self, context: ProjectContext, dry_run: bool = False) -> None:
@@ -72,4 +94,4 @@ class CreatePythonInitFileStep(ExecutionStep):
       :param dry_run: True if the step should change nothing
       :return: None
     """
-    raise NotImplementedError()
+    self._create_file_step.rollback(context, dry_run)
