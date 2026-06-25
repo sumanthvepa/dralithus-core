@@ -81,7 +81,11 @@ class TestCreatePylintConfigurationStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       step = CreatePylintConfigurationStep()
 
       step.run(context)
@@ -98,7 +102,11 @@ class TestCreatePylintConfigurationStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       step = CreatePylintConfigurationStep()
 
       step.run(context)
@@ -115,7 +123,11 @@ class TestCreatePylintConfigurationStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       pylintrc = self._pylintrc(project_root)
       pylintrc.write_text('user config\n', encoding='utf-8')
       step = CreatePylintConfigurationStep()
@@ -132,7 +144,11 @@ class TestCreatePylintConfigurationStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       step = CreatePylintConfigurationStep()
 
       step.run(context)
@@ -148,7 +164,11 @@ class TestCreatePylintConfigurationStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       pylintrc = self._pylintrc(project_root)
       pylintrc.write_text('user config\n', encoding='utf-8')
       step = CreatePylintConfigurationStep()
@@ -166,7 +186,11 @@ class TestCreatePylintConfigurationStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       step = CreatePylintConfigurationStep()
 
       step.run(context, dry_run=True)
@@ -181,7 +205,11 @@ class TestCreatePylintConfigurationStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       self._pylintrc(project_root).mkdir()
       step = CreatePylintConfigurationStep()
 
