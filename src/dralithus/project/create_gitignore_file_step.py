@@ -53,24 +53,22 @@ class CreateGitIgnoreFileStep(ExecutionStep):
       '')
 
   @override
-  def run(self, context: ProjectContext, dry_run: bool = False) -> None:
+  def run(self, dry_run: bool = False) -> None:
     """
       Run the .gitignore creation step.
 
-      :param context: The shared project creation context
       :param dry_run: True if the step should validate without
         changing the file system
       :return: None
     """
-    self._create_file_step.run(context, dry_run)
+    self._create_file_step.run(dry_run)
 
   @override
-  def rollback(self, context: ProjectContext, dry_run: bool = False) -> None:
+  def rollback(self, dry_run: bool = False) -> None:
     """
       Roll back the .gitignore creation step.
 
-      :param context: The shared project creation context
       :param dry_run: True if the step should change nothing
       :return: None
     """
-    self._create_file_step.rollback(context, dry_run)
+    self._create_file_step.rollback(dry_run)

@@ -50,7 +50,7 @@ class TestMkdirStep(unittest.TestCase):
         copyright_year=2026)
       step = MkdirStep(context, Path('src'))
 
-      step.run(context)
+      step.run()
 
       self.assertTrue((project_root / 'src').is_dir())
 
@@ -70,7 +70,7 @@ class TestMkdirStep(unittest.TestCase):
       target = Path('src') / 'dralithus' / 'project'
       step = MkdirStep(context, target)
 
-      step.run(context)
+      step.run()
 
       self.assertTrue((project_root / target).is_dir())
 
@@ -89,7 +89,7 @@ class TestMkdirStep(unittest.TestCase):
         copyright_year=2026)
       step = MkdirStep(context, Path('src'))
 
-      step.run(context, dry_run=True)
+      step.run(dry_run=True)
 
       self.assertFalse((project_root / 'src').exists())
 
@@ -108,8 +108,8 @@ class TestMkdirStep(unittest.TestCase):
         copyright_year=2026)
       step = MkdirStep(context, Path('src'))
 
-      step.run(context)
-      step.rollback(context)
+      step.run()
+      step.rollback()
 
       self.assertFalse((project_root / 'src').exists())
 
@@ -128,9 +128,9 @@ class TestMkdirStep(unittest.TestCase):
         copyright_year=2026)
       step = MkdirStep(context, Path('src'))
 
-      step.run(context)
-      step.run(context)
-      step.rollback(context)
+      step.run()
+      step.run()
+      step.rollback()
 
       self.assertFalse((project_root / 'src').exists())
 
@@ -152,8 +152,8 @@ class TestMkdirStep(unittest.TestCase):
       target = Path('src') / 'dralithus' / 'project'
       step = MkdirStep(context, target)
 
-      step.run(context)
-      step.rollback(context)
+      step.run()
+      step.rollback()
 
       self.assertFalse((project_root / target).exists())
       self.assertFalse((project_root / 'src' / 'dralithus').exists())
@@ -179,8 +179,8 @@ class TestMkdirStep(unittest.TestCase):
       preexisting_parent.mkdir()
       step = MkdirStep(context, target)
 
-      step.run(context)
-      step.rollback(context)
+      step.run()
+      step.rollback()
 
       self.assertFalse((project_root / target).exists())
       self.assertFalse((project_root / 'src' / 'dralithus').exists())
@@ -201,8 +201,8 @@ class TestMkdirStep(unittest.TestCase):
         copyright_year=2026)
       step = MkdirStep(context, Path('src'))
 
-      step.run(context)
-      step.rollback(context, dry_run=True)
+      step.run()
+      step.rollback(dry_run=True)
 
       self.assertTrue((project_root / 'src').is_dir())
 
@@ -223,8 +223,8 @@ class TestMkdirStep(unittest.TestCase):
       target.mkdir()
       step = MkdirStep(context, Path('src'))
 
-      step.run(context)
-      step.rollback(context)
+      step.run()
+      step.rollback()
 
       self.assertTrue(target.is_dir())
 
@@ -244,11 +244,11 @@ class TestMkdirStep(unittest.TestCase):
       target = project_root / 'src'
       step = MkdirStep(context, Path('src'))
 
-      step.run(context)
+      step.run()
       (target / 'module.py').touch()
 
       with self.assertRaises(DralithusProjectError):
-        step.rollback(context)
+        step.rollback()
 
       self.assertTrue(target.is_dir())
       self.assertTrue((target / 'module.py').is_file())
@@ -269,4 +269,4 @@ class TestMkdirStep(unittest.TestCase):
 
       with self.assertRaises(DralithusProjectError):
         step = MkdirStep(context, project_root / 'src')
-        step.run(context)
+        step.run()

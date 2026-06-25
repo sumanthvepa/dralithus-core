@@ -47,11 +47,10 @@ class CreateMypyConfigurationStep(ExecutionStep):
     parameterized_gitignore: CreateFileStep
     parameterized_stub: CreateFileStep
 
-  def _run_dry_run(self, context: ProjectContext) -> None:
+  def _run_dry_run(self) -> None:
     """
       Validate existing mypy configuration state without changing it.
 
-      :param context: The shared project creation context
       :return: None
       :raises DralithusProjectError: When existing mypy configuration
         state cannot be accepted
@@ -60,13 +59,13 @@ class CreateMypyConfigurationStep(ExecutionStep):
     # directory steps validate without creating directories. Running
     # child file steps when their parent directories are absent would
     # fail validation for paths this composite step normally creates.
-    self._steps.mypy_ini.run(context, dry_run=True)
-    self._steps.stubs_parameterized_directory.run(context, dry_run=True)
-    if (context.project_root / 'stubs').is_dir():
-      self._steps.stubs_gitignore.run(context, dry_run=True)
-    if (context.project_root / 'stubs' / 'parameterized').is_dir():
-      self._steps.parameterized_gitignore.run(context, dry_run=True)
-      self._steps.parameterized_stub.run(context, dry_run=True)
+    self._steps.mypy_ini.run(dry_run=True)
+    self._steps.stubs_parameterized_directory.run(dry_run=True)
+    if (self._context.project_root / 'stubs').is_dir():
+      self._steps.stubs_gitignore.run(dry_run=True)
+    if (self._context.project_root / 'stubs' / 'parameterized').is_dir():
+      self._steps.parameterized_gitignore.run(dry_run=True)
+      self._steps.parameterized_stub.run(dry_run=True)
 
   def __init__(self, context: ProjectContext) -> None:
     """
@@ -96,11 +95,10 @@ class CreateMypyConfigurationStep(ExecutionStep):
     )
 
   @override
-  def run(self, context: ProjectContext, dry_run: bool = False) -> None:
+  def run(self, dry_run: bool = False) -> None:
     """
       Run the mypy configuration creation step.
 
-      :param context: The shared project creation context
       :param dry_run: True if the step should validate without
         changing the file system
       :return: None
@@ -110,25 +108,24 @@ class CreateMypyConfigurationStep(ExecutionStep):
     if dry_run:
       # See comment in _run_dry_run() for why dry_run needs to be
       # handled separately.
-      self._run_dry_run(context)
+      self._run_dry_run()
     else:
       try:
         for step in self._steps:
-          step.run(context)
+          step.run()
       except DralithusProjectError:
-        self.rollback(context)
+        self.rollback()
         raise
 
   @override
-  def rollback(self, context: ProjectContext, dry_run: bool = False) -> None:
+  def rollback(self, dry_run: bool = False) -> None:
     """
       Roll back the mypy configuration creation step.
 
-      :param context: The shared project creation context
       :param dry_run: True if the step should change nothing
       :return: None
       :raises DralithusProjectError: When an owned mypy artifact
         cannot be removed
     """
     for step in reversed(self._steps):
-      step.rollback(context, dry_run)
+      step.rollback(dry_run)

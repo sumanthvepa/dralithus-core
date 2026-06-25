@@ -55,7 +55,7 @@ class TestCreateVenvStep(unittest.TestCase):
       step = CreateVenvStep(context, self._python_executable())
       target = project_root / 'venv'
 
-      step.run(context)
+      step.run()
 
       self.assertTrue(target.is_dir())
       self.assertTrue((target / 'pyvenv.cfg').is_file())
@@ -70,7 +70,7 @@ class TestCreateVenvStep(unittest.TestCase):
       step = CreateVenvStep(context, self._python_executable())
       target = context.venv_path
 
-      step.run(context)
+      step.run()
 
       self.assertTrue(target.is_dir())
       self.assertTrue((target / 'pyvenv.cfg').is_file())
@@ -84,7 +84,7 @@ class TestCreateVenvStep(unittest.TestCase):
     with project_context() as (project_root, context):
       step = CreateVenvStep(context, self._python_executable())
 
-      step.run(context, dry_run=True)
+      step.run(dry_run=True)
 
       self.assertFalse((project_root / 'venv').exists())
 
@@ -99,7 +99,7 @@ class TestCreateVenvStep(unittest.TestCase):
       step = CreateVenvStep(context, self._python_executable())
 
       with self.assertRaises(DralithusProjectError):
-        step.run(context, dry_run=True)
+        step.run(dry_run=True)
 
   def test_rollback_removes_venv_created_by_step(self) -> None:
     """
@@ -111,8 +111,8 @@ class TestCreateVenvStep(unittest.TestCase):
       step = CreateVenvStep(context, self._python_executable())
       target = project_root / 'venv'
 
-      step.run(context)
-      step.rollback(context)
+      step.run()
+      step.rollback()
 
       self.assertFalse(target.exists())
 
@@ -126,10 +126,10 @@ class TestCreateVenvStep(unittest.TestCase):
       step = CreateVenvStep(context, self._python_executable())
       target = project_root / 'venv'
 
-      step.run(context)
+      step.run()
       self.assertTrue(target.is_dir())
-      step.run(context)
-      step.rollback(context)
+      step.run()
+      step.rollback()
 
       self.assertFalse(target.exists())
 
@@ -143,8 +143,8 @@ class TestCreateVenvStep(unittest.TestCase):
       step = CreateVenvStep(context, self._python_executable())
       target = project_root / 'venv'
 
-      step.run(context)
-      step.rollback(context, dry_run=True)
+      step.run()
+      step.rollback(dry_run=True)
 
       self.assertTrue(target.is_dir())
 
@@ -157,11 +157,11 @@ class TestCreateVenvStep(unittest.TestCase):
     with project_context() as (project_root, context):
       target = project_root / 'venv'
       step = CreateVenvStep(context, self._python_executable())
-      step.run(context)
+      step.run()
       step = CreateVenvStep(context, self._python_executable())
 
-      step.run(context)
-      step.rollback(context)
+      step.run()
+      step.rollback()
 
       self.assertTrue(target.is_dir())
       self.assertTrue((target / 'pyvenv.cfg').is_file())
@@ -178,7 +178,7 @@ class TestCreateVenvStep(unittest.TestCase):
       step = CreateVenvStep(context, self._python_executable())
 
       with self.assertRaisesRegex(DralithusProjectError, 'Path is not a venv'):
-        step.run(context)
+        step.run()
 
       self.assertTrue(target.is_dir())
 
@@ -263,7 +263,7 @@ class TestCreateVenvStep(unittest.TestCase):
       step = CreateVenvStep(context, self._python_executable())
 
       with self.assertRaises(DralithusProjectError):
-        step.run(context)
+        step.run()
 
   def test_init_wraps_python_execution_failure(self) -> None:
     """
@@ -296,12 +296,12 @@ class TestCreateVenvStep(unittest.TestCase):
       step = CreateVenvStep(context, self._python_executable())
       target = project_root / 'venv'
 
-      step.run(context)
-      step.rollback(context, dry_run=True)
+      step.run()
+      step.rollback(dry_run=True)
       target.rename(project_root / 'saved-venv')
       target.touch()
 
       with self.assertRaises(DralithusProjectError):
-        step.rollback(context)
+        step.rollback()
 
       self.assertTrue(target.is_file())

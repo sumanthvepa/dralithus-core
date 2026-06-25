@@ -90,7 +90,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
       test_package = self._test_package(project_root)
       step = CreateSourceAndTestTreeStep(context)
 
-      step.run(context)
+      step.run()
 
       self.assertTrue(src_package.is_dir())
       self.assertTrue(test_package.is_dir())
@@ -123,7 +123,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
       test_package = self._test_package(project_root)
       step = CreateSourceAndTestTreeStep(context)
 
-      step.run(context)
+      step.run()
 
       init_text = (
         test_package / '__init__.py').read_text(encoding='utf-8')
@@ -148,7 +148,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
       init_py.write_text('# existing\n', encoding='utf-8')
       step = CreateSourceAndTestTreeStep(context)
 
-      step.run(context)
+      step.run()
 
       self.assertEqual(
         '# existing\n', init_py.read_text(encoding='utf-8'))
@@ -167,7 +167,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
     with project_context() as (project_root, context):
       step = CreateSourceAndTestTreeStep(context)
 
-      step.run(context)
+      step.run()
 
       directories = [
         project_root / 'src',
@@ -196,7 +196,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
       gitignore.write_text('*.log\n', encoding='utf-8')
       step = CreateSourceAndTestTreeStep(context)
 
-      step.run(context)
+      step.run()
 
       self.assertEqual('*.log\n', gitignore.read_text(encoding='utf-8'))
 
@@ -214,7 +214,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
       test_package.mkdir(parents=True)
       step = CreateSourceAndTestTreeStep(context)
 
-      step.run(context)
+      step.run()
 
       self.assertTrue(src_package.is_dir())
       self.assertTrue(test_package.is_dir())
@@ -233,7 +233,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
       init_py.write_text('# existing\n', encoding='utf-8')
       step = CreateSourceAndTestTreeStep(context)
 
-      step.run(context)
+      step.run()
 
       self.assertEqual(
         '# existing\n', init_py.read_text(encoding='utf-8'))
@@ -251,7 +251,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
       gitignore.write_text('*.pyc\n', encoding='utf-8')
       step = CreateSourceAndTestTreeStep(context)
 
-      step.run(context)
+      step.run()
 
       self.assertEqual(
         '*.pyc\n', gitignore.read_text(encoding='utf-8'))
@@ -270,7 +270,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
       step = CreateSourceAndTestTreeStep(context)
 
       with self.assertRaises(DralithusProjectError):
-        step.run(context)
+        step.run()
 
   def test_run_dry_run_creates_nothing(self) -> None:
     """
@@ -282,7 +282,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
     with project_context() as (project_root, context):
       step = CreateSourceAndTestTreeStep(context)
 
-      step.run(context, dry_run=True)
+      step.run(dry_run=True)
 
       self.assertFalse((project_root / 'src').exists())
       self.assertFalse((project_root / 'tests').exists())
@@ -299,8 +299,8 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
     with project_context() as (project_root, context):
       step = CreateSourceAndTestTreeStep(context)
 
-      step.run(context)
-      step.rollback(context)
+      step.run()
+      step.rollback()
 
       self.assertFalse((project_root / 'src').exists())
       self.assertFalse((project_root / 'tests').exists())
@@ -319,8 +319,8 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
       init_py.write_text('# existing\n', encoding='utf-8')
       step = CreateSourceAndTestTreeStep(context)
 
-      step.run(context)
-      step.rollback(context)
+      step.run()
+      step.rollback()
 
       self.assertTrue(test_package.is_dir())
       self.assertEqual(
@@ -338,8 +338,8 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
       test_package = self._test_package(project_root)
       step = CreateSourceAndTestTreeStep(context)
 
-      step.run(context)
-      step.rollback(context, dry_run=True)
+      step.run()
+      step.rollback(dry_run=True)
 
       self.assertTrue(src_package.is_dir())
       self.assertTrue(test_package.is_dir())
@@ -356,9 +356,9 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
       test_package = self._test_package(project_root)
       step = CreateSourceAndTestTreeStep(context)
 
-      step.run(context)
+      step.run()
       (test_package / '__init__.py').unlink()
-      step.rollback(context)
+      step.rollback()
 
       self.assertFalse((project_root / 'src').exists())
       self.assertFalse((project_root / 'tests').exists())
@@ -383,8 +383,8 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
       init_link.symlink_to(target)
       step = CreateSourceAndTestTreeStep(context)
 
-      step.run(context)
-      step.rollback(context)
+      step.run()
+      step.rollback()
 
       self.assertTrue(init_link.is_symlink())
       self.assertEqual(
@@ -401,9 +401,9 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
     with project_context() as (project_root, context):
       step = CreateSourceAndTestTreeStep(context)
 
-      step.run(context)
-      step.run(context)
-      step.rollback(context)
+      step.run()
+      step.run()
+      step.rollback()
 
       self.assertFalse((project_root / 'src').exists())
       self.assertFalse((project_root / 'tests').exists())
@@ -429,7 +429,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
       step = CreateSourceAndTestTreeStep(context)
 
       with self.assertRaises(DralithusProjectError):
-        step.run(context)
+        step.run()
 
       self.assertTrue(init_dir.is_dir())
       self.assertFalse((project_root / 'src').exists())
@@ -449,7 +449,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
       step = CreateSourceAndTestTreeStep(context)
 
       with self.assertRaises(DralithusProjectError):
-        step.run(context)
+        step.run()
 
       self.assertTrue(init_link.is_symlink())
       self.assertFalse((project_root / 'src').exists())
@@ -474,7 +474,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
       init_link.symlink_to(target)
       step = CreateSourceAndTestTreeStep(context)
 
-      step.run(context)
+      step.run()
 
       self.assertTrue(init_link.is_symlink())
       self.assertEqual(
@@ -501,7 +501,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
       step = CreateSourceAndTestTreeStep(context)
 
       with self.assertRaises(DralithusProjectError):
-        step.run(context)
+        step.run()
 
       self.assertTrue(init_link.is_symlink())
       self.assertFalse((project_root / 'src').exists())
@@ -526,7 +526,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
       step = CreateSourceAndTestTreeStep(context)
 
       with self.assertRaises(DralithusProjectError):
-        step.run(context)
+        step.run()
 
       self.assertFalse((project_root / 'src').exists())
       self.assertTrue(tests_path.is_file())
@@ -561,7 +561,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
         side_effect=fail_src_gitignore
       ):
         with self.assertRaises(DralithusProjectError):
-          step.run(context)
+          step.run()
 
       self.assertFalse((project_root / 'src').exists())
       self.assertFalse((project_root / 'tests').exists())

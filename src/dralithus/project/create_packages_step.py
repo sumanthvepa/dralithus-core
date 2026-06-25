@@ -148,11 +148,10 @@ class CreatePackagesStep(ExecutionStep):
     self._created_files = []
 
   @override
-  def run(self, context: ProjectContext, dry_run: bool = False) -> None:
+  def run(self, dry_run: bool = False) -> None:
     """
       Run the packages creation step.
 
-      :param context: The shared project creation context
       :param dry_run: True if the step should report what it would
         do without changing the file system
       :return: None
@@ -162,22 +161,21 @@ class CreatePackagesStep(ExecutionStep):
     if not dry_run:
       # The failure cleanup is needed because the orchestrator
       # never rolls back a step whose own run raised.
-      self._create_missing_files(context.project_root)
+      self._create_missing_files(self._context.project_root)
       try:
-        Packages(context.project_root)
+        Packages(self._context.project_root)
       except DralithusProjectError:
         self._remove_created_files()
         raise
 
   @override
-  def rollback(self, context: ProjectContext, dry_run: bool = False) -> None:
+  def rollback(self, dry_run: bool = False) -> None:
     """
       Roll back the packages creation step.
 
       Removes only the dependency files created by this step's run.
       Pre-existing dependency files are left in place.
 
-      :param context: The shared project creation context
       :param dry_run: True if the step should report what it would
         do without changing the file system
       :return: None

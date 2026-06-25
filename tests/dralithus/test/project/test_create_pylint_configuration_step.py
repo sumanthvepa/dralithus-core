@@ -88,7 +88,7 @@ class TestCreatePylintConfigurationStep(unittest.TestCase):
         copyright_year=2026)
       step = CreatePylintConfigurationStep(context)
 
-      step.run(context)
+      step.run()
 
       self.assertEqual(
         self._pylintrc_template_content(),
@@ -109,7 +109,7 @@ class TestCreatePylintConfigurationStep(unittest.TestCase):
         copyright_year=2026)
       step = CreatePylintConfigurationStep(context)
 
-      step.run(context)
+      step.run()
 
       self.assertIn(
         self._INIT_HOOK,
@@ -132,7 +132,7 @@ class TestCreatePylintConfigurationStep(unittest.TestCase):
       pylintrc.write_text('user config\n', encoding='utf-8')
       step = CreatePylintConfigurationStep(context)
 
-      step.run(context)
+      step.run()
 
       self.assertEqual('user config\n', pylintrc.read_text(encoding='utf-8'))
 
@@ -151,8 +151,8 @@ class TestCreatePylintConfigurationStep(unittest.TestCase):
         copyright_year=2026)
       step = CreatePylintConfigurationStep(context)
 
-      step.run(context)
-      step.rollback(context)
+      step.run()
+      step.rollback()
 
       self.assertFalse(self._pylintrc(project_root).exists())
 
@@ -173,8 +173,8 @@ class TestCreatePylintConfigurationStep(unittest.TestCase):
       pylintrc.write_text('user config\n', encoding='utf-8')
       step = CreatePylintConfigurationStep(context)
 
-      step.run(context)
-      step.rollback(context)
+      step.run()
+      step.rollback()
 
       self.assertEqual('user config\n', pylintrc.read_text(encoding='utf-8'))
 
@@ -193,7 +193,7 @@ class TestCreatePylintConfigurationStep(unittest.TestCase):
         copyright_year=2026)
       step = CreatePylintConfigurationStep(context)
 
-      step.run(context, dry_run=True)
+      step.run(dry_run=True)
 
       self.assertFalse(self._pylintrc(project_root).exists())
 
@@ -214,4 +214,4 @@ class TestCreatePylintConfigurationStep(unittest.TestCase):
       step = CreatePylintConfigurationStep(context)
 
       with self.assertRaises(DralithusProjectError):
-        step.run(context, dry_run=True)
+        step.run(dry_run=True)

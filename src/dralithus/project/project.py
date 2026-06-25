@@ -51,9 +51,9 @@ class Project:  # pylint: disable=too-few-public-methods
     completed_steps: list[ExecutionStep] = []
     try:
       for step in self._creation_steps:
-        step.run(self._context, dry_run)
+        step.run(dry_run)
         completed_steps.append(step)
     except DralithusProjectError:
       for step in reversed(completed_steps):
-        step.rollback(self._context, dry_run)
+        step.rollback(dry_run)
       raise

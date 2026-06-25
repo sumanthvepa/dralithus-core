@@ -172,29 +172,28 @@ class CreateVenvStep(ExecutionStep):
         f'Could not remove venv: {venv_dir}') from error
 
   @override
-  def run(self, context: ProjectContext, dry_run: bool = False) -> None:
+  def run(self, dry_run: bool = False) -> None:
     """
       Run the Python venv creation step.
 
-      :param context: The shared project creation context
       :param dry_run: True if the step should report what it would
         do without changing the file system
       :return: None
       :raises DralithusProjectError: When venv creation fails
     """
-    if not self._venv_exists(context.venv_path):
-      self._created_venv = self._create_venv(context.venv_path, dry_run)
+    if not self._venv_exists(self._context.venv_path):
+      self._created_venv = self._create_venv(
+        self._context.venv_path, dry_run)
 
   @override
-  def rollback(self, context: ProjectContext, dry_run: bool = False) -> None:
+  def rollback(self, dry_run: bool = False) -> None:
     """
       Roll back the Python venv creation step.
 
-      :param context: The shared project creation context
       :param dry_run: True if the step should report what it would
         do without changing the file system
       :return: None
       :raises DralithusProjectError: When venv removal fails
     """
     if self._created_venv and not dry_run:
-      self._created_venv = self._delete_venv(context.venv_path)
+      self._created_venv = self._delete_venv(self._context.venv_path)

@@ -55,7 +55,7 @@ class TestCreatePackagesStep(unittest.TestCase):
         project_root / Packages.LOCAL_PACKAGES_FILENAME)
       step = CreatePackagesStep(context)
 
-      step.run(context)
+      step.run()
 
       self.assertTrue(packages_txt.is_file())
       self.assertTrue(local_packages_txt.is_file())
@@ -82,7 +82,7 @@ class TestCreatePackagesStep(unittest.TestCase):
       packages_txt.write_text('requests\n', encoding='utf-8')
       step = CreatePackagesStep(context)
 
-      step.run(context)
+      step.run()
 
       self.assertEqual(
         'requests\n', packages_txt.read_text(encoding='utf-8'))
@@ -108,7 +108,7 @@ class TestCreatePackagesStep(unittest.TestCase):
       local_packages_txt.write_text('../common-lib\n', encoding='utf-8')
       step = CreatePackagesStep(context)
 
-      step.run(context)
+      step.run()
 
       self.assertEqual(
         '../common-lib\n',
@@ -131,7 +131,7 @@ class TestCreatePackagesStep(unittest.TestCase):
         copyright_year=2026)
       step = CreatePackagesStep(context)
 
-      step.run(context, dry_run=True)
+      step.run(dry_run=True)
 
       self.assertFalse(
         (project_root / Packages.PACKAGES_FILENAME).exists())
@@ -160,7 +160,7 @@ class TestCreatePackagesStep(unittest.TestCase):
         DralithusProjectError,
         'Could not read dependency file'
       ):
-        step.run(context)
+        step.run()
 
   def test_run_writes_header_content(self) -> None:
     """
@@ -178,7 +178,7 @@ class TestCreatePackagesStep(unittest.TestCase):
         copyright_year=2026)
       step = CreatePackagesStep(context)
 
-      step.run(context)
+      step.run()
 
       packages_text = (
         project_root / Packages.PACKAGES_FILENAME).read_text(
@@ -229,7 +229,7 @@ class TestCreatePackagesStep(unittest.TestCase):
         CreatePackagesStep, '_create_file', side_effect=fail_local
       ):
         with self.assertRaises(DralithusProjectError) as context_manager:
-          step.run(context)
+          step.run()
 
       self.assertEqual(
         f'Could not write dependency file: {project_root}',
@@ -276,7 +276,7 @@ class TestCreatePackagesStep(unittest.TestCase):
 
       with mock.patch.object(Path, 'open', failing_open):
         with self.assertRaises(DralithusProjectError) as context_manager:
-          step.run(context)
+          step.run()
 
       self.assertEqual(
         f'Could not write dependency file: {project_root}',
@@ -308,7 +308,7 @@ class TestCreatePackagesStep(unittest.TestCase):
       step = CreatePackagesStep(context)
 
       with self.assertRaises(DralithusProjectError):
-        step.run(context)
+        step.run()
 
       self.assertFalse(
         (project_root / Packages.LOCAL_PACKAGES_FILENAME).exists())
@@ -329,8 +329,8 @@ class TestCreatePackagesStep(unittest.TestCase):
         copyright_year=2026)
       step = CreatePackagesStep(context)
 
-      step.run(context)
-      step.rollback(context)
+      step.run()
+      step.rollback()
 
       self.assertFalse(
         (project_root / Packages.PACKAGES_FILENAME).exists())
@@ -355,8 +355,8 @@ class TestCreatePackagesStep(unittest.TestCase):
       packages_txt.write_text('requests\n', encoding='utf-8')
       step = CreatePackagesStep(context)
 
-      step.run(context)
-      step.rollback(context)
+      step.run()
+      step.rollback()
 
       self.assertEqual(
         'requests\n', packages_txt.read_text(encoding='utf-8'))
@@ -378,9 +378,9 @@ class TestCreatePackagesStep(unittest.TestCase):
         copyright_year=2026)
       step = CreatePackagesStep(context)
 
-      step.run(context)
-      step.run(context)
-      step.rollback(context)
+      step.run()
+      step.run()
+      step.rollback()
 
       self.assertFalse(
         (project_root / Packages.PACKAGES_FILENAME).exists())
@@ -403,8 +403,8 @@ class TestCreatePackagesStep(unittest.TestCase):
         copyright_year=2026)
       step = CreatePackagesStep(context)
 
-      step.run(context)
-      step.rollback(context, dry_run=True)
+      step.run()
+      step.rollback(dry_run=True)
 
       self.assertTrue(
         (project_root / Packages.PACKAGES_FILENAME).is_file())
@@ -428,9 +428,9 @@ class TestCreatePackagesStep(unittest.TestCase):
       packages_txt = project_root / Packages.PACKAGES_FILENAME
       step = CreatePackagesStep(context)
 
-      step.run(context)
+      step.run()
       packages_txt.unlink()
-      step.rollback(context)
+      step.rollback()
 
       self.assertFalse(packages_txt.exists())
       self.assertFalse(
@@ -465,7 +465,7 @@ class TestCreatePackagesStep(unittest.TestCase):
         DralithusProjectError,
         'Could not read dependency file'
       ):
-        step.run(context)
+        step.run()
 
       self.assertTrue(local_packages_txt.is_symlink())
       self.assertFalse(
@@ -498,8 +498,8 @@ class TestCreatePackagesStep(unittest.TestCase):
       step = CreatePackagesStep(context)
 
       with mock.patch.object(Path, 'exists', return_value=False):
-        step.run(context)
-      step.rollback(context)
+        step.run()
+      step.rollback()
 
       self.assertEqual(
         '../common-lib\n',
@@ -523,7 +523,7 @@ class TestCreatePackagesStep(unittest.TestCase):
       packages_txt = project_root / Packages.PACKAGES_FILENAME
       step = CreatePackagesStep(context)
 
-      step.run(context)
+      step.run()
       packages_txt.unlink()
       packages_txt.mkdir()
 
@@ -531,4 +531,4 @@ class TestCreatePackagesStep(unittest.TestCase):
         DralithusProjectError,
         'Could not remove dependency file'
       ):
-        step.rollback(context)
+        step.rollback()

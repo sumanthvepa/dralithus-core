@@ -53,33 +53,31 @@ class CreateSourceAndTestTreeStep(ExecutionStep):
   """
   _created_files: list[Path]
 
-  def _copyleft_header(self, context: ProjectContext) -> str:
+  def _copyleft_header(self) -> str:
     """
       Build the generated Python copyleft header.
 
-      :param context: The shared project creation context
       :return: The generated copyleft header
     """
     description = (
       f'{self._package_name}/test/__init__.py: '
       f'Unit tests for {self._package_name}.')
-    year = context.copyright_year
+    year = self._context.copyright_year
     if year is None:
       year = date.today().year
     template = Template(self._copyleft_header_template())
     return template.substitute(
       description=description,
       year=year,
-      copyright_holder=context.copyright_holder)
+      copyright_holder=self._context.copyright_holder)
 
-  def _init_py_content(self, context: ProjectContext) -> str:
+  def _init_py_content(self) -> str:
     """
       Build the content for the test package __init__.py.
 
       The content is a module docstring followed by the generated
       copyleft header.
 
-      :param context: The shared project creation context
       :return: The text to write to the __init__.py
     """
     description = (
@@ -89,7 +87,7 @@ class CreateSourceAndTestTreeStep(ExecutionStep):
       '"""\n'
       f'  {description}\n'
       '"""\n'
-      f'{self._copyleft_header(context)}\n')
+      f'{self._copyleft_header()}\n')
 
   def _create_file(self, path: Path, content: str) -> None:
     """
@@ -123,7 +121,7 @@ class CreateSourceAndTestTreeStep(ExecutionStep):
       with file:
         file.write(content)
 
-  def _create_initial_files(self, context: ProjectContext) -> None:
+  def _create_initial_files(self) -> None:
     """
       Create the test package __init__.py and a .gitignore in every
       directory this step is responsible for.
@@ -134,20 +132,19 @@ class CreateSourceAndTestTreeStep(ExecutionStep):
       the tracked-directory principle (every durable directory carries
       a .gitignore).
 
-      :param context: The shared project creation context
       :return: None
       :raises DralithusProjectError: When a path already
         exists but is not a regular file, or a file cannot be
         created or written
     """
-    project_root = context.project_root
+    project_root = self._context.project_root
     src_directory = project_root / 'src'
     src_package = src_directory / self._package_name
     tests_directory = project_root / 'tests'
     tests_parent = tests_directory / self._package_name
     test_package = tests_parent / 'test'
     files = [
-      (test_package / '__init__.py', self._init_py_content(context)),
+      (test_package / '__init__.py', self._init_py_content()),
       (src_directory / '.gitignore', ''),
       (src_package / '.gitignore', ''),
       (tests_directory / '.gitignore', ''),
@@ -234,7 +231,7 @@ class CreateSourceAndTestTreeStep(ExecutionStep):
     self._created_files = []
 
   @override
-  def run(self, context: ProjectContext, dry_run: bool = False) -> None:
+  def run(self, dry_run: bool = False) -> None:
     """
       Run the source and test tree creation step.
 
@@ -242,23 +239,22 @@ class CreateSourceAndTestTreeStep(ExecutionStep):
       re-raising, because the orchestrator never rolls back a step
       whose own run raised.
 
-      :param context: The shared project creation context
       :param dry_run: True if the step should report what it would
         do without changing the file system
       :return: None
       :raises DralithusProjectError: When tree or file creation fails
     """
     try:
-      self._src_mkdir.run(context, dry_run)
-      self._tests_mkdir.run(context, dry_run)
+      self._src_mkdir.run(dry_run)
+      self._tests_mkdir.run(dry_run)
       if not dry_run:
-        self._create_initial_files(context)
+        self._create_initial_files()
     except DralithusProjectError:
-      self.rollback(context, dry_run)
+      self.rollback(dry_run)
       raise
 
   @override
-  def rollback(self, context: ProjectContext, dry_run: bool = False) -> None:
+  def rollback(self, dry_run: bool = False) -> None:
     """
       Roll back the source and test tree creation step.
 
@@ -267,7 +263,6 @@ class CreateSourceAndTestTreeStep(ExecutionStep):
       reverse order. Pre-existing files and directories are left in
       place.
 
-      :param context: The shared project creation context
       :param dry_run: True if the step should report what it would
         do without changing the file system
       :return: None
@@ -275,5 +270,5 @@ class CreateSourceAndTestTreeStep(ExecutionStep):
     """
     if not dry_run:
       self._remove_created_files()
-      self._tests_mkdir.rollback(context, dry_run)
-      self._src_mkdir.rollback(context, dry_run)
+      self._tests_mkdir.rollback(dry_run)
+      self._src_mkdir.rollback(dry_run)

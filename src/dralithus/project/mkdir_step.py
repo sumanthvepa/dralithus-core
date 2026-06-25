@@ -110,26 +110,24 @@ class MkdirStep(ExecutionStep):
       raise DralithusProjectError(
         f'Could not remove directory: {path}') from error
 
-  def run(self, context: ProjectContext, dry_run: bool = False) -> None:
+  def run(self, dry_run: bool = False) -> None:
     """
       Run the directory creation step.
 
-      :param context: The shared project creation context
       :param dry_run: True if the step should report what it would
         do without changing the file system
       :return: None
       :raises DralithusProjectError: When directory creation fails
     """
-    missing = self._missing_directories(context.project_root)
+    missing = self._missing_directories(self._context.project_root)
     if not dry_run:
-      self._create_directory(context.project_root)
+      self._create_directory(self._context.project_root)
       self._created_directories.extend(reversed(missing))
 
-  def rollback(self, context: ProjectContext, dry_run: bool = False) -> None:
+  def rollback(self, dry_run: bool = False) -> None:
     """
       Roll back the directory creation step.
 
-      :param context: The shared project creation context
       :param dry_run: True if the step should report what it would
         do without changing the file system
       :return: None
@@ -138,6 +136,6 @@ class MkdirStep(ExecutionStep):
     if not dry_run:
       while self._created_directories:
         self._remove_directory(
-          context.project_root,
+          self._context.project_root,
           self._created_directories[-1])
         self._created_directories.pop()

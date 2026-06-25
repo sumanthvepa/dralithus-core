@@ -73,23 +73,21 @@ class CreatePyProjectStep(ExecutionStep):
         values[name.strip()] = value.strip()
     return values
 
-  @classmethod
-  def _python_requirement(cls, context: ProjectContext) -> str:
+  def _python_requirement(self) -> str:
     """
       Return the Python requirement for the project venv.
 
-      :param context: The project creation context
       :return: The Python major/minor version requirement
       :raises DralithusProjectError: When the venv metadata is missing
     """
-    pyvenv_cfg = context.venv_path / 'pyvenv.cfg'
-    if not context.venv_path.is_dir():
+    pyvenv_cfg = self._context.venv_path / 'pyvenv.cfg'
+    if not self._context.venv_path.is_dir():
       raise DralithusProjectError(
-        f'Venv does not exist: {context.venv_path}')
+        f'Venv does not exist: {self._context.venv_path}')
     if not pyvenv_cfg.is_file():
       raise DralithusProjectError(
         f'Venv metadata does not exist: {pyvenv_cfg}')
-    version = cls._read_key_value_file(pyvenv_cfg).get('version')
+    version = self._read_key_value_file(pyvenv_cfg).get('version')
     if version is None:
       raise DralithusProjectError(
         f'Venv metadata has no version: {pyvenv_cfg}')
@@ -112,14 +110,10 @@ class CreatePyProjectStep(ExecutionStep):
     """
     return Packages(project_root)
 
-  def _expected_pyproject(
-    self,
-    context: ProjectContext
-  ) -> PyProjectToml:
+  def _expected_pyproject(self) -> PyProjectToml:
     """
       Build the expected pyproject.toml for this project.
 
-      :param context: The project creation context
       :return: The expected pyproject.toml
       :raises DralithusProjectError: When the venv metadata is
         missing
@@ -128,8 +122,8 @@ class CreatePyProjectStep(ExecutionStep):
       name=self._project_name,
       description=self._project_description,
       package_name=self._package_name,
-      python_requirement=self._python_requirement(context),
-      packages=self._packages(context.project_root),
+      python_requirement=self._python_requirement(),
+      packages=self._packages(self._context.project_root),
       version=self._project_version)
 
   def _create_pyproject(
@@ -153,17 +147,16 @@ class CreatePyProjectStep(ExecutionStep):
     self._created_pyproject = True
 
   @override
-  def run(self, context: ProjectContext, dry_run: bool = False) -> None:
+  def run(self, dry_run: bool = False) -> None:
     """
       Run the pyproject.toml creation step.
 
-      :param context: The shared project creation context
       :param dry_run: True if the step should report what it would
         do without changing the file system
       :return: None
     """
-    expected = self._expected_pyproject(context)
-    path = context.project_root / 'pyproject.toml'
+    expected = self._expected_pyproject()
+    path = self._context.project_root / 'pyproject.toml'
     if path.exists():
       actual = PyProjectToml.from_file(path, expected.packages)
       actual.matches(expected)
@@ -171,17 +164,16 @@ class CreatePyProjectStep(ExecutionStep):
       self._create_pyproject(expected, path)
 
   @override
-  def rollback(self, context: ProjectContext, dry_run: bool = False) -> None:
+  def rollback(self, dry_run: bool = False) -> None:
     """
       Roll back the pyproject.toml creation step.
 
-      :param context: The shared project creation context
       :param dry_run: True if the step should report what it would
         do without changing the file system
       :return: None
     """
     if self._created_pyproject and not dry_run:
-      path = context.project_root / 'pyproject.toml'
+      path = self._context.project_root / 'pyproject.toml'
       try:
         path.unlink()
       except OSError as error:

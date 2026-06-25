@@ -73,7 +73,7 @@ class TestCreateFileStep(unittest.TestCase):
       source.write_text(self._CONTENT, encoding='utf-8')
       step = CreateFileStep.from_file(context, self._FILENAME, source)
 
-      step.run(context)
+      step.run()
 
       self.assertEqual(
         self._CONTENT,
@@ -104,7 +104,7 @@ class TestCreateFileStep(unittest.TestCase):
         'dralithus.project',
         'error.py')
 
-      step.run(context)
+      step.run()
 
       expected = (
         Path(__file__).parents[4]
@@ -160,7 +160,7 @@ class TestCreateFileStep(unittest.TestCase):
           'example.templates',
           'config.ini.j2')
 
-      step.run(context)
+      step.run()
 
       self.assertEqual(
         f'root={project_root}\n'
@@ -192,7 +192,7 @@ class TestCreateFileStep(unittest.TestCase):
     with project_context() as (project_root, context):
       step = CreateFileStep(context, self._FILENAME, self._CONTENT)
 
-      step.run(context)
+      step.run()
 
       self.assertEqual(
         self._CONTENT,
@@ -224,7 +224,7 @@ class TestCreateFileStep(unittest.TestCase):
       content_provider: FileContentProvider = make_content
       step = CreateFileStep(context, self._FILENAME, content_provider)
 
-      step.run(context)
+      step.run()
 
       self.assertEqual(
         'venv = env\n',
@@ -252,7 +252,7 @@ class TestCreateFileStep(unittest.TestCase):
       content_provider: FileContentProvider = make_content
       step = CreateFileStep(context, self._FILENAME, content_provider)
 
-      step.run(context)
+      step.run()
 
       self.assertEqual(
         'user content\n', target.read_text(encoding='utf-8'))
@@ -277,7 +277,7 @@ class TestCreateFileStep(unittest.TestCase):
       content_provider: FileContentProvider = make_content
       step = CreateFileStep(context, self._FILENAME, content_provider)
 
-      step.run(context, dry_run=True)
+      step.run(dry_run=True)
 
       self.assertFalse(self._target(project_root).exists())
 
@@ -291,7 +291,7 @@ class TestCreateFileStep(unittest.TestCase):
       content = 'first line\nsecond line\n'
       step = CreateFileStep(context, self._FILENAME, content)
 
-      step.run(context)
+      step.run()
 
       self.assertEqual(
         content,
@@ -308,7 +308,7 @@ class TestCreateFileStep(unittest.TestCase):
         context, Path('missing') / self._FILENAME, self._CONTENT)
 
       with self.assertRaises(DralithusProjectError):
-        step.run(context)
+        step.run()
 
   def test_run_reports_missing_parent_directory(self) -> None:
     """
@@ -324,7 +324,7 @@ class TestCreateFileStep(unittest.TestCase):
         DralithusProjectError,
         f'Parent directory does not exist: {project_root / filename.parent}'
       ):
-        step.run(context)
+        step.run()
 
   def test_run_reports_parent_path_that_is_not_directory(self) -> None:
     """
@@ -344,7 +344,7 @@ class TestCreateFileStep(unittest.TestCase):
         DralithusProjectError,
         f'Parent path is not a directory: {parent}'
       ):
-        step.run(context)
+        step.run()
 
   def test_run_accepts_valid_symlink_to_parent_directory(self) -> None:
     """
@@ -360,7 +360,7 @@ class TestCreateFileStep(unittest.TestCase):
       filename = Path('linked-parent') / self._FILENAME
       step = CreateFileStep(context, filename, self._CONTENT)
 
-      step.run(context)
+      step.run()
 
       self.assertEqual(
         self._CONTENT,
@@ -377,7 +377,7 @@ class TestCreateFileStep(unittest.TestCase):
       target.write_text('user content\n', encoding='utf-8')
       step = CreateFileStep(context, self._FILENAME, self._CONTENT)
 
-      step.run(context)
+      step.run()
 
       self.assertEqual(
         'user content\n', target.read_text(encoding='utf-8'))
@@ -395,7 +395,7 @@ class TestCreateFileStep(unittest.TestCase):
       target.symlink_to(symlink_target)
       step = CreateFileStep(context, self._FILENAME, self._CONTENT)
 
-      step.run(context)
+      step.run()
 
       self.assertTrue(target.is_symlink())
       self.assertEqual(
@@ -412,7 +412,7 @@ class TestCreateFileStep(unittest.TestCase):
       step = CreateFileStep(context, self._FILENAME, self._CONTENT)
 
       with self.assertRaises(DralithusProjectError):
-        step.run(context)
+        step.run()
 
   def test_run_rejects_dangling_target_symlink(self) -> None:
     """
@@ -426,7 +426,7 @@ class TestCreateFileStep(unittest.TestCase):
       step = CreateFileStep(context, self._FILENAME, self._CONTENT)
 
       with self.assertRaises(DralithusProjectError):
-        step.run(context)
+        step.run()
 
   def test_run_rejects_symlink_to_non_regular_target(self) -> None:
     """
@@ -442,7 +442,7 @@ class TestCreateFileStep(unittest.TestCase):
       step = CreateFileStep(context, self._FILENAME, self._CONTENT)
 
       with self.assertRaises(DralithusProjectError):
-        step.run(context)
+        step.run()
 
   def test_run_wraps_target_read_failure(self) -> None:
     """
@@ -468,7 +468,7 @@ class TestCreateFileStep(unittest.TestCase):
 
       with mock.patch.object(Path, 'open', fail_target_read):
         with self.assertRaises(DralithusProjectError):
-          step.run(context)
+          step.run()
 
   def test_run_write_failure_removes_created_file(self) -> None:
     """
@@ -496,7 +496,7 @@ class TestCreateFileStep(unittest.TestCase):
 
       with mock.patch.object(Path, 'open', failing_open):
         with self.assertRaises(DralithusProjectError):
-          step.run(context)
+          step.run()
 
       self.assertFalse(self._target(project_root).exists())
 
@@ -509,8 +509,8 @@ class TestCreateFileStep(unittest.TestCase):
     with project_context() as (project_root, context):
       step = CreateFileStep(context, self._FILENAME, self._CONTENT)
 
-      step.run(context)
-      step.rollback(context)
+      step.run()
+      step.rollback()
 
       self.assertFalse(self._target(project_root).exists())
 
@@ -525,8 +525,8 @@ class TestCreateFileStep(unittest.TestCase):
       target.write_text('user content\n', encoding='utf-8')
       step = CreateFileStep(context, self._FILENAME, self._CONTENT)
 
-      step.run(context)
-      step.rollback(context)
+      step.run()
+      step.rollback()
 
       self.assertEqual(
         'user content\n', target.read_text(encoding='utf-8'))
@@ -544,8 +544,8 @@ class TestCreateFileStep(unittest.TestCase):
       target.symlink_to(symlink_target)
       step = CreateFileStep(context, self._FILENAME, self._CONTENT)
 
-      step.run(context)
-      step.rollback(context)
+      step.run()
+      step.rollback()
 
       self.assertTrue(target.is_symlink())
       self.assertEqual(
@@ -561,9 +561,9 @@ class TestCreateFileStep(unittest.TestCase):
       target = self._target(project_root)
       step = CreateFileStep(context, self._FILENAME, self._CONTENT)
 
-      step.run(context)
+      step.run()
       target.unlink()
-      step.rollback(context)
+      step.rollback()
 
       self.assertFalse(target.exists())
 
@@ -576,7 +576,7 @@ class TestCreateFileStep(unittest.TestCase):
     with project_context() as (project_root, context):
       target = self._target(project_root)
       step = CreateFileStep(context, self._FILENAME, self._CONTENT)
-      step.run(context)
+      step.run()
       real_unlink = Path.unlink
 
       def fail_target_unlink(
@@ -590,7 +590,7 @@ class TestCreateFileStep(unittest.TestCase):
 
       with mock.patch.object(Path, 'unlink', fail_target_unlink):
         with self.assertRaises(DralithusProjectError):
-          step.rollback(context)
+          step.rollback()
 
   def test_rollback_clears_ownership_and_preserves_recreated_file(
     self
@@ -605,11 +605,11 @@ class TestCreateFileStep(unittest.TestCase):
       target = self._target(project_root)
       step = CreateFileStep(context, self._FILENAME, self._CONTENT)
 
-      step.run(context)
-      step.rollback(context)
+      step.run()
+      step.rollback()
 
       target.write_text('foreign user content\n', encoding='utf-8')
-      step.rollback(context)
+      step.rollback()
 
       self.assertTrue(target.exists())
       self.assertEqual(
@@ -644,11 +644,11 @@ class TestCreateFileStep(unittest.TestCase):
 
       with mock.patch.object(Path, 'open', fail_first_write):
         with self.assertRaises(DralithusProjectError):
-          step.run(context)
-        step.run(context)
+          step.run()
+        step.run()
 
       self.assertTrue(target.exists())
-      step.rollback(context)
+      step.rollback()
       self.assertFalse(target.exists())
 
   def test_repeated_runs_are_convergent_and_rollback_removes_file(
@@ -663,9 +663,9 @@ class TestCreateFileStep(unittest.TestCase):
       target = self._target(project_root)
       step = CreateFileStep(context, self._FILENAME, self._CONTENT)
 
-      step.run(context)
-      step.run(context)
-      step.rollback(context)
+      step.run()
+      step.run()
+      step.rollback()
 
       self.assertFalse(target.exists())
 
@@ -678,7 +678,7 @@ class TestCreateFileStep(unittest.TestCase):
     with project_context() as (project_root, context):
       step = CreateFileStep(context, self._FILENAME, self._CONTENT)
 
-      step.run(context, dry_run=True)
+      step.run(dry_run=True)
 
       self.assertFalse(self._target(project_root).exists())
 
@@ -693,7 +693,7 @@ class TestCreateFileStep(unittest.TestCase):
       step = CreateFileStep(context, self._FILENAME, self._CONTENT)
 
       with self.assertRaises(DralithusProjectError):
-        step.run(context, dry_run=True)
+        step.run(dry_run=True)
 
   def test_rollback_dry_run_changes_nothing(self) -> None:
     """
@@ -705,8 +705,8 @@ class TestCreateFileStep(unittest.TestCase):
       target = self._target(project_root)
       step = CreateFileStep(context, self._FILENAME, self._CONTENT)
 
-      step.run(context)
-      step.rollback(context, dry_run=True)
+      step.run()
+      step.rollback(dry_run=True)
 
       self.assertEqual(
         self._CONTENT, target.read_text(encoding='utf-8'))

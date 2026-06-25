@@ -53,17 +53,16 @@ class CreateFileStep(ExecutionStep):
   """
   _file_created: bool
 
-  def _content(self, context: ProjectContext) -> str:
+  def _content(self) -> str:
     """
-      Return the file content for a project context.
+      Return the file content for the project context.
 
-      :param context: The shared project creation context
       :return: The UTF-8 text to write
     """
     if isinstance(self._content_source, str):
       content = self._content_source
     else:
-      content = self._content_source(context)
+      content = self._content_source(self._context)
     return content
 
   def _remove_created_file(self, path: Path) -> None:
@@ -83,11 +82,10 @@ class CreateFileStep(ExecutionStep):
         f'Could not remove file: {path}') from error
     self._file_created = False
 
-  def _create_file(self, context: ProjectContext, path: Path) -> None:
+  def _create_file(self, path: Path) -> None:
     """
       Create the target file exclusively.
 
-      :param context: The shared project creation context
       :param path: The target file path
       :return: None
       :raises DralithusProjectError: When the file cannot be created
@@ -106,7 +104,7 @@ class CreateFileStep(ExecutionStep):
       self._file_created = True
       try:
         with file:
-          file.write(self._content(context))
+          file.write(self._content())
       except OSError as error:
         self._remove_created_file(path)
         raise DralithusProjectError(
@@ -196,38 +194,37 @@ class CreateFileStep(ExecutionStep):
     self._file_created = False
 
   @override
-  def run(self, context: ProjectContext, dry_run: bool = False) -> None:
+  def run(self, dry_run: bool = False) -> None:
     """
       Run the file creation step.
 
-      :param context: The shared project creation context
       :param dry_run: True if the step should validate without
         changing the file system
       :return: None
       :raises DralithusProjectError: When the target cannot be
         created or accepted
     """
-    path = context.project_root / self._filename
+    path = self._context.project_root / self._filename
     self._verify_parent(path)
     if dry_run:
       if os.path.lexists(path):
         self._verify_existing_file(path)
     else:
-      self._create_file(context, path)
+      self._create_file(path)
 
   @override
-  def rollback(self, context: ProjectContext, dry_run: bool = False) -> None:
+  def rollback(self, dry_run: bool = False) -> None:
     """
       Roll back the file creation step.
 
-      :param context: The shared project creation context
       :param dry_run: True if the step should change nothing
       :return: None
       :raises DralithusProjectError: When the owned file cannot be
         removed
     """
     if not dry_run and self._file_created:
-      self._remove_created_file(context.project_root / self._filename)
+      self._remove_created_file(
+        self._context.project_root / self._filename)
 
   @classmethod
   def from_file(

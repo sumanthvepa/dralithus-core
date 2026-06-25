@@ -90,7 +90,7 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
         self._DIRECTORY,
         self._copyright_header())
 
-      step.run(context)
+      step.run()
 
       self.assertEqual(
         '# Copyright (C) 2020 Milestone 42.\n'
@@ -116,7 +116,7 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
         self._DIRECTORY,
         self._copyright_header())
 
-      step.run(context)
+      step.run()
 
       self.assertEqual(
         '# Copyright (C) 2020 Acme Tools.\n'
@@ -140,7 +140,7 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
         self._DIRECTORY,
         self._copyright_header())
 
-      step.run(context)
+      step.run()
 
       self.assertEqual('# existing\n', init_py.read_text(encoding='utf-8'))
 
@@ -158,7 +158,7 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
         self._copyright_header())
 
       with self.assertRaises(DralithusProjectError):
-        step.run(context)
+        step.run()
 
   def test_run_rejects_unusable_existing_init_py(self) -> None:
     """
@@ -177,7 +177,7 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
         self._copyright_header())
 
       with self.assertRaises(DralithusProjectError):
-        step.run(context)
+        step.run()
 
   def test_rollback_removes_created_init_py(self) -> None:
     """
@@ -194,8 +194,8 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
         self._DIRECTORY,
         self._copyright_header())
 
-      step.run(context)
-      step.rollback(context)
+      step.run()
+      step.rollback()
 
       self.assertFalse(self._init_py(project_root).exists())
 
@@ -216,8 +216,8 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
         self._DIRECTORY,
         self._copyright_header())
 
-      step.run(context)
-      step.rollback(context)
+      step.run()
+      step.rollback()
 
       self.assertEqual('# existing\n', init_py.read_text(encoding='utf-8'))
 
@@ -236,7 +236,7 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
         self._DIRECTORY,
         self._copyright_header())
 
-      step.run(context, dry_run=True)
+      step.run(dry_run=True)
 
       self.assertFalse(self._init_py(project_root).exists())
 
@@ -257,7 +257,7 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
         self._copyright_header())
 
       with self.assertRaises(DralithusProjectError):
-        step.run(context, dry_run=True)
+        step.run(dry_run=True)
 
   def test_repeated_runs_are_convergent_and_rollback_removes_init_py(
     self
@@ -277,8 +277,8 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
         self._DIRECTORY,
         self._copyright_header())
 
-      step.run(context)
-      step.run(context)
-      step.rollback(context)
+      step.run()
+      step.run()
+      step.rollback()
 
       self.assertFalse(self._init_py(project_root).exists())

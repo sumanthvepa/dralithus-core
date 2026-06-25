@@ -64,7 +64,7 @@ class TestCreateGitIgnoreFileStep(unittest.TestCase):
       (project_root / self._DIRECTORY).mkdir()
       step = CreateGitIgnoreFileStep(context, self._DIRECTORY)
 
-      step.run(context)
+      step.run()
 
       self.assertEqual(
         '', self._gitignore(project_root).read_text(encoding='utf-8'))
@@ -87,7 +87,7 @@ class TestCreateGitIgnoreFileStep(unittest.TestCase):
       gitignore.write_text('*.log\n', encoding='utf-8')
       step = CreateGitIgnoreFileStep(context, self._DIRECTORY)
 
-      step.run(context)
+      step.run()
 
       self.assertEqual('*.log\n', gitignore.read_text(encoding='utf-8'))
 
@@ -106,7 +106,7 @@ class TestCreateGitIgnoreFileStep(unittest.TestCase):
       step = CreateGitIgnoreFileStep(context, self._DIRECTORY)
 
       with self.assertRaises(DralithusProjectError):
-        step.run(context)
+        step.run()
 
   def test_rollback_removes_created_gitignore(self) -> None:
     """
@@ -124,8 +124,8 @@ class TestCreateGitIgnoreFileStep(unittest.TestCase):
       (project_root / self._DIRECTORY).mkdir()
       step = CreateGitIgnoreFileStep(context, self._DIRECTORY)
 
-      step.run(context)
-      step.rollback(context)
+      step.run()
+      step.rollback()
 
       self.assertFalse(self._gitignore(project_root).exists())
 
@@ -147,8 +147,8 @@ class TestCreateGitIgnoreFileStep(unittest.TestCase):
       gitignore.write_text('*.log\n', encoding='utf-8')
       step = CreateGitIgnoreFileStep(context, self._DIRECTORY)
 
-      step.run(context)
-      step.rollback(context)
+      step.run()
+      step.rollback()
 
       self.assertEqual('*.log\n', gitignore.read_text(encoding='utf-8'))
 
@@ -168,7 +168,7 @@ class TestCreateGitIgnoreFileStep(unittest.TestCase):
       (project_root / self._DIRECTORY).mkdir()
       step = CreateGitIgnoreFileStep(context, self._DIRECTORY)
 
-      step.run(context, dry_run=True)
+      step.run(dry_run=True)
 
       self.assertFalse(self._gitignore(project_root).exists())
 
@@ -190,4 +190,4 @@ class TestCreateGitIgnoreFileStep(unittest.TestCase):
       step = CreateGitIgnoreFileStep(context, self._DIRECTORY)
 
       with self.assertRaises(DralithusProjectError):
-        step.run(context, dry_run=True)
+        step.run(dry_run=True)

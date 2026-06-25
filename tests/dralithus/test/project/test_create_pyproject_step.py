@@ -258,7 +258,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
         project_name='sample-project',
         project_description='Sample project')
 
-      step.run(context)
+      step.run()
 
       self._validate_pyproject(context)
 
@@ -275,7 +275,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
         project_name='sample-project',
         project_description='Sample project')
 
-      step.run(context)
+      step.run()
 
       pyproject = PyProjectToml.from_file(
         project_root / 'pyproject.toml',
@@ -302,7 +302,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
         'sample-project',
         'Sample project')
 
-      step.run(context)
+      step.run()
 
       self._validate_pyproject(
         context,
@@ -329,7 +329,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
         'sample-project',
         'Sample project')
 
-      step.run(context)
+      step.run()
 
       pyproject = PyProjectToml.from_file(
         project_root / 'pyproject.toml',
@@ -360,7 +360,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
         'sample-project',
         'Sample project')
 
-      step.run(context)
+      step.run()
 
       parsed = PyProjectToml.from_file(
         project_root / 'pyproject.toml',
@@ -381,7 +381,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
         'sample-project',
         'Sample project')
 
-      step.run(context, dry_run=True)
+      step.run(dry_run=True)
 
       self.assertFalse((project_root / 'pyproject.toml').exists())
 
@@ -399,7 +399,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
         'Sample project')
 
       with self.assertRaises(DralithusProjectError):
-        step.run(context)
+        step.run()
 
   def test_run_rejects_missing_venv(self) -> None:
     """
@@ -414,7 +414,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
         'Sample project')
 
       with self.assertRaises(DralithusProjectError):
-        step.run(context)
+        step.run()
 
   def test_run_rejects_venv_without_pyvenv_cfg(self) -> None:
     """
@@ -430,7 +430,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
         'Sample project')
 
       with self.assertRaises(DralithusProjectError):
-        step.run(context)
+        step.run()
 
   def test_run_rejects_venv_without_version(self) -> None:
     """
@@ -449,7 +449,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
         'Sample project')
 
       with self.assertRaises(DralithusProjectError):
-        step.run(context)
+        step.run()
 
   def test_run_leaves_valid_existing_pyproject_unchanged(self) -> None:
     """
@@ -467,7 +467,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
         'sample-project',
         'Sample project')
 
-      step.run(context)
+      step.run()
 
       self.assertEqual(text, pyproject.read_text(encoding='utf-8'))
 
@@ -486,7 +486,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
         'Sample project')
 
       with self.assertRaises(DralithusProjectError):
-        step.run(context)
+        step.run()
 
   # noinspection PyUnusedLocal
   # pylint: disable=unused-argument
@@ -532,7 +532,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
         'Sample project')
 
       with self.assertRaises(DralithusProjectError):
-        step.run(context)
+        step.run()
 
   def test_rollback_removes_pyproject_created_by_step(self) -> None:
     """
@@ -547,8 +547,8 @@ class TestCreatePyProjectStep(unittest.TestCase):
         'sample-project',
         'Sample project')
 
-      step.run(context)
-      step.rollback(context)
+      step.run()
+      step.rollback()
 
       self.assertFalse((project_root / 'pyproject.toml').exists())
 
@@ -565,9 +565,9 @@ class TestCreatePyProjectStep(unittest.TestCase):
         'sample-project',
         'Sample project')
 
-      step.run(context)
-      step.run(context)
-      step.rollback(context)
+      step.run()
+      step.run()
+      step.rollback()
 
       self.assertFalse((project_root / 'pyproject.toml').exists())
 
@@ -586,8 +586,8 @@ class TestCreatePyProjectStep(unittest.TestCase):
         'sample-project',
         'Sample project')
 
-      step.run(context)
-      step.rollback(context)
+      step.run()
+      step.rollback()
 
       self.assertTrue(pyproject.is_file())
 
@@ -604,7 +604,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
         'sample-project',
         'Sample project')
 
-      step.run(context)
-      step.rollback(context, dry_run=True)
+      step.run()
+      step.rollback(dry_run=True)
 
       self.assertTrue((project_root / 'pyproject.toml').is_file())

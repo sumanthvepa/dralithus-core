@@ -129,7 +129,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
       step = InstallDependenciesStep(context)
       with mock.patch('subprocess.run'):
         with self.assertRaises(DralithusProjectError):
-          step.run(context)
+          step.run()
 
   def test_run_fails_when_packages_file_missing(self) -> None:
     """
@@ -148,7 +148,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
       step = InstallDependenciesStep(context)
       with mock.patch('subprocess.run'):
         with self.assertRaises(DralithusProjectError):
-          step.run(context)
+          step.run()
 
   # run(): installation
 
@@ -173,7 +173,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
       packages = Packages(project_root)
       with mock.patch('subprocess.run') as run_mock:
         run_mock.return_value = self._ok_result()
-        step.run(context)
+        step.run()
       commands = self._commands(run_mock)
       self.assertEqual(
         commands[0], [python, '-m', 'pip', 'install', '--upgrade', 'pip'])
@@ -207,7 +207,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
       python = str(context.venv_python)
       with mock.patch('subprocess.run') as run_mock:
         run_mock.return_value = self._ok_result()
-        step.run(context)
+        step.run()
       commands = self._commands(run_mock)
       self.assertEqual(
         commands[0], [python, '-m', 'pip', 'install', '--upgrade', 'pip'])
@@ -232,7 +232,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
       step = InstallDependenciesStep(context)
       with mock.patch('subprocess.run') as run_mock:
         run_mock.return_value = self._ok_result()
-        step.run(context)
+        step.run()
       commands = self._commands(run_mock)
       self.assertFalse(any('-e' in command for command in commands))
 
@@ -257,7 +257,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
       python = str(self._venv_python(context))
       with mock.patch('subprocess.run') as run_mock:
         run_mock.return_value = self._ok_result()
-        step.run(context)
+        step.run()
       commands = self._commands(run_mock)
       self.assertIn(
         [python, '-m', 'pip', 'install',
@@ -286,7 +286,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
       step = InstallDependenciesStep(context)
       with mock.patch('subprocess.run') as run_mock:
         run_mock.return_value = self._ok_result()
-        step.run(context)
+        step.run()
       commands = self._commands(run_mock)
       self.assertFalse(any('-e' in command for command in commands))
       self.assertIn('../test-lib', commands[1])
@@ -310,7 +310,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
       step = InstallDependenciesStep(context)
       with mock.patch('subprocess.run') as run_mock:
         run_mock.return_value = self._ok_result()
-        step.run(context)
+        step.run()
       self.assertTrue(
         all(call.kwargs.get('text') is True
             for call in run_mock.call_args_list))
@@ -338,7 +338,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
       with mock.patch('subprocess.run') as run_mock:
         run_mock.side_effect = [self._ok_result(), error]
         with self.assertRaises(DralithusProjectError):
-          step.run(context)
+          step.run()
       requirements = project_root / InstallDependenciesStep.REQUIREMENTS_FILENAME
       self.assertFalse(requirements.exists())
 
@@ -362,7 +362,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
       with mock.patch('subprocess.run') as run_mock:
         run_mock.side_effect = OSError('cannot run')
         with self.assertRaises(DralithusProjectError):
-          step.run(context)
+          step.run()
 
   def test_run_wraps_requirements_write_failure(self) -> None:
     """
@@ -385,7 +385,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
           mock.patch('os.replace', side_effect=OSError('disk full')):
         run_mock.return_value = self._ok_result()
         with self.assertRaises(DralithusProjectError):
-          step.run(context)
+          step.run()
       requirements = project_root / InstallDependenciesStep.REQUIREMENTS_FILENAME
       self.assertFalse(requirements.exists())
       self.assertEqual(
@@ -414,7 +414,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
           mock.patch('tempfile.mkstemp', side_effect=OSError('no temp')):
         run_mock.return_value = self._ok_result()
         with self.assertRaises(DralithusProjectError):
-          step.run(context)
+          step.run()
       requirements = project_root / InstallDependenciesStep.REQUIREMENTS_FILENAME
       self.assertFalse(requirements.exists())
 
@@ -443,7 +443,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
           mock.patch('os.replace', side_effect=OSError('disk full')):
         run_mock.return_value = self._ok_result()
         with self.assertRaises(DralithusProjectError):
-          step.run(context)
+          step.run()
       self.assertEqual(
         requirements.read_text(encoding='utf-8'), self._PRE_CONTENT)
 
@@ -465,7 +465,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
         copyright_year=2026)
       step = InstallDependenciesStep(context)
       with mock.patch('subprocess.run') as run_mock:
-        step.run(context, dry_run=True)
+        step.run(dry_run=True)
       run_mock.assert_not_called()
       requirements = project_root / InstallDependenciesStep.REQUIREMENTS_FILENAME
       self.assertFalse(requirements.exists())
@@ -491,7 +491,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
       step = InstallDependenciesStep(context)
       with mock.patch('subprocess.run') as run_mock:
         run_mock.return_value = self._ok_result()
-        step.run(context)
+        step.run()
       self.assertEqual(
         requirements.read_text(encoding='utf-8'), self._FREEZE_OUTPUT)
 
@@ -521,7 +521,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
       with mock.patch('subprocess.run') as run_mock:
         run_mock.return_value = self._ok_result()
         with self.assertRaises(DralithusProjectError):
-          step.run(context)
+          step.run()
       run_mock.assert_not_called()
       self.assertTrue(requirements.is_symlink())
       self.assertEqual(
@@ -548,7 +548,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
       with mock.patch('subprocess.run') as run_mock:
         run_mock.return_value = self._ok_result()
         with self.assertRaises(DralithusProjectError):
-          step.run(context)
+          step.run()
       run_mock.assert_not_called()
       self.assertTrue(requirements.is_dir())
 
@@ -574,8 +574,8 @@ class TestInstallDependenciesStep(unittest.TestCase):
       requirements = project_root / InstallDependenciesStep.REQUIREMENTS_FILENAME
       with mock.patch('subprocess.run') as run_mock:
         run_mock.return_value = self._ok_result()
-        step.run(context)
-        step.rollback(context)
+        step.run()
+        step.rollback()
       self.assertFalse(requirements.exists())
       self.assertTrue(context.venv_path.is_dir())
 
@@ -600,8 +600,8 @@ class TestInstallDependenciesStep(unittest.TestCase):
       step = InstallDependenciesStep(context)
       with mock.patch('subprocess.run') as run_mock:
         run_mock.return_value = self._ok_result()
-        step.run(context)
-        step.rollback(context)
+        step.run()
+        step.rollback()
       self.assertTrue(requirements.exists())
 
   def test_rollback_preserves_externally_recreated_requirements(
@@ -627,10 +627,10 @@ class TestInstallDependenciesStep(unittest.TestCase):
       requirements = project_root / InstallDependenciesStep.REQUIREMENTS_FILENAME
       with mock.patch('subprocess.run') as run_mock:
         run_mock.return_value = self._ok_result()
-        step.run(context)
-        step.rollback(context)
+        step.run()
+        step.rollback()
         requirements.write_text(self._PRE_CONTENT, encoding='utf-8')
-        step.rollback(context)
+        step.rollback()
       self.assertTrue(requirements.exists())
       self.assertEqual(
         requirements.read_text(encoding='utf-8'), self._PRE_CONTENT)
@@ -656,9 +656,9 @@ class TestInstallDependenciesStep(unittest.TestCase):
       requirements = project_root / InstallDependenciesStep.REQUIREMENTS_FILENAME
       with mock.patch('subprocess.run') as run_mock:
         run_mock.return_value = self._ok_result()
-        step.run(context)
-        step.run(context)
-        step.rollback(context)
+        step.run()
+        step.run()
+        step.rollback()
       self.assertFalse(requirements.exists())
 
   def test_rollback_is_a_no_op_when_nothing_created(self) -> None:
@@ -676,8 +676,8 @@ class TestInstallDependenciesStep(unittest.TestCase):
         copyright_holder='Sumanth Vepa',
         copyright_year=2026)
       step = InstallDependenciesStep(context)
-      step.rollback(context, dry_run=True)
-      step.rollback(context)
+      step.rollback(dry_run=True)
+      step.rollback()
 
 
 if __name__ == '__main__':

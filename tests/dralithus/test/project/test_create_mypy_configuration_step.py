@@ -149,7 +149,7 @@ class TestCreateMypyConfigurationStep(unittest.TestCase):
         copyright_year=2026)
       step = CreateMypyConfigurationStep(context)
 
-      step.run(context)
+      step.run()
 
       self.assertTrue(self._mypy_ini(project_root).is_file())
       self.assertTrue(self._stubs(project_root).is_dir())
@@ -173,7 +173,7 @@ class TestCreateMypyConfigurationStep(unittest.TestCase):
         copyright_year=2026)
       step = CreateMypyConfigurationStep(context)
 
-      step.run(context)
+      step.run()
 
       self.assertEqual(
         self._mypy_template_content(),
@@ -194,7 +194,7 @@ class TestCreateMypyConfigurationStep(unittest.TestCase):
         copyright_year=2026)
       step = CreateMypyConfigurationStep(context)
 
-      step.run(context)
+      step.run()
 
       self.assertEqual(
         self._stub_template_content(),
@@ -216,7 +216,7 @@ class TestCreateMypyConfigurationStep(unittest.TestCase):
         copyright_year=2026)
       step = CreateMypyConfigurationStep(context)
 
-      step.run(context)
+      step.run()
 
       self.assertEqual(
         '',
@@ -248,7 +248,7 @@ class TestCreateMypyConfigurationStep(unittest.TestCase):
         encoding='utf-8')
       step = CreateMypyConfigurationStep(context)
 
-      step.run(context)
+      step.run()
 
       self.assertEqual(
         'user mypy config\n',
@@ -275,7 +275,7 @@ class TestCreateMypyConfigurationStep(unittest.TestCase):
       step = CreateMypyConfigurationStep(context)
 
       with self.assertRaises(DralithusProjectError):
-        step.run(context)
+        step.run()
 
       self.assertFalse(self._mypy_ini(project_root).exists())
       self.assertFalse(self._stubs_gitignore(project_root).exists())
@@ -296,8 +296,8 @@ class TestCreateMypyConfigurationStep(unittest.TestCase):
         copyright_year=2026)
       step = CreateMypyConfigurationStep(context)
 
-      step.run(context)
-      step.rollback(context)
+      step.run()
+      step.rollback()
 
       self.assertFalse(self._mypy_ini(project_root).exists())
       self.assertFalse(self._stubs(project_root).exists())
@@ -321,8 +321,8 @@ class TestCreateMypyConfigurationStep(unittest.TestCase):
       self._parameterized(project_root).mkdir(parents=True)
       step = CreateMypyConfigurationStep(context)
 
-      step.run(context)
-      step.rollback(context)
+      step.run()
+      step.rollback()
 
       self.assertEqual(
         'user mypy config\n',
@@ -344,7 +344,7 @@ class TestCreateMypyConfigurationStep(unittest.TestCase):
         copyright_year=2026)
       step = CreateMypyConfigurationStep(context)
 
-      step.run(context, dry_run=True)
+      step.run(dry_run=True)
 
       self.assertFalse(self._mypy_ini(project_root).exists())
       self.assertFalse(self._stubs(project_root).exists())
@@ -366,4 +366,4 @@ class TestCreateMypyConfigurationStep(unittest.TestCase):
       step = CreateMypyConfigurationStep(context)
 
       with self.assertRaises(DralithusProjectError):
-        step.run(context, dry_run=True)
+        step.run(dry_run=True)

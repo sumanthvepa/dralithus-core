@@ -53,28 +53,26 @@ class CreatePylintConfigurationStep(ExecutionStep):
       'pylintrc')
 
   @override
-  def run(self, context: ProjectContext, dry_run: bool = False) -> None:
+  def run(self, dry_run: bool = False) -> None:
     """
       Run the Pylint configuration creation step.
 
-      :param context: The shared project creation context
       :param dry_run: True if the step should validate without
         changing the file system
       :return: None
       :raises DralithusProjectError: When pylintrc cannot be created
         or accepted
     """
-    self._pylintrc_step.run(context, dry_run)
+    self._pylintrc_step.run(dry_run)
 
   @override
-  def rollback(self, context: ProjectContext, dry_run: bool = False) -> None:
+  def rollback(self, dry_run: bool = False) -> None:
     """
       Roll back the Pylint configuration creation step.
 
-      :param context: The shared project creation context
       :param dry_run: True if the step should change nothing
       :return: None
       :raises DralithusProjectError: When an owned pylintrc cannot be
         removed
     """
-    self._pylintrc_step.rollback(context, dry_run)
+    self._pylintrc_step.rollback(dry_run)

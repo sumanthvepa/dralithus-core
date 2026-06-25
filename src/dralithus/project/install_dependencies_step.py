@@ -48,17 +48,16 @@ class InstallDependenciesStep(ExecutionStep):
 
   _requirements_created: bool
 
-  def _install_and_snapshot(self, context: ProjectContext) -> None:
+  def _install_and_snapshot(self) -> None:
     """
       Install the dependency closure and snapshot requirements.txt.
 
-      :param context: The shared project creation context
       :return: None
       :raises DralithusProjectError: When a prerequisite is missing or
         installation or snapshotting fails
     """
-    project_root = context.project_root
-    venv_python = context.venv_python
+    project_root = self._context.project_root
+    venv_python = self._context.venv_python
     if not venv_python.is_file() or not os.access(venv_python, os.X_OK):
       raise DralithusProjectError(
         f'Virtual environment not found: {venv_python}')
@@ -69,7 +68,7 @@ class InstallDependenciesStep(ExecutionStep):
       self._install(venv_python, project_root, packages)
       self._write_requirements(venv_python, project_root)
     except DralithusProjectError:
-      self.rollback(context)
+      self.rollback()
       raise
 
   def _install(
@@ -217,11 +216,10 @@ class InstallDependenciesStep(ExecutionStep):
     self._requirements_created = False
 
   @override
-  def run(self, context: ProjectContext, dry_run: bool = False) -> None:
+  def run(self, dry_run: bool = False) -> None:
     """
       Install the dependencies and snapshot requirements.txt.
 
-      :param context: The shared project creation context
       :param dry_run: True if the step should report what it would
         do without changing the file system
       :return: None
@@ -229,10 +227,10 @@ class InstallDependenciesStep(ExecutionStep):
         fails
     """
     if not dry_run:
-      self._install_and_snapshot(context)
+      self._install_and_snapshot()
 
   @override
-  def rollback(self, context: ProjectContext, dry_run: bool = False) -> None:
+  def rollback(self, dry_run: bool = False) -> None:
     """
       Roll back the dependency installation step.
 
@@ -240,7 +238,6 @@ class InstallDependenciesStep(ExecutionStep):
       packages are not uninstalled here; the venv is owned by
       CreateVenvStep.
 
-      :param context: The shared project creation context
       :param dry_run: True if the step should report what it would
         do without changing the file system
       :return: None
@@ -248,5 +245,5 @@ class InstallDependenciesStep(ExecutionStep):
         fails
     """
     if not dry_run and self._requirements_created:
-      self._remove_requirements(context.project_root)
+      self._remove_requirements(self._context.project_root)
       self._requirements_created = False

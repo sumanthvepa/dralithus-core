@@ -39,15 +39,10 @@ class ExecutionStep(ABC):
     self._context = context
 
   @abstractmethod
-  def run(
-    self,
-    context: ProjectContext,
-    dry_run: bool = False
-  ) -> None:
+  def run(self, dry_run: bool = False) -> None:
     """
       Run the execution step.
 
-      :param context: The shared project creation context
       :param dry_run: True if the step should report what it would
         do without changing the file system
       :return: None
@@ -55,15 +50,10 @@ class ExecutionStep(ABC):
     raise NotImplementedError('run() must be implemented in derived class')
 
   @abstractmethod
-  def rollback(
-    self,
-    context: ProjectContext,
-    dry_run: bool = False
-  ) -> None:
+  def rollback(self, dry_run: bool = False) -> None:
     """
       Roll back the execution step.
 
-      :param context: The shared project creation context
       :param dry_run: True if the step should report what it would
         do without changing the file system
       :return: None
