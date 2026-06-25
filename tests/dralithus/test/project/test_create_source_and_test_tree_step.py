@@ -160,6 +160,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
     with project_context() as (project_root, _context):
       context = ProjectContext(
         project_root=project_root,
+        package_name='sample',
         copyright_holder='Milestone 42',
         copyright_year=2030)
       test_package = self._test_package(project_root)
@@ -181,6 +182,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
     with project_context() as (project_root, _context):
       context = ProjectContext(
         project_root=project_root,
+        package_name='sample',
         copyright_holder='Milestone 42',
         copyright_year=2030)
       test_package = self._test_package(project_root)
