@@ -29,6 +29,15 @@ class ExecutionStep(ABC):
   """
     Represent one idempotent execution step.
   """
+  def __init__(self, context: ProjectContext) -> None:
+    """
+      Initialize the execution step.
+
+      :param context: The shared project creation context
+      :return: None
+    """
+    self._context = context
+
   @abstractmethod
   def run(
     self,
