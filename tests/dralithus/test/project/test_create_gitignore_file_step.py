@@ -62,7 +62,7 @@ class TestCreateGitIgnoreFileStep(unittest.TestCase):
         copyright_holder='Sumanth Vepa',
         copyright_year=2026)
       (project_root / self._DIRECTORY).mkdir()
-      step = CreateGitIgnoreFileStep(self._DIRECTORY)
+      step = CreateGitIgnoreFileStep(context, self._DIRECTORY)
 
       step.run(context)
 
@@ -85,7 +85,7 @@ class TestCreateGitIgnoreFileStep(unittest.TestCase):
       (project_root / self._DIRECTORY).mkdir()
       gitignore = self._gitignore(project_root)
       gitignore.write_text('*.log\n', encoding='utf-8')
-      step = CreateGitIgnoreFileStep(self._DIRECTORY)
+      step = CreateGitIgnoreFileStep(context, self._DIRECTORY)
 
       step.run(context)
 
@@ -103,7 +103,7 @@ class TestCreateGitIgnoreFileStep(unittest.TestCase):
         package_name='sample',
         copyright_holder='Sumanth Vepa',
         copyright_year=2026)
-      step = CreateGitIgnoreFileStep(self._DIRECTORY)
+      step = CreateGitIgnoreFileStep(context, self._DIRECTORY)
 
       with self.assertRaises(DralithusProjectError):
         step.run(context)
@@ -122,7 +122,7 @@ class TestCreateGitIgnoreFileStep(unittest.TestCase):
         copyright_holder='Sumanth Vepa',
         copyright_year=2026)
       (project_root / self._DIRECTORY).mkdir()
-      step = CreateGitIgnoreFileStep(self._DIRECTORY)
+      step = CreateGitIgnoreFileStep(context, self._DIRECTORY)
 
       step.run(context)
       step.rollback(context)
@@ -145,7 +145,7 @@ class TestCreateGitIgnoreFileStep(unittest.TestCase):
       (project_root / self._DIRECTORY).mkdir()
       gitignore = self._gitignore(project_root)
       gitignore.write_text('*.log\n', encoding='utf-8')
-      step = CreateGitIgnoreFileStep(self._DIRECTORY)
+      step = CreateGitIgnoreFileStep(context, self._DIRECTORY)
 
       step.run(context)
       step.rollback(context)
@@ -166,7 +166,7 @@ class TestCreateGitIgnoreFileStep(unittest.TestCase):
         copyright_holder='Sumanth Vepa',
         copyright_year=2026)
       (project_root / self._DIRECTORY).mkdir()
-      step = CreateGitIgnoreFileStep(self._DIRECTORY)
+      step = CreateGitIgnoreFileStep(context, self._DIRECTORY)
 
       step.run(context, dry_run=True)
 
@@ -187,7 +187,7 @@ class TestCreateGitIgnoreFileStep(unittest.TestCase):
         copyright_year=2026)
       (project_root / self._DIRECTORY).mkdir()
       self._gitignore(project_root).mkdir()
-      step = CreateGitIgnoreFileStep(self._DIRECTORY)
+      step = CreateGitIgnoreFileStep(context, self._DIRECTORY)
 
       with self.assertRaises(DralithusProjectError):
         step.run(context, dry_run=True)

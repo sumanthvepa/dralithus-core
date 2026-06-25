@@ -37,15 +37,18 @@ class CreateGitIgnoreFileStep(ExecutionStep):
   """
   _GITIGNORE_FILENAME = '.gitignore'
 
-  def __init__(self, directory: Path) -> None:
+  def __init__(self, context: ProjectContext, directory: Path) -> None:
     """
       Initialize the .gitignore creation step.
 
+      :param context: The shared project creation context
       :param directory: The project-relative directory that should
         contain the .gitignore file
       :return: None
     """
+    super().__init__(context)
     self._create_file_step = CreateFileStep(
+      context,
       directory / self._GITIGNORE_FILENAME,
       '')
 
