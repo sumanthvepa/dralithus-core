@@ -36,15 +36,21 @@ class CreateVenvStep(ExecutionStep):
   """
     Represent a project creation step that creates a Python venv.
   """
-  def __init__(self, python_executable: Path) -> None:
+  def __init__(
+    self,
+    context: ProjectContext,
+    python_executable: Path
+  ) -> None:
     """
       Initialize the Python venv creation step.
 
+      :param context: The shared project creation context
       :param python_executable: The path to the Python executable
       :return: None
       :raises DralithusProjectError: When python_executable is not a
         runnable Python executable
     """
+    super().__init__(context)
     self._python_version = self._validate_python(python_executable)
     self._python_executable = python_executable
     self._created_venv = False

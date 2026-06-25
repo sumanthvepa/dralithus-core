@@ -21,7 +21,6 @@
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
 from pathlib import Path
-from tempfile import TemporaryDirectory
 import stat
 import sys
 import unittest
@@ -53,7 +52,7 @@ class TestCreateVenvStep(unittest.TestCase):
       :return: None
     """
     with project_context() as (project_root, context):
-      step = CreateVenvStep(self._python_executable())
+      step = CreateVenvStep(context, self._python_executable())
       target = project_root / 'venv'
 
       step.run(context)
@@ -68,7 +67,7 @@ class TestCreateVenvStep(unittest.TestCase):
       :return: None
     """
     with project_context(venv_name='env') as (_project_root, context):
-      step = CreateVenvStep(self._python_executable())
+      step = CreateVenvStep(context, self._python_executable())
       target = context.venv_path
 
       step.run(context)
@@ -83,7 +82,7 @@ class TestCreateVenvStep(unittest.TestCase):
       :return: None
     """
     with project_context() as (project_root, context):
-      step = CreateVenvStep(self._python_executable())
+      step = CreateVenvStep(context, self._python_executable())
 
       step.run(context, dry_run=True)
 
@@ -97,7 +96,7 @@ class TestCreateVenvStep(unittest.TestCase):
     """
     with project_context() as (project_root, context):
       (project_root / 'venv').touch()
-      step = CreateVenvStep(self._python_executable())
+      step = CreateVenvStep(context, self._python_executable())
 
       with self.assertRaises(DralithusProjectError):
         step.run(context, dry_run=True)
@@ -109,7 +108,7 @@ class TestCreateVenvStep(unittest.TestCase):
       :return: None
     """
     with project_context() as (project_root, context):
-      step = CreateVenvStep(self._python_executable())
+      step = CreateVenvStep(context, self._python_executable())
       target = project_root / 'venv'
 
       step.run(context)
@@ -124,7 +123,7 @@ class TestCreateVenvStep(unittest.TestCase):
       :return: None
     """
     with project_context() as (project_root, context):
-      step = CreateVenvStep(self._python_executable())
+      step = CreateVenvStep(context, self._python_executable())
       target = project_root / 'venv'
 
       step.run(context)
@@ -141,7 +140,7 @@ class TestCreateVenvStep(unittest.TestCase):
       :return: None
     """
     with project_context() as (project_root, context):
-      step = CreateVenvStep(self._python_executable())
+      step = CreateVenvStep(context, self._python_executable())
       target = project_root / 'venv'
 
       step.run(context)
@@ -157,9 +156,9 @@ class TestCreateVenvStep(unittest.TestCase):
     """
     with project_context() as (project_root, context):
       target = project_root / 'venv'
-      step = CreateVenvStep(self._python_executable())
+      step = CreateVenvStep(context, self._python_executable())
       step.run(context)
-      step = CreateVenvStep(self._python_executable())
+      step = CreateVenvStep(context, self._python_executable())
 
       step.run(context)
       step.rollback(context)
@@ -176,7 +175,7 @@ class TestCreateVenvStep(unittest.TestCase):
     with project_context() as (project_root, context):
       target = project_root / 'venv'
       target.mkdir()
-      step = CreateVenvStep(self._python_executable())
+      step = CreateVenvStep(context, self._python_executable())
 
       with self.assertRaisesRegex(DralithusProjectError, 'Path is not a venv'):
         step.run(context)
@@ -189,14 +188,14 @@ class TestCreateVenvStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      executable = Path(temp_directory) / 'missing-python'
+    with project_context() as (project_root, context):
+      executable = project_root / 'missing-python'
 
       with self.assertRaisesRegex(
         DralithusProjectError,
         'Python executable does not exist'
       ):
-        CreateVenvStep(executable)
+        CreateVenvStep(context, executable)
 
   def test_init_rejects_python_executable_directory(self) -> None:
     """
@@ -204,14 +203,14 @@ class TestCreateVenvStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      executable = Path(temp_directory)
+    with project_context() as (project_root, context):
+      executable = project_root
 
       with self.assertRaisesRegex(
         DralithusProjectError,
         'Python executable is not a file'
       ):
-        CreateVenvStep(executable)
+        CreateVenvStep(context, executable)
 
   def test_init_rejects_non_executable_python_file(self) -> None:
     """
@@ -219,15 +218,15 @@ class TestCreateVenvStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      executable = Path(temp_directory) / 'python'
+    with project_context() as (project_root, context):
+      executable = project_root / 'python'
       executable.write_text('#!/bin/sh\n', encoding='utf-8')
 
       with self.assertRaisesRegex(
         DralithusProjectError,
         'Python executable is not executable'
       ):
-        CreateVenvStep(executable)
+        CreateVenvStep(context, executable)
 
   def test_init_rejects_executable_that_is_not_python(self) -> None:
     """
@@ -235,8 +234,8 @@ class TestCreateVenvStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      executable = Path(temp_directory) / 'not-python'
+    with project_context() as (project_root, context):
+      executable = project_root / 'not-python'
       executable.write_text(
         '#!/bin/sh\n'
         'echo "not python"\n',
@@ -251,7 +250,7 @@ class TestCreateVenvStep(unittest.TestCase):
         DralithusProjectError,
         'Executable is not Python'
       ):
-        CreateVenvStep(executable)
+        CreateVenvStep(context, executable)
 
   def test_run_raises_error_when_venv_path_is_file(self) -> None:
     """
@@ -261,7 +260,7 @@ class TestCreateVenvStep(unittest.TestCase):
     """
     with project_context() as (project_root, context):
       (project_root / 'venv').touch()
-      step = CreateVenvStep(self._python_executable())
+      step = CreateVenvStep(context, self._python_executable())
 
       with self.assertRaises(DralithusProjectError):
         step.run(context)
@@ -272,8 +271,8 @@ class TestCreateVenvStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      executable = Path(temp_directory) / 'not-python'
+    with project_context() as (project_root, context):
+      executable = project_root / 'not-python'
       executable.write_text('#!/bin/sh\nexit 1\n', encoding='utf-8')
       executable.chmod(
         executable.stat().st_mode
@@ -285,7 +284,7 @@ class TestCreateVenvStep(unittest.TestCase):
         DralithusProjectError,
         'Python executable failed version check'
       ):
-        CreateVenvStep(executable)
+        CreateVenvStep(context, executable)
 
   def test_rollback_wraps_venv_removal_failure(self) -> None:
     """
@@ -294,7 +293,7 @@ class TestCreateVenvStep(unittest.TestCase):
       :return: None
     """
     with project_context() as (project_root, context):
-      step = CreateVenvStep(self._python_executable())
+      step = CreateVenvStep(context, self._python_executable())
       target = project_root / 'venv'
 
       step.run(context)
