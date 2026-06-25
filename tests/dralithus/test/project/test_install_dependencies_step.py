@@ -121,7 +121,11 @@ class TestInstallDependenciesStep(unittest.TestCase):
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
       self._write_packages(project_root)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       step = InstallDependenciesStep()
       with mock.patch('subprocess.run'):
         with self.assertRaises(DralithusProjectError):
@@ -135,7 +139,11 @@ class TestInstallDependenciesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       self._make_venv(context)
       step = InstallDependenciesStep()
       with mock.patch('subprocess.run'):
@@ -153,7 +161,11 @@ class TestInstallDependenciesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
       step = InstallDependenciesStep()
@@ -183,7 +195,12 @@ class TestInstallDependenciesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root, venv_name='env')
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026,
+        venv_name='env')
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
       step = InstallDependenciesStep()
@@ -205,7 +222,11 @@ class TestInstallDependenciesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
       step = InstallDependenciesStep()
@@ -224,7 +245,11 @@ class TestInstallDependenciesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
       self._write_local_packages(project_root, './libs/a\n./libs/b\n')
@@ -250,7 +275,11 @@ class TestInstallDependenciesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
       self._write_local_packages(project_root, '../test-lib [dev]\n')
@@ -271,7 +300,11 @@ class TestInstallDependenciesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
       step = InstallDependenciesStep()
@@ -293,7 +326,11 @@ class TestInstallDependenciesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
       step = InstallDependenciesStep()
@@ -314,7 +351,11 @@ class TestInstallDependenciesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
       step = InstallDependenciesStep()
@@ -332,7 +373,11 @@ class TestInstallDependenciesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
       step = InstallDependenciesStep()
@@ -357,7 +402,11 @@ class TestInstallDependenciesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
       step = InstallDependenciesStep()
@@ -380,7 +429,11 @@ class TestInstallDependenciesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
       requirements = project_root / InstallDependenciesStep.REQUIREMENTS_FILENAME
@@ -405,7 +458,11 @@ class TestInstallDependenciesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       step = InstallDependenciesStep()
       with mock.patch('subprocess.run') as run_mock:
         step.run(context, dry_run=True)
@@ -422,7 +479,11 @@ class TestInstallDependenciesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
       requirements = project_root / InstallDependenciesStep.REQUIREMENTS_FILENAME
@@ -445,7 +506,11 @@ class TestInstallDependenciesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
       external = project_root / 'external.txt'
@@ -470,7 +535,11 @@ class TestInstallDependenciesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
       requirements = project_root / InstallDependenciesStep.REQUIREMENTS_FILENAME
@@ -494,7 +563,11 @@ class TestInstallDependenciesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
       step = InstallDependenciesStep()
@@ -515,7 +588,11 @@ class TestInstallDependenciesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
       requirements = project_root / InstallDependenciesStep.REQUIREMENTS_FILENAME
@@ -539,7 +616,11 @@ class TestInstallDependenciesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
       step = InstallDependenciesStep()
@@ -564,7 +645,11 @@ class TestInstallDependenciesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
       step = InstallDependenciesStep()
@@ -585,7 +670,11 @@ class TestInstallDependenciesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       step = InstallDependenciesStep()
       step.rollback(context, dry_run=True)
       step.rollback(context)
