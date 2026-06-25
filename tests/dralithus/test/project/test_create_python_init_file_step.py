@@ -86,6 +86,7 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
       context = self._context(project_root)
       (project_root / self._DIRECTORY).mkdir(parents=True)
       step = CreatePythonInitFileStep(
+        context,
         self._DIRECTORY,
         self._copyright_header())
 
@@ -111,6 +112,7 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
         copyright_year=2020)
       (project_root / self._DIRECTORY).mkdir(parents=True)
       step = CreatePythonInitFileStep(
+        context,
         self._DIRECTORY,
         self._copyright_header())
 
@@ -134,6 +136,7 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
       init_py = self._init_py(project_root)
       init_py.write_text('# existing\n', encoding='utf-8')
       step = CreatePythonInitFileStep(
+        context,
         self._DIRECTORY,
         self._copyright_header())
 
@@ -150,6 +153,7 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
     with TemporaryDirectory() as temp_directory:
       context = self._context(Path(temp_directory))
       step = CreatePythonInitFileStep(
+        context,
         self._DIRECTORY,
         self._copyright_header())
 
@@ -168,6 +172,7 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
       (project_root / self._DIRECTORY).mkdir(parents=True)
       self._init_py(project_root).mkdir()
       step = CreatePythonInitFileStep(
+        context,
         self._DIRECTORY,
         self._copyright_header())
 
@@ -185,6 +190,7 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
       context = self._context(project_root)
       (project_root / self._DIRECTORY).mkdir(parents=True)
       step = CreatePythonInitFileStep(
+        context,
         self._DIRECTORY,
         self._copyright_header())
 
@@ -206,6 +212,7 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
       init_py = self._init_py(project_root)
       init_py.write_text('# existing\n', encoding='utf-8')
       step = CreatePythonInitFileStep(
+        context,
         self._DIRECTORY,
         self._copyright_header())
 
@@ -225,6 +232,7 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
       context = self._context(project_root)
       (project_root / self._DIRECTORY).mkdir(parents=True)
       step = CreatePythonInitFileStep(
+        context,
         self._DIRECTORY,
         self._copyright_header())
 
@@ -244,6 +252,7 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
       (project_root / self._DIRECTORY).mkdir(parents=True)
       self._init_py(project_root).mkdir()
       step = CreatePythonInitFileStep(
+        context,
         self._DIRECTORY,
         self._copyright_header())
 
@@ -264,6 +273,7 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
       context = self._context(project_root)
       (project_root / self._DIRECTORY).mkdir(parents=True)
       step = CreatePythonInitFileStep(
+        context,
         self._DIRECTORY,
         self._copyright_header())
 

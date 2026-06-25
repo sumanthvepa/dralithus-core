@@ -47,20 +47,24 @@ class CreatePythonInitFileStep(ExecutionStep):
 
   def __init__(
     self,
+    context: ProjectContext,
     directory: Path,
     copyright_header: CopyrightHeader
   ) -> None:
     """
       Initialize the Python __init__.py creation step.
 
+      :param context: The shared project creation context
       :param directory: The project-relative directory that should
         contain the __init__.py file
       :param copyright_header: The copyright header renderer for the
         generated __init__.py file
       :return: None
     """
+    super().__init__(context)
     self._copyright_header = copyright_header
     self._create_file_step = CreateFileStep(
+      context,
       directory / self.init_filename,
       self._content)
 
