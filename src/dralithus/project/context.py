@@ -21,6 +21,7 @@
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
 from dataclasses import dataclass
+import keyword
 from pathlib import Path
 
 from dralithus.project.error import DralithusProjectError
@@ -35,6 +36,7 @@ class ProjectContext:
   venv_name: str = 'venv'
   copyright_holder: str = 'Sumanth Vepa'
   copyright_year: int | None = None
+  package_name: str = 'dralithus'
 
   @staticmethod
   def _validate_venv_name(venv_name: str) -> None:
@@ -53,14 +55,38 @@ class ProjectContext:
       raise DralithusProjectError(
         f'Venv name must not contain path components: {venv_name}')
 
+  @staticmethod
+  def validate_package_name(package_name: str) -> None:
+    """
+      Validate that package_name is a valid Python package name.
+
+      :param package_name: The package name to validate
+      :return: None
+      :raises DralithusProjectError: When package_name is empty, not
+        a valid identifier, a Python keyword, or not lowercase
+    """
+    if package_name == '':
+      raise DralithusProjectError('Package name must not be empty')
+    if not package_name.isidentifier():
+      raise DralithusProjectError(
+        f'Package name is not a valid identifier: {package_name}')
+    if keyword.iskeyword(package_name):
+      raise DralithusProjectError(
+        f'Package name must not be a Python keyword: {package_name}')
+    if package_name != package_name.lower():
+      raise DralithusProjectError(
+        f'Package name must be lowercase: {package_name}')
+
   def __post_init__(self) -> None:
     """
       Validate the project context after dataclass initialization.
 
       :return: None
-      :raises DralithusProjectError: When venv_name is invalid
+      :raises DralithusProjectError: When venv_name or package_name
+        is invalid
     """
     self._validate_venv_name(self.venv_name)
+    self.validate_package_name(self.package_name)
 
   @property
   def venv_path(self) -> Path:

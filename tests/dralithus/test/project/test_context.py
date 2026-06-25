@@ -44,6 +44,32 @@ class TestProjectContext(unittest.TestCase):
 
       self.assertEqual('venv', context.venv_name)
 
+  def test_default_package_name_is_dralithus(self) -> None:
+    """
+      Verify that the default package name is dralithus.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(project_root=project_root)
+
+      self.assertEqual('dralithus', context.package_name)
+
+  def test_custom_package_name_is_stored(self) -> None:
+    """
+      Verify that a custom package name is stored.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='mypkg')
+
+      self.assertEqual('mypkg', context.package_name)
+
   def test_default_copyright_holder_is_sumanth_vepa(self) -> None:
     """
       Verify that the default copyright holder is Sumanth Vepa.
@@ -200,3 +226,63 @@ class TestProjectContext(unittest.TestCase):
         'Venv name must not contain path components'
       ):
         ProjectContext(project_root=project_root, venv_name='env/venv')
+
+  def test_rejects_empty_package_name(self) -> None:
+    """
+      Verify that empty package names are rejected.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+
+      with self.assertRaisesRegex(
+        DralithusProjectError,
+        'Package name must not be empty'
+      ):
+        ProjectContext(project_root=project_root, package_name='')
+
+  def test_rejects_non_identifier_package_name(self) -> None:
+    """
+      Verify that non-identifier package names are rejected.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+
+      with self.assertRaisesRegex(
+        DralithusProjectError,
+        'Package name is not a valid identifier'
+      ):
+        ProjectContext(project_root=project_root, package_name='my-pkg')
+
+  def test_rejects_keyword_package_name(self) -> None:
+    """
+      Verify that Python keywords are rejected as package names.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+
+      with self.assertRaisesRegex(
+        DralithusProjectError,
+        'Package name must not be a Python keyword'
+      ):
+        ProjectContext(project_root=project_root, package_name='class')
+
+  def test_rejects_uppercase_package_name(self) -> None:
+    """
+      Verify that uppercase package names are rejected.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+
+      with self.assertRaisesRegex(
+        DralithusProjectError,
+        'Package name must be lowercase'
+      ):
+        ProjectContext(project_root=project_root, package_name='MyPkg')
