@@ -71,6 +71,7 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
     """
     return ProjectContext(
       project_root=project_root,
+      package_name='sample',
       copyright_holder='Milestone 42',
       copyright_year=2030)
 
@@ -105,6 +106,7 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
       project_root = Path(temp_directory)
       context = ProjectContext(
         project_root=project_root,
+        package_name='sample',
         copyright_holder='Acme Tools',
         copyright_year=2035)
       (project_root / self._DIRECTORY).mkdir(parents=True)
