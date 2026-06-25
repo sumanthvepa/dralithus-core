@@ -40,21 +40,13 @@ class TestProjectContext(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
 
       self.assertEqual('venv', context.venv_name)
-
-  def test_default_package_name_is_dralithus(self) -> None:
-    """
-      Verify that the default package name is dralithus.
-
-      :return: None
-    """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
-
-      self.assertEqual('dralithus', context.package_name)
 
   def test_custom_package_name_is_stored(self) -> None:
     """
@@ -66,33 +58,11 @@ class TestProjectContext(unittest.TestCase):
       project_root = Path(temp_directory)
       context = ProjectContext(
         project_root=project_root,
-        package_name='mypkg')
+        package_name='mypkg',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
 
       self.assertEqual('mypkg', context.package_name)
-
-  def test_default_copyright_holder_is_sumanth_vepa(self) -> None:
-    """
-      Verify that the default copyright holder is Sumanth Vepa.
-
-      :return: None
-    """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
-
-      self.assertEqual('Sumanth Vepa', context.copyright_holder)
-
-  def test_default_copyright_year_is_none(self) -> None:
-    """
-      Verify that the default copyright year is unspecified.
-
-      :return: None
-    """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
-
-      self.assertIsNone(context.copyright_year)
 
   def test_custom_copyright_settings_are_stored(self) -> None:
     """
@@ -104,6 +74,7 @@ class TestProjectContext(unittest.TestCase):
       project_root = Path(temp_directory)
       context = ProjectContext(
         project_root=project_root,
+        package_name='sample',
         copyright_holder='Milestone 42',
         copyright_year=2030)
 
@@ -118,7 +89,11 @@ class TestProjectContext(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
 
       self.assertEqual(project_root / 'venv', context.venv_path)
 
@@ -130,7 +105,11 @@ class TestProjectContext(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
 
       self.assertEqual(project_root / 'venv' / 'bin' / 'python',
                        context.venv_python)
@@ -143,7 +122,12 @@ class TestProjectContext(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root, venv_name='env')
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026,
+        venv_name='env')
 
       self.assertEqual('env', context.venv_name)
       self.assertEqual(project_root / 'env', context.venv_path)
@@ -163,7 +147,12 @@ class TestProjectContext(unittest.TestCase):
         DralithusProjectError,
         'Venv name must not be empty'
       ):
-        ProjectContext(project_root=project_root, venv_name='')
+        ProjectContext(
+          project_root=project_root,
+          package_name='sample',
+          copyright_holder='Sumanth Vepa',
+          copyright_year=2026,
+          venv_name='')
 
   def test_rejects_current_directory_venv_name(self) -> None:
     """
@@ -178,7 +167,12 @@ class TestProjectContext(unittest.TestCase):
         DralithusProjectError,
         'Venv name must not contain path components'
       ):
-        ProjectContext(project_root=project_root, venv_name='.')
+        ProjectContext(
+          project_root=project_root,
+          package_name='sample',
+          copyright_holder='Sumanth Vepa',
+          copyright_year=2026,
+          venv_name='.')
 
   def test_rejects_parent_directory_venv_name(self) -> None:
     """
@@ -193,7 +187,12 @@ class TestProjectContext(unittest.TestCase):
         DralithusProjectError,
         'Venv name must not contain path components'
       ):
-        ProjectContext(project_root=project_root, venv_name='..')
+        ProjectContext(
+          project_root=project_root,
+          package_name='sample',
+          copyright_holder='Sumanth Vepa',
+          copyright_year=2026,
+          venv_name='..')
 
   def test_rejects_absolute_venv_path(self) -> None:
     """
@@ -210,6 +209,9 @@ class TestProjectContext(unittest.TestCase):
       ):
         ProjectContext(
           project_root=project_root,
+          package_name='sample',
+          copyright_holder='Sumanth Vepa',
+          copyright_year=2026,
           venv_name=str(project_root / 'venv'))
 
   def test_rejects_nested_venv_name(self) -> None:
@@ -225,7 +227,12 @@ class TestProjectContext(unittest.TestCase):
         DralithusProjectError,
         'Venv name must not contain path components'
       ):
-        ProjectContext(project_root=project_root, venv_name='env/venv')
+        ProjectContext(
+          project_root=project_root,
+          package_name='sample',
+          copyright_holder='Sumanth Vepa',
+          copyright_year=2026,
+          venv_name='env/venv')
 
   def test_rejects_empty_package_name(self) -> None:
     """
@@ -240,7 +247,11 @@ class TestProjectContext(unittest.TestCase):
         DralithusProjectError,
         'Package name must not be empty'
       ):
-        ProjectContext(project_root=project_root, package_name='')
+        ProjectContext(
+          project_root=project_root,
+          package_name='',
+          copyright_holder='Sumanth Vepa',
+          copyright_year=2026)
 
   def test_rejects_non_identifier_package_name(self) -> None:
     """
@@ -255,7 +266,11 @@ class TestProjectContext(unittest.TestCase):
         DralithusProjectError,
         'Package name is not a valid identifier'
       ):
-        ProjectContext(project_root=project_root, package_name='my-pkg')
+        ProjectContext(
+          project_root=project_root,
+          package_name='my-pkg',
+          copyright_holder='Sumanth Vepa',
+          copyright_year=2026)
 
   def test_rejects_keyword_package_name(self) -> None:
     """
@@ -270,7 +285,11 @@ class TestProjectContext(unittest.TestCase):
         DralithusProjectError,
         'Package name must not be a Python keyword'
       ):
-        ProjectContext(project_root=project_root, package_name='class')
+        ProjectContext(
+          project_root=project_root,
+          package_name='class',
+          copyright_holder='Sumanth Vepa',
+          copyright_year=2026)
 
   def test_rejects_uppercase_package_name(self) -> None:
     """
@@ -285,4 +304,8 @@ class TestProjectContext(unittest.TestCase):
         DralithusProjectError,
         'Package name must be lowercase'
       ):
-        ProjectContext(project_root=project_root, package_name='MyPkg')
+        ProjectContext(
+          project_root=project_root,
+          package_name='MyPkg',
+          copyright_holder='Sumanth Vepa',
+          copyright_year=2026)
