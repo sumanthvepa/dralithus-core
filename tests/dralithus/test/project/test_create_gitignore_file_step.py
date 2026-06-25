@@ -56,7 +56,11 @@ class TestCreateGitIgnoreFileStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       (project_root / self._DIRECTORY).mkdir()
       step = CreateGitIgnoreFileStep(self._DIRECTORY)
 
@@ -73,7 +77,11 @@ class TestCreateGitIgnoreFileStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       (project_root / self._DIRECTORY).mkdir()
       gitignore = self._gitignore(project_root)
       gitignore.write_text('*.log\n', encoding='utf-8')
@@ -90,7 +98,11 @@ class TestCreateGitIgnoreFileStep(unittest.TestCase):
       :return: None
     """
     with TemporaryDirectory() as temp_directory:
-      context = ProjectContext(project_root=Path(temp_directory))
+      context = ProjectContext(
+        project_root=Path(temp_directory),
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       step = CreateGitIgnoreFileStep(self._DIRECTORY)
 
       with self.assertRaises(DralithusProjectError):
@@ -104,7 +116,11 @@ class TestCreateGitIgnoreFileStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       (project_root / self._DIRECTORY).mkdir()
       step = CreateGitIgnoreFileStep(self._DIRECTORY)
 
@@ -121,7 +137,11 @@ class TestCreateGitIgnoreFileStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       (project_root / self._DIRECTORY).mkdir()
       gitignore = self._gitignore(project_root)
       gitignore.write_text('*.log\n', encoding='utf-8')
@@ -140,7 +160,11 @@ class TestCreateGitIgnoreFileStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       (project_root / self._DIRECTORY).mkdir()
       step = CreateGitIgnoreFileStep(self._DIRECTORY)
 
@@ -156,7 +180,11 @@ class TestCreateGitIgnoreFileStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       (project_root / self._DIRECTORY).mkdir()
       self._gitignore(project_root).mkdir()
       step = CreateGitIgnoreFileStep(self._DIRECTORY)
