@@ -173,18 +173,21 @@ class CreateFileStep(ExecutionStep):
 
   def __init__(
     self,
+    context: ProjectContext,
     filename: Path,
     content: str | FileContentProvider
   ) -> None:
     """
       Initialize the file creation step.
 
+      :param context: The shared project creation context
       :param filename: The project-relative file to create
       :param content: The literal UTF-8 text to write, or a provider
         that returns text for the project context
       :return: None
       :raises DralithusProjectError: When filename is absolute
     """
+    super().__init__(context)
     if filename.is_absolute():
       raise DralithusProjectError(
         f'Filename must be relative: {filename}')
@@ -227,10 +230,16 @@ class CreateFileStep(ExecutionStep):
       self._remove_created_file(context.project_root / self._filename)
 
   @classmethod
-  def from_file(cls, filename: Path, source_filename: Path) -> Self:
+  def from_file(
+    cls,
+    context: ProjectContext,
+    filename: Path,
+    source_filename: Path
+  ) -> Self:
     """
       Create a step whose content is read from a file.
 
+      :param context: The shared project creation context
       :param filename: The project-relative file to create
       :param source_filename: The source file to read
       :return: The configured file creation step
@@ -241,11 +250,12 @@ class CreateFileStep(ExecutionStep):
     except (OSError, UnicodeError) as error:
       raise DralithusProjectError(
         f'Could not read source file: {source_filename}') from error
-    return cls(filename, content)
+    return cls(context, filename, content)
 
   @classmethod
   def from_resource(
     cls,
+    context: ProjectContext,
     filename: Path,
     package: str,
     resource: str
@@ -253,6 +263,7 @@ class CreateFileStep(ExecutionStep):
     """
       Create a step whose content is read from a package resource.
 
+      :param context: The shared project creation context
       :param filename: The project-relative file to create
       :param package: The package containing the resource
       :param resource: The package-relative resource name
@@ -265,23 +276,23 @@ class CreateFileStep(ExecutionStep):
     except (ImportError, OSError, TypeError, UnicodeError) as error:
       raise DralithusProjectError(
         f'Could not read package resource: {package}/{resource}') from error
-    return cls(filename, content)
+    return cls(context, filename, content)
 
   @classmethod
   def from_template_resource(
     cls,
+    context: ProjectContext,
     filename: Path,
     package: str,
-    resource: str,
-    context: ProjectContext
+    resource: str
   ) -> Self:
     """
       Create a step whose content is rendered from a package template.
 
+      :param context: The shared project creation context
       :param filename: The project-relative file to create
       :param package: The package containing the resource
       :param resource: The package-relative resource name
-      :param context: The shared project creation context
       :return: The configured file creation step
       :raises DralithusProjectError: When the resource cannot be read
     """
@@ -300,4 +311,4 @@ class CreateFileStep(ExecutionStep):
     ) as error:
       raise DralithusProjectError(
         f'Could not render package resource: {package}/{resource}') from error
-    return cls(filename, content)
+    return cls(context, filename, content)

@@ -22,7 +22,6 @@
 # -------------------------------------------------------------------
 from importlib import resources
 from pathlib import Path
-from tempfile import TemporaryDirectory
 from typing import IO
 import unittest
 from unittest import mock
@@ -58,9 +57,10 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
+    with project_context() as (project_root, context):
       with self.assertRaises(DralithusProjectError):
-        CreateFileStep(Path(temp_directory) / self._FILENAME, self._CONTENT)
+        CreateFileStep(
+          context, project_root / self._FILENAME, self._CONTENT)
 
   def test_from_file_reads_source_content(self) -> None:
     """
@@ -71,7 +71,7 @@ class TestCreateFileStep(unittest.TestCase):
     with project_context() as (project_root, context):
       source = project_root / 'source.txt'
       source.write_text(self._CONTENT, encoding='utf-8')
-      step = CreateFileStep.from_file(self._FILENAME, source)
+      step = CreateFileStep.from_file(context, self._FILENAME, source)
 
       step.run(context)
 
@@ -85,11 +85,11 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      source = Path(temp_directory) / 'missing.txt'
+    with project_context() as (project_root, context):
+      source = project_root / 'missing.txt'
 
       with self.assertRaises(DralithusProjectError):
-        CreateFileStep.from_file(self._FILENAME, source)
+        CreateFileStep.from_file(context, self._FILENAME, source)
 
   def test_from_resource_reads_resource_content(self) -> None:
     """
@@ -99,6 +99,7 @@ class TestCreateFileStep(unittest.TestCase):
     """
     with project_context() as (project_root, context):
       step = CreateFileStep.from_resource(
+        context,
         self._FILENAME,
         'dralithus.project',
         'error.py')
@@ -119,11 +120,13 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    with self.assertRaises(DralithusProjectError):
-      CreateFileStep.from_resource(
-        self._FILENAME,
-        'dralithus.project',
-        'missing-resource.txt')
+    with project_context() as (_project_root, context):
+      with self.assertRaises(DralithusProjectError):
+        CreateFileStep.from_resource(
+          context,
+          self._FILENAME,
+          'dralithus.project',
+          'missing-resource.txt')
 
   def test_from_template_resource_renders_context_values(self) -> None:
     """
@@ -152,10 +155,10 @@ class TestCreateFileStep(unittest.TestCase):
         resources, 'files', return_value=template_directory
       ):
         step = CreateFileStep.from_template_resource(
+          context,
           self._FILENAME,
           'example.templates',
-          'config.ini.j2',
-          context)
+          'config.ini.j2')
 
       step.run(context)
 
@@ -175,10 +178,10 @@ class TestCreateFileStep(unittest.TestCase):
     with project_context() as (_project_root, context):
       with self.assertRaises(DralithusProjectError):
         CreateFileStep.from_template_resource(
+          context,
           self._FILENAME,
           'dralithus.project',
-          'missing-resource.txt',
-          context)
+          'missing-resource.txt')
 
   def test_run_creates_file_with_supplied_content(self) -> None:
     """
@@ -187,7 +190,7 @@ class TestCreateFileStep(unittest.TestCase):
       :return: None
     """
     with project_context() as (project_root, context):
-      step = CreateFileStep(self._FILENAME, self._CONTENT)
+      step = CreateFileStep(context, self._FILENAME, self._CONTENT)
 
       step.run(context)
 
@@ -219,7 +222,7 @@ class TestCreateFileStep(unittest.TestCase):
         return f'venv = {provider_context.venv_name}\n'
 
       content_provider: FileContentProvider = make_content
-      step = CreateFileStep(self._FILENAME, content_provider)
+      step = CreateFileStep(context, self._FILENAME, content_provider)
 
       step.run(context)
 
@@ -247,7 +250,7 @@ class TestCreateFileStep(unittest.TestCase):
         raise AssertionError('provider should not be called')
 
       content_provider: FileContentProvider = make_content
-      step = CreateFileStep(self._FILENAME, content_provider)
+      step = CreateFileStep(context, self._FILENAME, content_provider)
 
       step.run(context)
 
@@ -272,7 +275,7 @@ class TestCreateFileStep(unittest.TestCase):
         raise AssertionError('provider should not be called')
 
       content_provider: FileContentProvider = make_content
-      step = CreateFileStep(self._FILENAME, content_provider)
+      step = CreateFileStep(context, self._FILENAME, content_provider)
 
       step.run(context, dry_run=True)
 
@@ -286,7 +289,7 @@ class TestCreateFileStep(unittest.TestCase):
     """
     with project_context() as (project_root, context):
       content = 'first line\nsecond line\n'
-      step = CreateFileStep(self._FILENAME, content)
+      step = CreateFileStep(context, self._FILENAME, content)
 
       step.run(context)
 
@@ -301,7 +304,8 @@ class TestCreateFileStep(unittest.TestCase):
       :return: None
     """
     with project_context() as (_project_root, context):
-      step = CreateFileStep(Path('missing') / self._FILENAME, self._CONTENT)
+      step = CreateFileStep(
+        context, Path('missing') / self._FILENAME, self._CONTENT)
 
       with self.assertRaises(DralithusProjectError):
         step.run(context)
@@ -314,7 +318,7 @@ class TestCreateFileStep(unittest.TestCase):
     """
     with project_context() as (project_root, context):
       filename = Path('missing') / self._FILENAME
-      step = CreateFileStep(filename, self._CONTENT)
+      step = CreateFileStep(context, filename, self._CONTENT)
 
       with self.assertRaisesRegex(
         DralithusProjectError,
@@ -332,6 +336,7 @@ class TestCreateFileStep(unittest.TestCase):
       parent = project_root / 'parent'
       parent.write_text('not a directory\n', encoding='utf-8')
       step = CreateFileStep(
+        context,
         Path(parent.name) / self._FILENAME,
         self._CONTENT)
 
@@ -353,7 +358,7 @@ class TestCreateFileStep(unittest.TestCase):
       (project_root / 'linked-parent').symlink_to(
         real_parent, target_is_directory=True)
       filename = Path('linked-parent') / self._FILENAME
-      step = CreateFileStep(filename, self._CONTENT)
+      step = CreateFileStep(context, filename, self._CONTENT)
 
       step.run(context)
 
@@ -370,7 +375,7 @@ class TestCreateFileStep(unittest.TestCase):
     with project_context() as (project_root, context):
       target = self._target(project_root)
       target.write_text('user content\n', encoding='utf-8')
-      step = CreateFileStep(self._FILENAME, self._CONTENT)
+      step = CreateFileStep(context, self._FILENAME, self._CONTENT)
 
       step.run(context)
 
@@ -388,7 +393,7 @@ class TestCreateFileStep(unittest.TestCase):
       symlink_target.write_text('user content\n', encoding='utf-8')
       target = self._target(project_root)
       target.symlink_to(symlink_target)
-      step = CreateFileStep(self._FILENAME, self._CONTENT)
+      step = CreateFileStep(context, self._FILENAME, self._CONTENT)
 
       step.run(context)
 
@@ -404,7 +409,7 @@ class TestCreateFileStep(unittest.TestCase):
     """
     with project_context() as (project_root, context):
       self._target(project_root).mkdir()
-      step = CreateFileStep(self._FILENAME, self._CONTENT)
+      step = CreateFileStep(context, self._FILENAME, self._CONTENT)
 
       with self.assertRaises(DralithusProjectError):
         step.run(context)
@@ -418,7 +423,7 @@ class TestCreateFileStep(unittest.TestCase):
     with project_context() as (project_root, context):
       target = self._target(project_root)
       target.symlink_to(project_root / 'missing-target')
-      step = CreateFileStep(self._FILENAME, self._CONTENT)
+      step = CreateFileStep(context, self._FILENAME, self._CONTENT)
 
       with self.assertRaises(DralithusProjectError):
         step.run(context)
@@ -434,7 +439,7 @@ class TestCreateFileStep(unittest.TestCase):
       directory.mkdir()
       self._target(project_root).symlink_to(
         directory, target_is_directory=True)
-      step = CreateFileStep(self._FILENAME, self._CONTENT)
+      step = CreateFileStep(context, self._FILENAME, self._CONTENT)
 
       with self.assertRaises(DralithusProjectError):
         step.run(context)
@@ -448,7 +453,7 @@ class TestCreateFileStep(unittest.TestCase):
     with project_context() as (project_root, context):
       target = self._target(project_root)
       target.write_text('user content\n', encoding='utf-8')
-      step = CreateFileStep(self._FILENAME, self._CONTENT)
+      step = CreateFileStep(context, self._FILENAME, self._CONTENT)
       real_open = Path.open
 
       def fail_target_read(
@@ -487,7 +492,7 @@ class TestCreateFileStep(unittest.TestCase):
       return file
 
     with project_context() as (project_root, context):
-      step = CreateFileStep(self._FILENAME, self._CONTENT)
+      step = CreateFileStep(context, self._FILENAME, self._CONTENT)
 
       with mock.patch.object(Path, 'open', failing_open):
         with self.assertRaises(DralithusProjectError):
@@ -502,7 +507,7 @@ class TestCreateFileStep(unittest.TestCase):
       :return: None
     """
     with project_context() as (project_root, context):
-      step = CreateFileStep(self._FILENAME, self._CONTENT)
+      step = CreateFileStep(context, self._FILENAME, self._CONTENT)
 
       step.run(context)
       step.rollback(context)
@@ -518,7 +523,7 @@ class TestCreateFileStep(unittest.TestCase):
     with project_context() as (project_root, context):
       target = self._target(project_root)
       target.write_text('user content\n', encoding='utf-8')
-      step = CreateFileStep(self._FILENAME, self._CONTENT)
+      step = CreateFileStep(context, self._FILENAME, self._CONTENT)
 
       step.run(context)
       step.rollback(context)
@@ -537,7 +542,7 @@ class TestCreateFileStep(unittest.TestCase):
       symlink_target.write_text('user content\n', encoding='utf-8')
       target = self._target(project_root)
       target.symlink_to(symlink_target)
-      step = CreateFileStep(self._FILENAME, self._CONTENT)
+      step = CreateFileStep(context, self._FILENAME, self._CONTENT)
 
       step.run(context)
       step.rollback(context)
@@ -554,7 +559,7 @@ class TestCreateFileStep(unittest.TestCase):
     """
     with project_context() as (project_root, context):
       target = self._target(project_root)
-      step = CreateFileStep(self._FILENAME, self._CONTENT)
+      step = CreateFileStep(context, self._FILENAME, self._CONTENT)
 
       step.run(context)
       target.unlink()
@@ -570,7 +575,7 @@ class TestCreateFileStep(unittest.TestCase):
     """
     with project_context() as (project_root, context):
       target = self._target(project_root)
-      step = CreateFileStep(self._FILENAME, self._CONTENT)
+      step = CreateFileStep(context, self._FILENAME, self._CONTENT)
       step.run(context)
       real_unlink = Path.unlink
 
@@ -598,7 +603,7 @@ class TestCreateFileStep(unittest.TestCase):
     """
     with project_context() as (project_root, context):
       target = self._target(project_root)
-      step = CreateFileStep(self._FILENAME, self._CONTENT)
+      step = CreateFileStep(context, self._FILENAME, self._CONTENT)
 
       step.run(context)
       step.rollback(context)
@@ -618,7 +623,7 @@ class TestCreateFileStep(unittest.TestCase):
     """
     with project_context() as (project_root, context):
       target = self._target(project_root)
-      step = CreateFileStep(self._FILENAME, self._CONTENT)
+      step = CreateFileStep(context, self._FILENAME, self._CONTENT)
       real_open = Path.open
       fail_write = True
 
@@ -656,7 +661,7 @@ class TestCreateFileStep(unittest.TestCase):
     """
     with project_context() as (project_root, context):
       target = self._target(project_root)
-      step = CreateFileStep(self._FILENAME, self._CONTENT)
+      step = CreateFileStep(context, self._FILENAME, self._CONTENT)
 
       step.run(context)
       step.run(context)
@@ -671,7 +676,7 @@ class TestCreateFileStep(unittest.TestCase):
       :return: None
     """
     with project_context() as (project_root, context):
-      step = CreateFileStep(self._FILENAME, self._CONTENT)
+      step = CreateFileStep(context, self._FILENAME, self._CONTENT)
 
       step.run(context, dry_run=True)
 
@@ -685,7 +690,7 @@ class TestCreateFileStep(unittest.TestCase):
     """
     with project_context() as (project_root, context):
       self._target(project_root).mkdir()
-      step = CreateFileStep(self._FILENAME, self._CONTENT)
+      step = CreateFileStep(context, self._FILENAME, self._CONTENT)
 
       with self.assertRaises(DralithusProjectError):
         step.run(context, dry_run=True)
@@ -698,7 +703,7 @@ class TestCreateFileStep(unittest.TestCase):
     """
     with project_context() as (project_root, context):
       target = self._target(project_root)
-      step = CreateFileStep(self._FILENAME, self._CONTENT)
+      step = CreateFileStep(context, self._FILENAME, self._CONTENT)
 
       step.run(context)
       step.rollback(context, dry_run=True)
