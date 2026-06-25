@@ -143,7 +143,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
     cls,
     project_name: str = 'sample-project',
     project_description: str = 'Sample project',
-    package_name: str = 'sample_project',
+    package_name: str = 'sample',
     project_version: str = '0.1.0',
     python_requirement: str | None = None,
     dependencies: list[str] | None = None,
@@ -211,7 +211,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
     context: ProjectContext,
     project_name: str = 'sample-project',
     project_description: str = 'Sample project',
-    package_name: str = 'sample_project',
+    package_name: str = 'sample',
     project_version: str = '0.1.0',
     dependencies: list[str] | None = None
   ) -> None:
@@ -254,9 +254,9 @@ class TestCreatePyProjectStep(unittest.TestCase):
     with project_context() as (_project_root, context):
       self._create_venv(context)
       step = CreatePyProjectStep(
+        context,
         project_name='sample-project',
-        project_description='Sample project',
-        package_name='sample_project')
+        project_description='Sample project')
 
       step.run(context)
 
@@ -271,9 +271,9 @@ class TestCreatePyProjectStep(unittest.TestCase):
     with project_context(venv_name='env') as (project_root, context):
       self._create_venv(context)
       step = CreatePyProjectStep(
+        context,
         project_name='sample-project',
-        project_description='Sample project',
-        package_name='sample_project')
+        project_description='Sample project')
 
       step.run(context)
 
@@ -298,9 +298,9 @@ class TestCreatePyProjectStep(unittest.TestCase):
         'rich\n',
         encoding='utf-8')
       step = CreatePyProjectStep(
+        context,
         'sample-project',
-        'Sample project',
-        'sample_project')
+        'Sample project')
 
       step.run(context)
 
@@ -325,9 +325,9 @@ class TestCreatePyProjectStep(unittest.TestCase):
         '../test-lib [dev]\n',
         encoding='utf-8')
       step = CreatePyProjectStep(
+        context,
         'sample-project',
-        'Sample project',
-        'sample_project')
+        'Sample project')
 
       step.run(context)
 
@@ -356,9 +356,9 @@ class TestCreatePyProjectStep(unittest.TestCase):
         '../common-lib\n',
         encoding='utf-8')
       step = CreatePyProjectStep(
+        context,
         'sample-project',
-        'Sample project',
-        'sample_project')
+        'Sample project')
 
       step.run(context)
 
@@ -377,9 +377,9 @@ class TestCreatePyProjectStep(unittest.TestCase):
     with project_context() as (project_root, context):
       self._create_venv(context)
       step = CreatePyProjectStep(
+        context,
         'sample-project',
-        'Sample project',
-        'sample_project')
+        'Sample project')
 
       step.run(context, dry_run=True)
 
@@ -394,9 +394,9 @@ class TestCreatePyProjectStep(unittest.TestCase):
     with project_context() as (_project_root, context):
       self._create_venv(context, create_packages_txt=False)
       step = CreatePyProjectStep(
+        context,
         'sample-project',
-        'Sample project',
-        'sample_project')
+        'Sample project')
 
       with self.assertRaises(DralithusProjectError):
         step.run(context)
@@ -409,9 +409,9 @@ class TestCreatePyProjectStep(unittest.TestCase):
     """
     with project_context() as (_project_root, context):
       step = CreatePyProjectStep(
+        context,
         'sample-project',
-        'Sample project',
-        'sample_project')
+        'Sample project')
 
       with self.assertRaises(DralithusProjectError):
         step.run(context)
@@ -425,9 +425,9 @@ class TestCreatePyProjectStep(unittest.TestCase):
     with project_context() as (_project_root, context):
       context.venv_path.mkdir()
       step = CreatePyProjectStep(
+        context,
         'sample-project',
-        'Sample project',
-        'sample_project')
+        'Sample project')
 
       with self.assertRaises(DralithusProjectError):
         step.run(context)
@@ -444,9 +444,9 @@ class TestCreatePyProjectStep(unittest.TestCase):
         'home = /usr/bin\n',
         encoding='utf-8')
       step = CreatePyProjectStep(
+        context,
         'sample-project',
-        'Sample project',
-        'sample_project')
+        'Sample project')
 
       with self.assertRaises(DralithusProjectError):
         step.run(context)
@@ -463,9 +463,9 @@ class TestCreatePyProjectStep(unittest.TestCase):
       text = self._pyproject_text()
       pyproject.write_text(text, encoding='utf-8')
       step = CreatePyProjectStep(
+        context,
         'sample-project',
-        'Sample project',
-        'sample_project')
+        'Sample project')
 
       step.run(context)
 
@@ -481,9 +481,9 @@ class TestCreatePyProjectStep(unittest.TestCase):
       self._create_venv(context)
       (project_root / 'pyproject.toml').mkdir()
       step = CreatePyProjectStep(
+        context,
         'sample-project',
-        'Sample project',
-        'sample_project')
+        'Sample project')
 
       with self.assertRaises(DralithusProjectError):
         step.run(context)
@@ -527,9 +527,9 @@ class TestCreatePyProjectStep(unittest.TestCase):
       text = self._malformed_pyproject_text(malformed_case)
       (project_root / 'pyproject.toml').write_text(text, encoding='utf-8')
       step = CreatePyProjectStep(
+        context,
         'sample-project',
-        'Sample project',
-        'sample_project')
+        'Sample project')
 
       with self.assertRaises(DralithusProjectError):
         step.run(context)
@@ -543,9 +543,9 @@ class TestCreatePyProjectStep(unittest.TestCase):
     with project_context() as (project_root, context):
       self._create_venv(context)
       step = CreatePyProjectStep(
+        context,
         'sample-project',
-        'Sample project',
-        'sample_project')
+        'Sample project')
 
       step.run(context)
       step.rollback(context)
@@ -561,9 +561,9 @@ class TestCreatePyProjectStep(unittest.TestCase):
     with project_context() as (project_root, context):
       self._create_venv(context)
       step = CreatePyProjectStep(
+        context,
         'sample-project',
-        'Sample project',
-        'sample_project')
+        'Sample project')
 
       step.run(context)
       step.run(context)
@@ -582,9 +582,9 @@ class TestCreatePyProjectStep(unittest.TestCase):
       pyproject = project_root / 'pyproject.toml'
       pyproject.write_text(self._pyproject_text(), encoding='utf-8')
       step = CreatePyProjectStep(
+        context,
         'sample-project',
-        'Sample project',
-        'sample_project')
+        'Sample project')
 
       step.run(context)
       step.rollback(context)
@@ -600,9 +600,9 @@ class TestCreatePyProjectStep(unittest.TestCase):
     with project_context() as (project_root, context):
       self._create_venv(context)
       step = CreatePyProjectStep(
+        context,
         'sample-project',
-        'Sample project',
-        'sample_project')
+        'Sample project')
 
       step.run(context)
       step.rollback(context, dry_run=True)

@@ -37,23 +37,24 @@ class CreatePyProjectStep(ExecutionStep):
   # pylint: disable-next=too-many-arguments,too-many-positional-arguments
   def __init__(
     self,
+    context: ProjectContext,
     project_name: str,
     project_description: str,
-    package_name: str,
     project_version: str = '0.1.0'
   ) -> None:
     """
       Initialize the pyproject.toml creation step.
 
+      :param context: The shared project creation context
       :param project_name: The project distribution name
       :param project_description: The project description
-      :param package_name: The Python package name
       :param project_version: The project version
       :return: None
     """
+    super().__init__(context)
     self._project_name = project_name
     self._project_description = project_description
-    self._package_name = package_name
+    self._package_name = context.package_name
     self._project_version = project_version
     self._created_pyproject = False
 
