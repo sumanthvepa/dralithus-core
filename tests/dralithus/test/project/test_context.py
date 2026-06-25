@@ -24,7 +24,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
 
-from dralithus.project.context import ProjectContext
+from dralithus.project.context import ProjectContext, ProjectContextDict
 from dralithus.project.error import DralithusProjectError
 
 
@@ -309,3 +309,71 @@ class TestProjectContext(unittest.TestCase):
           package_name='MyPkg',
           copyright_holder='Sumanth Vepa',
           copyright_year=2026)
+
+  def test_as_dict_contains_all_fields(self) -> None:
+    """
+      Verify as_dict returns all fields with correct values.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
+
+      result = context.as_dict()
+
+      expected: ProjectContextDict = {
+        'project_root': project_root,
+        'package_name': 'sample',
+        'copyright_holder': 'Sumanth Vepa',
+        'copyright_year': 2026,
+        'venv_name': 'venv',
+        'venv_path': project_root / 'venv',
+        'venv_python': project_root / 'venv' / 'bin' / 'python',
+      }
+      self.assertEqual(expected, result)
+
+  def test_as_dict_preserves_none_copyright_year(self) -> None:
+    """
+      Verify as_dict preserves None for copyright_year.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=None)
+
+      result = context.as_dict()
+
+      self.assertIsNone(result['copyright_year'])
+
+  def test_as_dict_reflects_custom_venv_name(self) -> None:
+    """
+      Verify as_dict derived paths update when venv_name is custom.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026,
+        venv_name='env')
+
+      result = context.as_dict()
+
+      self.assertEqual('env', result['venv_name'])
+      self.assertEqual(project_root / 'env', result['venv_path'])
+      self.assertEqual(
+        project_root / 'env' / 'bin' / 'python',
+        result['venv_python'])

@@ -22,8 +22,22 @@
 # -------------------------------------------------------------------
 import keyword
 from pathlib import Path
+from typing import TypedDict
 
 from dralithus.project.error import DralithusProjectError
+
+
+class ProjectContextDict(TypedDict):
+  """
+    Typed dictionary representation of a ProjectContext.
+  """
+  project_root: Path
+  package_name: str
+  copyright_holder: str
+  copyright_year: int | None
+  venv_name: str
+  venv_path: Path
+  venv_python: Path
 
 
 class ProjectContext:
@@ -118,3 +132,19 @@ class ProjectContext:
     """
     # POSIX-only for now; Windows venv layout support is deferred.
     return self.venv_path / 'bin' / 'python'
+
+  def as_dict(self) -> ProjectContextDict:
+    """
+      Return a typed dictionary of all context fields.
+
+      :return: A ProjectContextDict containing every field and
+        derived property of this context
+    """
+    return ProjectContextDict(
+      project_root=self.project_root,
+      package_name=self.package_name,
+      copyright_holder=self.copyright_holder,
+      copyright_year=self.copyright_year,
+      venv_name=self.venv_name,
+      venv_path=self.venv_path,
+      venv_python=self.venv_python)
