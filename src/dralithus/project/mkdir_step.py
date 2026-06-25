@@ -31,14 +31,16 @@ class MkdirStep(ExecutionStep):
   """
     Represent a project creation step that creates a directory.
   """
-  def __init__(self, directory: Path) -> None:
+  def __init__(self, context: ProjectContext, directory: Path) -> None:
     """
       Initialize the directory creation step.
 
+      :param context: The shared project creation context
       :param directory: The project-relative directory to create
       :return: None
       :raises DralithusProjectError: When directory is not relative
     """
+    super().__init__(context)
     if directory.is_absolute():
       raise DralithusProjectError(
         f'Directory must be relative: {directory}')

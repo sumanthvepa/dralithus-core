@@ -48,7 +48,7 @@ class TestMkdirStep(unittest.TestCase):
         package_name='sample',
         copyright_holder='Sumanth Vepa',
         copyright_year=2026)
-      step = MkdirStep(Path('src'))
+      step = MkdirStep(context, Path('src'))
 
       step.run(context)
 
@@ -68,7 +68,7 @@ class TestMkdirStep(unittest.TestCase):
         copyright_holder='Sumanth Vepa',
         copyright_year=2026)
       target = Path('src') / 'dralithus' / 'project'
-      step = MkdirStep(target)
+      step = MkdirStep(context, target)
 
       step.run(context)
 
@@ -87,7 +87,7 @@ class TestMkdirStep(unittest.TestCase):
         package_name='sample',
         copyright_holder='Sumanth Vepa',
         copyright_year=2026)
-      step = MkdirStep(Path('src'))
+      step = MkdirStep(context, Path('src'))
 
       step.run(context, dry_run=True)
 
@@ -106,7 +106,7 @@ class TestMkdirStep(unittest.TestCase):
         package_name='sample',
         copyright_holder='Sumanth Vepa',
         copyright_year=2026)
-      step = MkdirStep(Path('src'))
+      step = MkdirStep(context, Path('src'))
 
       step.run(context)
       step.rollback(context)
@@ -126,7 +126,7 @@ class TestMkdirStep(unittest.TestCase):
         package_name='sample',
         copyright_holder='Sumanth Vepa',
         copyright_year=2026)
-      step = MkdirStep(Path('src'))
+      step = MkdirStep(context, Path('src'))
 
       step.run(context)
       step.run(context)
@@ -150,7 +150,7 @@ class TestMkdirStep(unittest.TestCase):
         copyright_holder='Sumanth Vepa',
         copyright_year=2026)
       target = Path('src') / 'dralithus' / 'project'
-      step = MkdirStep(target)
+      step = MkdirStep(context, target)
 
       step.run(context)
       step.rollback(context)
@@ -177,7 +177,7 @@ class TestMkdirStep(unittest.TestCase):
       preexisting_parent = project_root / 'src'
       target = Path('src') / 'dralithus' / 'project'
       preexisting_parent.mkdir()
-      step = MkdirStep(target)
+      step = MkdirStep(context, target)
 
       step.run(context)
       step.rollback(context)
@@ -199,7 +199,7 @@ class TestMkdirStep(unittest.TestCase):
         package_name='sample',
         copyright_holder='Sumanth Vepa',
         copyright_year=2026)
-      step = MkdirStep(Path('src'))
+      step = MkdirStep(context, Path('src'))
 
       step.run(context)
       step.rollback(context, dry_run=True)
@@ -221,7 +221,7 @@ class TestMkdirStep(unittest.TestCase):
         copyright_year=2026)
       target = project_root / 'src'
       target.mkdir()
-      step = MkdirStep(Path('src'))
+      step = MkdirStep(context, Path('src'))
 
       step.run(context)
       step.rollback(context)
@@ -242,7 +242,7 @@ class TestMkdirStep(unittest.TestCase):
         copyright_holder='Sumanth Vepa',
         copyright_year=2026)
       target = project_root / 'src'
-      step = MkdirStep(Path('src'))
+      step = MkdirStep(context, Path('src'))
 
       step.run(context)
       (target / 'module.py').touch()
@@ -268,5 +268,5 @@ class TestMkdirStep(unittest.TestCase):
         copyright_year=2026)
 
       with self.assertRaises(DralithusProjectError):
-        step = MkdirStep(project_root / 'src')
+        step = MkdirStep(context, project_root / 'src')
         step.run(context)
