@@ -43,7 +43,11 @@ class TestMkdirStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       step = MkdirStep(Path('src'))
 
       step.run(context)
@@ -58,7 +62,11 @@ class TestMkdirStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       target = Path('src') / 'dralithus' / 'project'
       step = MkdirStep(target)
 
@@ -74,7 +82,11 @@ class TestMkdirStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       step = MkdirStep(Path('src'))
 
       step.run(context, dry_run=True)
@@ -89,7 +101,11 @@ class TestMkdirStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       step = MkdirStep(Path('src'))
 
       step.run(context)
@@ -105,7 +121,11 @@ class TestMkdirStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       step = MkdirStep(Path('src'))
 
       step.run(context)
@@ -124,7 +144,11 @@ class TestMkdirStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       target = Path('src') / 'dralithus' / 'project'
       step = MkdirStep(target)
 
@@ -145,7 +169,11 @@ class TestMkdirStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       preexisting_parent = project_root / 'src'
       target = Path('src') / 'dralithus' / 'project'
       preexisting_parent.mkdir()
@@ -166,7 +194,11 @@ class TestMkdirStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       step = MkdirStep(Path('src'))
 
       step.run(context)
@@ -182,7 +214,11 @@ class TestMkdirStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       target = project_root / 'src'
       target.mkdir()
       step = MkdirStep(Path('src'))
@@ -200,7 +236,11 @@ class TestMkdirStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       target = project_root / 'src'
       step = MkdirStep(Path('src'))
 
@@ -221,7 +261,11 @@ class TestMkdirStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
 
       with self.assertRaises(DralithusProjectError):
         step = MkdirStep(project_root / 'src')
