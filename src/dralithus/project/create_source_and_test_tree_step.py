@@ -24,7 +24,6 @@
 # -------------------------------------------------------------------
 from datetime import date
 from importlib import resources
-import keyword
 from pathlib import Path
 from string import Template
 from typing import override
@@ -219,28 +218,6 @@ class CreateSourceAndTestTreeStep(ExecutionStep):
       raise DralithusProjectError(
         f'Path is not a regular file: {path}')
 
-  @staticmethod
-  def _validate_package_name(package_name: str) -> None:
-    """
-      Validate that package_name is a valid Python package name.
-
-      :param package_name: The package name to validate
-      :return: None
-      :raises DralithusProjectError: When package_name is empty, not
-        a valid identifier, a Python keyword, or not lowercase
-    """
-    if package_name == '':
-      raise DralithusProjectError('Package name must not be empty')
-    if not package_name.isidentifier():
-      raise DralithusProjectError(
-        f'Package name is not a valid identifier: {package_name}')
-    if keyword.iskeyword(package_name):
-      raise DralithusProjectError(
-        f'Package name must not be a Python keyword: {package_name}')
-    if package_name != package_name.lower():
-      raise DralithusProjectError(
-        f'Package name must be lowercase: {package_name}')
-
   def __init__(self, package_name: str) -> None:
     """
       Initialize the source and test tree creation step.
@@ -250,7 +227,7 @@ class CreateSourceAndTestTreeStep(ExecutionStep):
       :raises DralithusProjectError: When package_name is not a valid
         Python package name
     """
-    self._validate_package_name(package_name)
+    ProjectContext.validate_package_name(package_name)
     self._package_name = package_name
     self._src_mkdir = MkdirStep(Path('src') / package_name)
     self._tests_mkdir = MkdirStep(
