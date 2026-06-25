@@ -36,15 +36,6 @@ class CreatePythonInitFileStep(ExecutionStep):
     Represent a project creation step that creates an __init__.py file
     with a copyright notice in one project-relative directory.
   """
-  def _content(self, context: ProjectContext) -> str:
-    """
-      Return the generated __init__.py file content.
-
-      :param context: The shared project creation context
-      :return: The UTF-8 text to write
-    """
-    return self._copyright_header.text('python', context)
-
   def __init__(
     self,
     context: ProjectContext,
@@ -54,6 +45,9 @@ class CreatePythonInitFileStep(ExecutionStep):
     """
       Initialize the Python __init__.py creation step.
 
+      The copyright header is rendered here, because the project
+      context is known at construction time.
+
       :param context: The shared project creation context
       :param directory: The project-relative directory that should
         contain the __init__.py file
@@ -62,11 +56,11 @@ class CreatePythonInitFileStep(ExecutionStep):
       :return: None
     """
     super().__init__(context)
-    self._copyright_header = copyright_header
+    content = copyright_header.text('python', context)
     self._create_file_step = CreateFileStep(
       context,
       directory / self.init_filename,
-      self._content)
+      content)
 
   @property
   def init_filename(self) -> str:

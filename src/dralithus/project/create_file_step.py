@@ -23,7 +23,7 @@
 from importlib import resources
 import os
 from pathlib import Path
-from typing import Protocol, Self, override
+from typing import Self, override
 
 from jinja2 import Environment, TemplateError
 
@@ -32,38 +32,11 @@ from dralithus.project.error import DralithusProjectError
 from dralithus.project.execution_step import ExecutionStep
 
 
-# pylint: disable-next=too-few-public-methods
-class FileContentProvider(Protocol):
-  """
-    Represent a callable that provides file content at run time.
-  """
-  def __call__(self, context: ProjectContext, /) -> str:
-    """
-      Return file content for a project context.
-
-      :param context: The shared project creation context
-      :return: The UTF-8 text to write
-    """
-    raise NotImplementedError()
-
-
 class CreateFileStep(ExecutionStep):
   """
     Represent a project creation step that creates one file.
   """
   _file_created: bool
-
-  def _content(self) -> str:
-    """
-      Return the file content for the project context.
-
-      :return: The UTF-8 text to write
-    """
-    if isinstance(self._content_source, str):
-      content = self._content_source
-    else:
-      content = self._content_source(self._context)
-    return content
 
   def _remove_created_file(self, path: Path) -> None:
     """
@@ -104,7 +77,7 @@ class CreateFileStep(ExecutionStep):
       self._file_created = True
       try:
         with file:
-          file.write(self._content())
+          file.write(self._content)
       except OSError as error:
         self._remove_created_file(path)
         raise DralithusProjectError(
@@ -173,15 +146,14 @@ class CreateFileStep(ExecutionStep):
     self,
     context: ProjectContext,
     filename: Path,
-    content: str | FileContentProvider
+    content: str
   ) -> None:
     """
       Initialize the file creation step.
 
       :param context: The shared project creation context
       :param filename: The project-relative file to create
-      :param content: The literal UTF-8 text to write, or a provider
-        that returns text for the project context
+      :param content: The literal UTF-8 text to write
       :return: None
       :raises DralithusProjectError: When filename is absolute
     """
@@ -190,7 +162,7 @@ class CreateFileStep(ExecutionStep):
       raise DralithusProjectError(
         f'Filename must be relative: {filename}')
     self._filename = filename
-    self._content_source = content
+    self._content = content
     self._file_created = False
 
   @override
