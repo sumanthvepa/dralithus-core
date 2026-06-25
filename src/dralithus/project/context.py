@@ -20,24 +20,16 @@
 # along with this program.  If not, see
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
-from dataclasses import dataclass
 import keyword
 from pathlib import Path
 
 from dralithus.project.error import DralithusProjectError
 
 
-@dataclass
 class ProjectContext:
   """
     Hold shared state for project creation steps.
   """
-  project_root: Path
-  venv_name: str = 'venv'
-  copyright_holder: str = 'Sumanth Vepa'
-  copyright_year: int | None = None
-  package_name: str = 'dralithus'
-
   @staticmethod
   def _validate_venv_name(venv_name: str) -> None:
     """
@@ -77,16 +69,35 @@ class ProjectContext:
       raise DralithusProjectError(
         f'Package name must be lowercase: {package_name}')
 
-  def __post_init__(self) -> None:
+  # pylint: disable-next=too-many-arguments, too-many-positional-arguments
+  def __init__(
+      self,
+      project_root: Path,
+      package_name: str,
+      copyright_holder: str,
+      copyright_year: int | None,
+      venv_name: str = 'venv'
+  ) -> None:
     """
-      Validate the project context after dataclass initialization.
+      Initialize the project context.
 
+      :param project_root: The root directory of the project
+      :param package_name: The Python package name
+      :param copyright_holder: The copyright holder name
+      :param copyright_year: The copyright year, or None for the
+        current year
+      :param venv_name: The name of the virtual environment directory
       :return: None
       :raises DralithusProjectError: When venv_name or package_name
         is invalid
     """
-    self._validate_venv_name(self.venv_name)
-    self.validate_package_name(self.package_name)
+    self._validate_venv_name(venv_name)
+    self.validate_package_name(package_name)
+    self.project_root = project_root
+    self.venv_name = venv_name
+    self.copyright_holder = copyright_holder
+    self.copyright_year = copyright_year
+    self.package_name = package_name
 
   @property
   def venv_path(self) -> Path:
