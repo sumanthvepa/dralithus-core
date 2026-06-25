@@ -126,7 +126,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
         package_name='sample',
         copyright_holder='Sumanth Vepa',
         copyright_year=2026)
-      step = InstallDependenciesStep()
+      step = InstallDependenciesStep(context)
       with mock.patch('subprocess.run'):
         with self.assertRaises(DralithusProjectError):
           step.run(context)
@@ -145,7 +145,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
         copyright_holder='Sumanth Vepa',
         copyright_year=2026)
       self._make_venv(context)
-      step = InstallDependenciesStep()
+      step = InstallDependenciesStep(context)
       with mock.patch('subprocess.run'):
         with self.assertRaises(DralithusProjectError):
           step.run(context)
@@ -168,7 +168,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
         copyright_year=2026)
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
-      step = InstallDependenciesStep()
+      step = InstallDependenciesStep(context)
       python = str(self._venv_python(context))
       packages = Packages(project_root)
       with mock.patch('subprocess.run') as run_mock:
@@ -203,7 +203,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
         venv_name='env')
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
-      step = InstallDependenciesStep()
+      step = InstallDependenciesStep(context)
       python = str(context.venv_python)
       with mock.patch('subprocess.run') as run_mock:
         run_mock.return_value = self._ok_result()
@@ -229,7 +229,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
         copyright_year=2026)
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
-      step = InstallDependenciesStep()
+      step = InstallDependenciesStep(context)
       with mock.patch('subprocess.run') as run_mock:
         run_mock.return_value = self._ok_result()
         step.run(context)
@@ -253,7 +253,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
       self._write_local_packages(project_root, './libs/a\n./libs/b\n')
-      step = InstallDependenciesStep()
+      step = InstallDependenciesStep(context)
       python = str(self._venv_python(context))
       with mock.patch('subprocess.run') as run_mock:
         run_mock.return_value = self._ok_result()
@@ -283,7 +283,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
       self._write_local_packages(project_root, '../test-lib [dev]\n')
-      step = InstallDependenciesStep()
+      step = InstallDependenciesStep(context)
       with mock.patch('subprocess.run') as run_mock:
         run_mock.return_value = self._ok_result()
         step.run(context)
@@ -307,7 +307,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
         copyright_year=2026)
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
-      step = InstallDependenciesStep()
+      step = InstallDependenciesStep(context)
       with mock.patch('subprocess.run') as run_mock:
         run_mock.return_value = self._ok_result()
         step.run(context)
@@ -333,7 +333,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
         copyright_year=2026)
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
-      step = InstallDependenciesStep()
+      step = InstallDependenciesStep(context)
       error = subprocess.CalledProcessError(1, ['pip'], stderr='boom')
       with mock.patch('subprocess.run') as run_mock:
         run_mock.side_effect = [self._ok_result(), error]
@@ -358,7 +358,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
         copyright_year=2026)
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
-      step = InstallDependenciesStep()
+      step = InstallDependenciesStep(context)
       with mock.patch('subprocess.run') as run_mock:
         run_mock.side_effect = OSError('cannot run')
         with self.assertRaises(DralithusProjectError):
@@ -380,7 +380,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
         copyright_year=2026)
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
-      step = InstallDependenciesStep()
+      step = InstallDependenciesStep(context)
       with mock.patch('subprocess.run') as run_mock, \
           mock.patch('os.replace', side_effect=OSError('disk full')):
         run_mock.return_value = self._ok_result()
@@ -409,7 +409,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
         copyright_year=2026)
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
-      step = InstallDependenciesStep()
+      step = InstallDependenciesStep(context)
       with mock.patch('subprocess.run') as run_mock, \
           mock.patch('tempfile.mkstemp', side_effect=OSError('no temp')):
         run_mock.return_value = self._ok_result()
@@ -438,7 +438,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
       self._write_packages(project_root, 'requests\n')
       requirements = project_root / InstallDependenciesStep.REQUIREMENTS_FILENAME
       requirements.write_text(self._PRE_CONTENT, encoding='utf-8')
-      step = InstallDependenciesStep()
+      step = InstallDependenciesStep(context)
       with mock.patch('subprocess.run') as run_mock, \
           mock.patch('os.replace', side_effect=OSError('disk full')):
         run_mock.return_value = self._ok_result()
@@ -463,7 +463,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
         package_name='sample',
         copyright_holder='Sumanth Vepa',
         copyright_year=2026)
-      step = InstallDependenciesStep()
+      step = InstallDependenciesStep(context)
       with mock.patch('subprocess.run') as run_mock:
         step.run(context, dry_run=True)
       run_mock.assert_not_called()
@@ -488,7 +488,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
       self._write_packages(project_root, 'requests\n')
       requirements = project_root / InstallDependenciesStep.REQUIREMENTS_FILENAME
       requirements.write_text(self._PRE_CONTENT, encoding='utf-8')
-      step = InstallDependenciesStep()
+      step = InstallDependenciesStep(context)
       with mock.patch('subprocess.run') as run_mock:
         run_mock.return_value = self._ok_result()
         step.run(context)
@@ -517,7 +517,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
       external.write_text(self._PRE_CONTENT, encoding='utf-8')
       requirements = project_root / InstallDependenciesStep.REQUIREMENTS_FILENAME
       requirements.symlink_to(external)
-      step = InstallDependenciesStep()
+      step = InstallDependenciesStep(context)
       with mock.patch('subprocess.run') as run_mock:
         run_mock.return_value = self._ok_result()
         with self.assertRaises(DralithusProjectError):
@@ -544,7 +544,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
       self._write_packages(project_root, 'requests\n')
       requirements = project_root / InstallDependenciesStep.REQUIREMENTS_FILENAME
       requirements.mkdir()
-      step = InstallDependenciesStep()
+      step = InstallDependenciesStep(context)
       with mock.patch('subprocess.run') as run_mock:
         run_mock.return_value = self._ok_result()
         with self.assertRaises(DralithusProjectError):
@@ -570,7 +570,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
         copyright_year=2026)
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
-      step = InstallDependenciesStep()
+      step = InstallDependenciesStep(context)
       requirements = project_root / InstallDependenciesStep.REQUIREMENTS_FILENAME
       with mock.patch('subprocess.run') as run_mock:
         run_mock.return_value = self._ok_result()
@@ -597,7 +597,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
       self._write_packages(project_root, 'requests\n')
       requirements = project_root / InstallDependenciesStep.REQUIREMENTS_FILENAME
       requirements.write_text(self._PRE_CONTENT, encoding='utf-8')
-      step = InstallDependenciesStep()
+      step = InstallDependenciesStep(context)
       with mock.patch('subprocess.run') as run_mock:
         run_mock.return_value = self._ok_result()
         step.run(context)
@@ -623,7 +623,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
         copyright_year=2026)
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
-      step = InstallDependenciesStep()
+      step = InstallDependenciesStep(context)
       requirements = project_root / InstallDependenciesStep.REQUIREMENTS_FILENAME
       with mock.patch('subprocess.run') as run_mock:
         run_mock.return_value = self._ok_result()
@@ -652,7 +652,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
         copyright_year=2026)
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
-      step = InstallDependenciesStep()
+      step = InstallDependenciesStep(context)
       requirements = project_root / InstallDependenciesStep.REQUIREMENTS_FILENAME
       with mock.patch('subprocess.run') as run_mock:
         run_mock.return_value = self._ok_result()
@@ -675,7 +675,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
         package_name='sample',
         copyright_holder='Sumanth Vepa',
         copyright_year=2026)
-      step = InstallDependenciesStep()
+      step = InstallDependenciesStep(context)
       step.rollback(context, dry_run=True)
       step.rollback(context)
 

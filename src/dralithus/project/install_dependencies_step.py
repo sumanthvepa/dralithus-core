@@ -206,12 +206,14 @@ class InstallDependenciesStep(ExecutionStep):
     except (OSError, subprocess.CalledProcessError) as error:
       raise DralithusProjectError(error_message) from error
 
-  def __init__(self) -> None:
+  def __init__(self, context: ProjectContext) -> None:
     """
       Initialize the dependency installation step.
 
+      :param context: The shared project creation context
       :return: None
     """
+    super().__init__(context)
     self._requirements_created = False
 
   @override
