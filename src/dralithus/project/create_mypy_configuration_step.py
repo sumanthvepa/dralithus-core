@@ -68,23 +68,28 @@ class CreateMypyConfigurationStep(ExecutionStep):
       self._steps.parameterized_gitignore.run(context, dry_run=True)
       self._steps.parameterized_stub.run(context, dry_run=True)
 
-  def __init__(self) -> None:
+  def __init__(self, context: ProjectContext) -> None:
     """
       Initialize the mypy configuration creation step.
 
+      :param context: The shared project creation context
       :return: None
     """
+    super().__init__(context)
     self._steps = self.ExecutionSteps(
       CreateFileStep.from_resource(
+        context,
         Path('mypy.ini'),
         'dralithus.project.templates',
         'mypy.ini'),
-      MkdirStep(Path('stubs') / 'parameterized'),
-      CreateFileStep(Path('stubs') / '.gitignore', ''),
+      MkdirStep(context, Path('stubs') / 'parameterized'),
+      CreateFileStep(context, Path('stubs') / '.gitignore', ''),
       CreateFileStep(
+        context,
         Path('stubs') / 'parameterized' / '.gitignore',
         ''),
       CreateFileStep.from_resource(
+        context,
         Path('stubs') / 'parameterized' / '__init__.pyi',
         'dralithus.project.templates.parameterized',
         '__init__.pyi')

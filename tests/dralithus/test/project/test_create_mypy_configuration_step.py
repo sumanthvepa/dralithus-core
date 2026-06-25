@@ -147,7 +147,7 @@ class TestCreateMypyConfigurationStep(unittest.TestCase):
         package_name='sample',
         copyright_holder='Sumanth Vepa',
         copyright_year=2026)
-      step = CreateMypyConfigurationStep()
+      step = CreateMypyConfigurationStep(context)
 
       step.run(context)
 
@@ -171,7 +171,7 @@ class TestCreateMypyConfigurationStep(unittest.TestCase):
         package_name='sample',
         copyright_holder='Sumanth Vepa',
         copyright_year=2026)
-      step = CreateMypyConfigurationStep()
+      step = CreateMypyConfigurationStep(context)
 
       step.run(context)
 
@@ -192,7 +192,7 @@ class TestCreateMypyConfigurationStep(unittest.TestCase):
         package_name='sample',
         copyright_holder='Sumanth Vepa',
         copyright_year=2026)
-      step = CreateMypyConfigurationStep()
+      step = CreateMypyConfigurationStep(context)
 
       step.run(context)
 
@@ -214,7 +214,7 @@ class TestCreateMypyConfigurationStep(unittest.TestCase):
         package_name='sample',
         copyright_holder='Sumanth Vepa',
         copyright_year=2026)
-      step = CreateMypyConfigurationStep()
+      step = CreateMypyConfigurationStep(context)
 
       step.run(context)
 
@@ -246,7 +246,7 @@ class TestCreateMypyConfigurationStep(unittest.TestCase):
       (self._parameterized(project_root) / 'user-file.txt').write_text(
         'user data\n',
         encoding='utf-8')
-      step = CreateMypyConfigurationStep()
+      step = CreateMypyConfigurationStep(context)
 
       step.run(context)
 
@@ -272,7 +272,7 @@ class TestCreateMypyConfigurationStep(unittest.TestCase):
         copyright_holder='Sumanth Vepa',
         copyright_year=2026)
       self._parameterized_gitignore(project_root).mkdir(parents=True)
-      step = CreateMypyConfigurationStep()
+      step = CreateMypyConfigurationStep(context)
 
       with self.assertRaises(DralithusProjectError):
         step.run(context)
@@ -294,7 +294,7 @@ class TestCreateMypyConfigurationStep(unittest.TestCase):
         package_name='sample',
         copyright_holder='Sumanth Vepa',
         copyright_year=2026)
-      step = CreateMypyConfigurationStep()
+      step = CreateMypyConfigurationStep(context)
 
       step.run(context)
       step.rollback(context)
@@ -319,7 +319,7 @@ class TestCreateMypyConfigurationStep(unittest.TestCase):
         'user mypy config\n',
         encoding='utf-8')
       self._parameterized(project_root).mkdir(parents=True)
-      step = CreateMypyConfigurationStep()
+      step = CreateMypyConfigurationStep(context)
 
       step.run(context)
       step.rollback(context)
@@ -342,7 +342,7 @@ class TestCreateMypyConfigurationStep(unittest.TestCase):
         package_name='sample',
         copyright_holder='Sumanth Vepa',
         copyright_year=2026)
-      step = CreateMypyConfigurationStep()
+      step = CreateMypyConfigurationStep(context)
 
       step.run(context, dry_run=True)
 
@@ -363,7 +363,7 @@ class TestCreateMypyConfigurationStep(unittest.TestCase):
         copyright_holder='Sumanth Vepa',
         copyright_year=2026)
       self._mypy_ini(project_root).mkdir()
-      step = CreateMypyConfigurationStep()
+      step = CreateMypyConfigurationStep(context)
 
       with self.assertRaises(DralithusProjectError):
         step.run(context, dry_run=True)
