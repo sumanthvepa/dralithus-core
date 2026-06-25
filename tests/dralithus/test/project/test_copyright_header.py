@@ -50,6 +50,7 @@ class TestCopyrightHeader(unittest.TestCase):
     """
     return ProjectContext(
       project_root=project_root,
+      package_name='sample',
       copyright_holder='Milestone 42',
       copyright_year=2030)
 
@@ -105,9 +106,10 @@ class TestCopyrightHeader(unittest.TestCase):
       project_root = Path(temp_directory)
       context = ProjectContext(
         project_root=project_root,
-        venv_name='env',
+        package_name='sample',
         copyright_holder='Milestone 42',
-        copyright_year=2030)
+        copyright_year=2030,
+        venv_name='env')
       header = CopyrightHeader(
         'root={{ project_root }}\n'
         'venv={{ venv_name }}\n'

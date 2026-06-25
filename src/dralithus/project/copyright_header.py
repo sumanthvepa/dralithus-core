@@ -20,7 +20,6 @@
 # along with this program.  If not, see
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
-from dataclasses import asdict
 from importlib import resources
 from pathlib import Path
 from typing import Literal, Self
@@ -65,7 +64,7 @@ class CopyrightHeader:
       :param context: The shared project creation context
       :return: The template context dictionary
     """
-    return asdict(context)
+    return context.as_dict()
 
   @staticmethod
   def _comment_text(text: str, prefix: str) -> str:
