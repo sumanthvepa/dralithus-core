@@ -137,12 +137,14 @@ class CreatePackagesStep(ExecutionStep):
       with file:
         file.write(content)
 
-  def __init__(self) -> None:
+  def __init__(self, context: ProjectContext) -> None:
     """
       Initialize the packages creation step.
 
+      :param context: The shared project creation context
       :return: None
     """
+    super().__init__(context)
     self._created_files = []
 
   @override

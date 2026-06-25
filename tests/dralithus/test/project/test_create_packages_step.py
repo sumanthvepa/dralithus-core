@@ -53,7 +53,7 @@ class TestCreatePackagesStep(unittest.TestCase):
       packages_txt = project_root / Packages.PACKAGES_FILENAME
       local_packages_txt = (
         project_root / Packages.LOCAL_PACKAGES_FILENAME)
-      step = CreatePackagesStep()
+      step = CreatePackagesStep(context)
 
       step.run(context)
 
@@ -80,7 +80,7 @@ class TestCreatePackagesStep(unittest.TestCase):
         copyright_year=2026)
       packages_txt = project_root / Packages.PACKAGES_FILENAME
       packages_txt.write_text('requests\n', encoding='utf-8')
-      step = CreatePackagesStep()
+      step = CreatePackagesStep(context)
 
       step.run(context)
 
@@ -106,7 +106,7 @@ class TestCreatePackagesStep(unittest.TestCase):
       local_packages_txt = (
         project_root / Packages.LOCAL_PACKAGES_FILENAME)
       local_packages_txt.write_text('../common-lib\n', encoding='utf-8')
-      step = CreatePackagesStep()
+      step = CreatePackagesStep(context)
 
       step.run(context)
 
@@ -129,7 +129,7 @@ class TestCreatePackagesStep(unittest.TestCase):
         package_name='sample',
         copyright_holder='Sumanth Vepa',
         copyright_year=2026)
-      step = CreatePackagesStep()
+      step = CreatePackagesStep(context)
 
       step.run(context, dry_run=True)
 
@@ -154,7 +154,7 @@ class TestCreatePackagesStep(unittest.TestCase):
         copyright_year=2026)
       packages_txt = project_root / Packages.PACKAGES_FILENAME
       packages_txt.mkdir()
-      step = CreatePackagesStep()
+      step = CreatePackagesStep(context)
 
       with self.assertRaisesRegex(
         DralithusProjectError,
@@ -176,7 +176,7 @@ class TestCreatePackagesStep(unittest.TestCase):
         package_name='sample',
         copyright_holder='Sumanth Vepa',
         copyright_year=2026)
-      step = CreatePackagesStep()
+      step = CreatePackagesStep(context)
 
       step.run(context)
 
@@ -218,7 +218,7 @@ class TestCreatePackagesStep(unittest.TestCase):
         package_name='sample',
         copyright_holder='Sumanth Vepa',
         copyright_year=2026)
-      step = CreatePackagesStep()
+      step = CreatePackagesStep(context)
 
       def fail_local(path: Path, content: str) -> None:
         if path.name == Packages.LOCAL_PACKAGES_FILENAME:
@@ -272,7 +272,7 @@ class TestCreatePackagesStep(unittest.TestCase):
         package_name='sample',
         copyright_holder='Sumanth Vepa',
         copyright_year=2026)
-      step = CreatePackagesStep()
+      step = CreatePackagesStep(context)
 
       with mock.patch.object(Path, 'open', failing_open):
         with self.assertRaises(DralithusProjectError) as context_manager:
@@ -305,7 +305,7 @@ class TestCreatePackagesStep(unittest.TestCase):
         copyright_holder='Sumanth Vepa',
         copyright_year=2026)
       (project_root / Packages.PACKAGES_FILENAME).mkdir()
-      step = CreatePackagesStep()
+      step = CreatePackagesStep(context)
 
       with self.assertRaises(DralithusProjectError):
         step.run(context)
@@ -327,7 +327,7 @@ class TestCreatePackagesStep(unittest.TestCase):
         package_name='sample',
         copyright_holder='Sumanth Vepa',
         copyright_year=2026)
-      step = CreatePackagesStep()
+      step = CreatePackagesStep(context)
 
       step.run(context)
       step.rollback(context)
@@ -353,7 +353,7 @@ class TestCreatePackagesStep(unittest.TestCase):
         copyright_year=2026)
       packages_txt = project_root / Packages.PACKAGES_FILENAME
       packages_txt.write_text('requests\n', encoding='utf-8')
-      step = CreatePackagesStep()
+      step = CreatePackagesStep(context)
 
       step.run(context)
       step.rollback(context)
@@ -376,7 +376,7 @@ class TestCreatePackagesStep(unittest.TestCase):
         package_name='sample',
         copyright_holder='Sumanth Vepa',
         copyright_year=2026)
-      step = CreatePackagesStep()
+      step = CreatePackagesStep(context)
 
       step.run(context)
       step.run(context)
@@ -401,7 +401,7 @@ class TestCreatePackagesStep(unittest.TestCase):
         package_name='sample',
         copyright_holder='Sumanth Vepa',
         copyright_year=2026)
-      step = CreatePackagesStep()
+      step = CreatePackagesStep(context)
 
       step.run(context)
       step.rollback(context, dry_run=True)
@@ -426,7 +426,7 @@ class TestCreatePackagesStep(unittest.TestCase):
         copyright_holder='Sumanth Vepa',
         copyright_year=2026)
       packages_txt = project_root / Packages.PACKAGES_FILENAME
-      step = CreatePackagesStep()
+      step = CreatePackagesStep(context)
 
       step.run(context)
       packages_txt.unlink()
@@ -459,7 +459,7 @@ class TestCreatePackagesStep(unittest.TestCase):
       local_packages_txt = (
         project_root / Packages.LOCAL_PACKAGES_FILENAME)
       local_packages_txt.symlink_to(project_root / 'does-not-exist')
-      step = CreatePackagesStep()
+      step = CreatePackagesStep(context)
 
       with self.assertRaisesRegex(
         DralithusProjectError,
@@ -495,7 +495,7 @@ class TestCreatePackagesStep(unittest.TestCase):
       local_packages_txt = (
         project_root / Packages.LOCAL_PACKAGES_FILENAME)
       local_packages_txt.write_text('../common-lib\n', encoding='utf-8')
-      step = CreatePackagesStep()
+      step = CreatePackagesStep(context)
 
       with mock.patch.object(Path, 'exists', return_value=False):
         step.run(context)
@@ -521,7 +521,7 @@ class TestCreatePackagesStep(unittest.TestCase):
         copyright_holder='Sumanth Vepa',
         copyright_year=2026)
       packages_txt = project_root / Packages.PACKAGES_FILENAME
-      step = CreatePackagesStep()
+      step = CreatePackagesStep(context)
 
       step.run(context)
       packages_txt.unlink()
