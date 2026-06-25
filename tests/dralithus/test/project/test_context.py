@@ -76,10 +76,10 @@ class TestProjectContext(unittest.TestCase):
         project_root=project_root,
         package_name='sample',
         copyright_holder='Milestone 42',
-        copyright_year=2030)
+        copyright_year=2020)
 
       self.assertEqual('Milestone 42', context.copyright_holder)
-      self.assertEqual(2030, context.copyright_year)
+      self.assertEqual(2020, context.copyright_year)
 
   def test_default_venv_path_uses_venv_name(self) -> None:
     """
@@ -310,6 +310,46 @@ class TestProjectContext(unittest.TestCase):
           copyright_holder='Sumanth Vepa',
           copyright_year=2026)
 
+  def test_rejects_copyright_year_before_1710(self) -> None:
+    """
+      Verify that copyright years before 1710 are rejected.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+
+      with self.assertRaisesRegex(
+        DralithusProjectError,
+        'Copyright year must be 1710 or later'
+      ):
+        ProjectContext(
+          project_root=project_root,
+          package_name='sample',
+          copyright_holder='Sumanth Vepa',
+          copyright_year=1709)
+
+  def test_rejects_future_copyright_year(self) -> None:
+    """
+      Verify that future copyright years are rejected.
+
+      :return: None
+    """
+    import datetime
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      future_year = datetime.date.today().year + 1
+
+      with self.assertRaisesRegex(
+        DralithusProjectError,
+        'Copyright year must not be in the future'
+      ):
+        ProjectContext(
+          project_root=project_root,
+          package_name='sample',
+          copyright_holder='Sumanth Vepa',
+          copyright_year=future_year)
+
   def test_as_dict_contains_all_fields(self) -> None:
     """
       Verify as_dict returns all fields with correct values.
@@ -336,24 +376,6 @@ class TestProjectContext(unittest.TestCase):
         'venv_python': project_root / 'venv' / 'bin' / 'python',
       }
       self.assertEqual(expected, result)
-
-  def test_as_dict_preserves_none_copyright_year(self) -> None:
-    """
-      Verify as_dict preserves None for copyright_year.
-
-      :return: None
-    """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=None)
-
-      result = context.as_dict()
-
-      self.assertIsNone(result['copyright_year'])
 
   def test_as_dict_reflects_custom_venv_name(self) -> None:
     """

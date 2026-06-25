@@ -162,7 +162,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
         project_root=project_root,
         package_name='sample',
         copyright_holder='Milestone 42',
-        copyright_year=2030)
+        copyright_year=2020)
       test_package = self._test_package(project_root)
       step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
 
@@ -170,7 +170,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
 
       init_text = (
         test_package / '__init__.py').read_text(encoding='utf-8')
-      self.assertIn('# Copyright (C) 2030 Milestone 42.', init_text)
+      self.assertIn('# Copyright (C) 2020 Milestone 42.', init_text)
 
   def test_run_keeps_existing_init_py_with_custom_settings(self) -> None:
     """
@@ -184,7 +184,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
         project_root=project_root,
         package_name='sample',
         copyright_holder='Milestone 42',
-        copyright_year=2030)
+        copyright_year=2020)
       test_package = self._test_package(project_root)
       test_package.mkdir(parents=True)
       init_py = test_package / '__init__.py'

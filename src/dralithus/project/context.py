@@ -20,6 +20,7 @@
 # along with this program.  If not, see
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
+import datetime
 import keyword
 from pathlib import Path
 from typing import TypedDict
@@ -34,7 +35,7 @@ class ProjectContextDict(TypedDict):
   project_root: Path
   package_name: str
   copyright_holder: str
-  copyright_year: int | None
+  copyright_year: int
   venv_name: str
   venv_path: Path
   venv_python: Path
@@ -44,6 +45,17 @@ class ProjectContext:
   """
     Hold shared state for project creation steps.
   """
+  @staticmethod
+  def _validate_copyright_year(copyright_year: int) -> None:
+    # 1710 is the year the Statute of Anne came into force — the first
+    # modern copyright act. No meaningful copyright predates it.
+    if copyright_year < 1710:
+      raise DralithusProjectError(
+        f'Copyright year must be 1710 or later: {copyright_year}')
+    if copyright_year > datetime.date.today().year:
+      raise DralithusProjectError(
+        f'Copyright year must not be in the future: {copyright_year}')
+
   @staticmethod
   def _validate_venv_name(venv_name: str) -> None:
     """
@@ -89,7 +101,7 @@ class ProjectContext:
       project_root: Path,
       package_name: str,
       copyright_holder: str,
-      copyright_year: int | None,
+      copyright_year: int,
       venv_name: str = 'venv'
   ) -> None:
     """
@@ -98,8 +110,7 @@ class ProjectContext:
       :param project_root: The root directory of the project
       :param package_name: The Python package name
       :param copyright_holder: The copyright holder name
-      :param copyright_year: The copyright year, or None for the
-        current year
+      :param copyright_year: The copyright year
       :param venv_name: The name of the virtual environment directory
       :return: None
       :raises DralithusProjectError: When venv_name or package_name
@@ -107,6 +118,7 @@ class ProjectContext:
     """
     self._validate_venv_name(venv_name)
     self.validate_package_name(package_name)
+    self._validate_copyright_year(copyright_year)
     self.project_root = project_root
     self.venv_name = venv_name
     self.copyright_holder = copyright_holder

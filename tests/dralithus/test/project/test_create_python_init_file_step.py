@@ -73,7 +73,7 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
       project_root=project_root,
       package_name='sample',
       copyright_holder='Milestone 42',
-      copyright_year=2030)
+      copyright_year=2020)
 
   def test_run_creates_init_py_with_copyright_header(self) -> None:
     """
@@ -92,7 +92,7 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
       step.run(context)
 
       self.assertEqual(
-        '# Copyright (C) 2030 Milestone 42.\n'
+        '# Copyright (C) 2020 Milestone 42.\n'
         '# Released under the GPL.\n',
         self._init_py(project_root).read_text(encoding='utf-8'))
 
@@ -108,7 +108,7 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
         project_root=project_root,
         package_name='sample',
         copyright_holder='Acme Tools',
-        copyright_year=2035)
+        copyright_year=2020)
       (project_root / self._DIRECTORY).mkdir(parents=True)
       step = CreatePythonInitFileStep(
         self._DIRECTORY,
@@ -117,7 +117,7 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
       step.run(context)
 
       self.assertEqual(
-        '# Copyright (C) 2035 Acme Tools.\n'
+        '# Copyright (C) 2020 Acme Tools.\n'
         '# Released under the GPL.\n',
         self._init_py(project_root).read_text(encoding='utf-8'))
 

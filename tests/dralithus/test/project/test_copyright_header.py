@@ -52,7 +52,7 @@ class TestCopyrightHeader(unittest.TestCase):
       project_root=project_root,
       package_name='sample',
       copyright_holder='Milestone 42',
-      copyright_year=2030)
+      copyright_year=2020)
 
   def test_init_stores_template(self) -> None:
     """
@@ -77,7 +77,7 @@ class TestCopyrightHeader(unittest.TestCase):
       header = CopyrightHeader(self._TEMPLATE)
 
       self.assertEqual(
-        '# Copyright (C) 2030 Milestone 42.\n'
+        '# Copyright (C) 2020 Milestone 42.\n'
         '# Released under the GPL.\n',
         header.text('python', context))
 
@@ -92,7 +92,7 @@ class TestCopyrightHeader(unittest.TestCase):
       header = CopyrightHeader(self._TEMPLATE)
 
       self.assertEqual(
-        '// Copyright (C) 2030 Milestone 42.\n'
+        '// Copyright (C) 2020 Milestone 42.\n'
         '// Released under the GPL.\n',
         header.text('javascript', context))
 
@@ -108,7 +108,7 @@ class TestCopyrightHeader(unittest.TestCase):
         project_root=project_root,
         package_name='sample',
         copyright_holder='Milestone 42',
-        copyright_year=2030,
+        copyright_year=2020,
         venv_name='env')
       header = CopyrightHeader(
         'root={{ project_root }}\n'
@@ -120,7 +120,7 @@ class TestCopyrightHeader(unittest.TestCase):
         f'# root={project_root}\n'
         '# venv=env\n'
         '# holder=Milestone 42\n'
-        '# year=2030\n',
+        '# year=2020\n',
         header.text('python', context))
 
   def test_text_preserves_trailing_newline(self) -> None:
@@ -163,7 +163,7 @@ class TestCopyrightHeader(unittest.TestCase):
       header = CopyrightHeader.from_template_file(template_filename)
 
       self.assertEqual(
-        '# Copyright (C) 2030 Milestone 42.\n'
+        '# Copyright (C) 2020 Milestone 42.\n'
         '# Released under the GPL.\n',
         header.text('python', context))
 
@@ -201,7 +201,7 @@ class TestCopyrightHeader(unittest.TestCase):
           context)
 
       self.assertEqual(
-        '# Copyright (C) 2030 Milestone 42.\n'
+        '# Copyright (C) 2020 Milestone 42.\n'
         '# Released under the GPL.\n',
         header.text('python', context))
 

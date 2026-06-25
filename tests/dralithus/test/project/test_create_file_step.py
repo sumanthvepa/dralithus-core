@@ -137,7 +137,7 @@ class TestCreateFileStep(unittest.TestCase):
         project_root=project_root,
         package_name='sample',
         copyright_holder='Milestone 42',
-        copyright_year=2030,
+        copyright_year=2020,
         venv_name='env')
       template_directory = project_root / 'templates'
       template_directory.mkdir()
@@ -163,7 +163,7 @@ class TestCreateFileStep(unittest.TestCase):
         f'root={project_root}\n'
         'venv=env\n'
         'holder=Milestone 42\n'
-        'year=2030\n',
+        'year=2020\n',
         self._target(project_root).read_text(encoding='utf-8'))
 
   def test_from_template_resource_wraps_resource_read_failure(self) -> None:
