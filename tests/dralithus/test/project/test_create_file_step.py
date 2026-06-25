@@ -135,9 +135,10 @@ class TestCreateFileStep(unittest.TestCase):
     with project_context() as (project_root, _context):
       context = ProjectContext(
         project_root=project_root,
-        venv_name='env',
+        package_name='sample',
         copyright_holder='Milestone 42',
-        copyright_year=2030)
+        copyright_year=2030,
+        venv_name='env')
       template_directory = project_root / 'templates'
       template_directory.mkdir()
       template = template_directory / 'config.ini.j2'
@@ -201,7 +202,12 @@ class TestCreateFileStep(unittest.TestCase):
       :return: None
     """
     with project_context() as (project_root, _context):
-      context = ProjectContext(project_root=project_root, venv_name='env')
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026,
+        venv_name='env')
 
       def make_content(provider_context: ProjectContext) -> str:
         """

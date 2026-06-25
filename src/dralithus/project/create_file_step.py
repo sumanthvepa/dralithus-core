@@ -20,7 +20,6 @@
 # along with this program.  If not, see
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
-from dataclasses import asdict
 from importlib import resources
 import os
 from pathlib import Path
@@ -170,7 +169,7 @@ class CreateFileStep(ExecutionStep):
       :param context: The shared project creation context
       :return: The template context dictionary
     """
-    return asdict(context)
+    return context.as_dict()
 
   def __init__(
     self,
