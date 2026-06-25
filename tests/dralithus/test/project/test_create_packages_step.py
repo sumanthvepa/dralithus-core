@@ -45,7 +45,11 @@ class TestCreatePackagesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       packages_txt = project_root / Packages.PACKAGES_FILENAME
       local_packages_txt = (
         project_root / Packages.LOCAL_PACKAGES_FILENAME)
@@ -69,7 +73,11 @@ class TestCreatePackagesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       packages_txt = project_root / Packages.PACKAGES_FILENAME
       packages_txt.write_text('requests\n', encoding='utf-8')
       step = CreatePackagesStep()
@@ -90,7 +98,11 @@ class TestCreatePackagesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       local_packages_txt = (
         project_root / Packages.LOCAL_PACKAGES_FILENAME)
       local_packages_txt.write_text('../common-lib\n', encoding='utf-8')
@@ -112,7 +124,11 @@ class TestCreatePackagesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       step = CreatePackagesStep()
 
       step.run(context, dry_run=True)
@@ -131,7 +147,11 @@ class TestCreatePackagesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       packages_txt = project_root / Packages.PACKAGES_FILENAME
       packages_txt.mkdir()
       step = CreatePackagesStep()
@@ -151,7 +171,11 @@ class TestCreatePackagesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       step = CreatePackagesStep()
 
       step.run(context)
@@ -189,7 +213,11 @@ class TestCreatePackagesStep(unittest.TestCase):
 
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       step = CreatePackagesStep()
 
       def fail_local(path: Path, content: str) -> None:
@@ -239,7 +267,11 @@ class TestCreatePackagesStep(unittest.TestCase):
 
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       step = CreatePackagesStep()
 
       with mock.patch.object(Path, 'open', failing_open):
@@ -267,7 +299,11 @@ class TestCreatePackagesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       (project_root / Packages.PACKAGES_FILENAME).mkdir()
       step = CreatePackagesStep()
 
@@ -286,7 +322,11 @@ class TestCreatePackagesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       step = CreatePackagesStep()
 
       step.run(context)
@@ -306,7 +346,11 @@ class TestCreatePackagesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       packages_txt = project_root / Packages.PACKAGES_FILENAME
       packages_txt.write_text('requests\n', encoding='utf-8')
       step = CreatePackagesStep()
@@ -327,7 +371,11 @@ class TestCreatePackagesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       step = CreatePackagesStep()
 
       step.run(context)
@@ -348,7 +396,11 @@ class TestCreatePackagesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       step = CreatePackagesStep()
 
       step.run(context)
@@ -368,7 +420,11 @@ class TestCreatePackagesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       packages_txt = project_root / Packages.PACKAGES_FILENAME
       step = CreatePackagesStep()
 
@@ -395,7 +451,11 @@ class TestCreatePackagesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       local_packages_txt = (
         project_root / Packages.LOCAL_PACKAGES_FILENAME)
       local_packages_txt.symlink_to(project_root / 'does-not-exist')
@@ -427,7 +487,11 @@ class TestCreatePackagesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       local_packages_txt = (
         project_root / Packages.LOCAL_PACKAGES_FILENAME)
       local_packages_txt.write_text('../common-lib\n', encoding='utf-8')
@@ -451,7 +515,11 @@ class TestCreatePackagesStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       packages_txt = project_root / Packages.PACKAGES_FILENAME
       step = CreatePackagesStep()
 
