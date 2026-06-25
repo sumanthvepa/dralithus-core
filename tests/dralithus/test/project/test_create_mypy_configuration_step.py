@@ -142,7 +142,11 @@ class TestCreateMypyConfigurationStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       step = CreateMypyConfigurationStep()
 
       step.run(context)
@@ -162,7 +166,11 @@ class TestCreateMypyConfigurationStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       step = CreateMypyConfigurationStep()
 
       step.run(context)
@@ -179,7 +187,11 @@ class TestCreateMypyConfigurationStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       step = CreateMypyConfigurationStep()
 
       step.run(context)
@@ -197,7 +209,11 @@ class TestCreateMypyConfigurationStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       step = CreateMypyConfigurationStep()
 
       step.run(context)
@@ -218,7 +234,11 @@ class TestCreateMypyConfigurationStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       self._mypy_ini(project_root).write_text(
         'user mypy config\n',
         encoding='utf-8')
@@ -246,7 +266,11 @@ class TestCreateMypyConfigurationStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       self._parameterized_gitignore(project_root).mkdir(parents=True)
       step = CreateMypyConfigurationStep()
 
@@ -265,7 +289,11 @@ class TestCreateMypyConfigurationStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       step = CreateMypyConfigurationStep()
 
       step.run(context)
@@ -282,7 +310,11 @@ class TestCreateMypyConfigurationStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       self._mypy_ini(project_root).write_text(
         'user mypy config\n',
         encoding='utf-8')
@@ -305,7 +337,11 @@ class TestCreateMypyConfigurationStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       step = CreateMypyConfigurationStep()
 
       step.run(context, dry_run=True)
@@ -321,7 +357,11 @@ class TestCreateMypyConfigurationStep(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(project_root=project_root)
+      context = ProjectContext(
+        project_root=project_root,
+        package_name='sample',
+        copyright_holder='Sumanth Vepa',
+        copyright_year=2026)
       self._mypy_ini(project_root).mkdir()
       step = CreateMypyConfigurationStep()
 
