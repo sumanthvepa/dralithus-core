@@ -39,7 +39,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
   """
     Unit tests for the CreateSourceAndTestTreeStep class.
   """
-  _PACKAGE_NAME = 'mypkg'
+  _PACKAGE_NAME = 'sample'
 
   def _src_package(self, project_root: Path) -> Path:
     """
@@ -58,49 +58,6 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
       :return: The tests/<package_name>/test directory path
     """
     return project_root / 'tests' / self._PACKAGE_NAME / 'test'
-
-  # Constructor validation
-
-  def test_init_rejects_empty_package_name(self) -> None:
-    """
-      Verify that the constructor rejects an empty package name.
-
-      :return: None
-    """
-    with self.assertRaises(DralithusProjectError):
-      CreateSourceAndTestTreeStep('')
-
-  def test_init_rejects_non_identifier_package_name(self) -> None:
-    """
-      Verify that the constructor rejects a package name that is not
-      a valid Python identifier.
-
-      :return: None
-    """
-    with self.assertRaises(DralithusProjectError):
-      CreateSourceAndTestTreeStep('my-pkg')
-    with self.assertRaises(DralithusProjectError):
-      CreateSourceAndTestTreeStep('my.pkg')
-
-  def test_init_rejects_keyword_package_name(self) -> None:
-    """
-      Verify that the constructor rejects a Python keyword as a
-      package name.
-
-      :return: None
-    """
-    with self.assertRaises(DralithusProjectError):
-      CreateSourceAndTestTreeStep('class')
-
-  def test_init_rejects_uppercase_package_name(self) -> None:
-    """
-      Verify that the constructor rejects a package name that
-      contains uppercase letters.
-
-      :return: None
-    """
-    with self.assertRaises(DralithusProjectError):
-      CreateSourceAndTestTreeStep('MyPkg')
 
   # run
 
@@ -131,7 +88,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
     with project_context() as (project_root, context):
       src_package = self._src_package(project_root)
       test_package = self._test_package(project_root)
-      step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
+      step = CreateSourceAndTestTreeStep(context)
 
       step.run(context)
 
@@ -164,7 +121,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
         copyright_holder='Milestone 42',
         copyright_year=2020)
       test_package = self._test_package(project_root)
-      step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
+      step = CreateSourceAndTestTreeStep(context)
 
       step.run(context)
 
@@ -189,7 +146,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
       test_package.mkdir(parents=True)
       init_py = test_package / '__init__.py'
       init_py.write_text('# existing\n', encoding='utf-8')
-      step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
+      step = CreateSourceAndTestTreeStep(context)
 
       step.run(context)
 
@@ -208,7 +165,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
       :return: None
     """
     with project_context() as (project_root, context):
-      step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
+      step = CreateSourceAndTestTreeStep(context)
 
       step.run(context)
 
@@ -237,7 +194,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
       tests_dir.mkdir()
       gitignore = tests_dir / '.gitignore'
       gitignore.write_text('*.log\n', encoding='utf-8')
-      step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
+      step = CreateSourceAndTestTreeStep(context)
 
       step.run(context)
 
@@ -255,7 +212,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
       test_package = self._test_package(project_root)
       src_package.mkdir(parents=True)
       test_package.mkdir(parents=True)
-      step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
+      step = CreateSourceAndTestTreeStep(context)
 
       step.run(context)
 
@@ -274,7 +231,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
       test_package.mkdir(parents=True)
       init_py = test_package / '__init__.py'
       init_py.write_text('# existing\n', encoding='utf-8')
-      step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
+      step = CreateSourceAndTestTreeStep(context)
 
       step.run(context)
 
@@ -292,7 +249,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
       src_package.mkdir(parents=True)
       gitignore = src_package / '.gitignore'
       gitignore.write_text('*.pyc\n', encoding='utf-8')
-      step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
+      step = CreateSourceAndTestTreeStep(context)
 
       step.run(context)
 
@@ -310,7 +267,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
       (project_root / 'src').mkdir()
       (project_root / 'src' / self._PACKAGE_NAME).write_text(
         'not a directory\n', encoding='utf-8')
-      step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
+      step = CreateSourceAndTestTreeStep(context)
 
       with self.assertRaises(DralithusProjectError):
         step.run(context)
@@ -323,7 +280,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
       :return: None
     """
     with project_context() as (project_root, context):
-      step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
+      step = CreateSourceAndTestTreeStep(context)
 
       step.run(context, dry_run=True)
 
@@ -340,7 +297,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
       :return: None
     """
     with project_context() as (project_root, context):
-      step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
+      step = CreateSourceAndTestTreeStep(context)
 
       step.run(context)
       step.rollback(context)
@@ -360,7 +317,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
       test_package.mkdir(parents=True)
       init_py = test_package / '__init__.py'
       init_py.write_text('# existing\n', encoding='utf-8')
-      step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
+      step = CreateSourceAndTestTreeStep(context)
 
       step.run(context)
       step.rollback(context)
@@ -379,7 +336,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
     with project_context() as (project_root, context):
       src_package = self._src_package(project_root)
       test_package = self._test_package(project_root)
-      step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
+      step = CreateSourceAndTestTreeStep(context)
 
       step.run(context)
       step.rollback(context, dry_run=True)
@@ -397,7 +354,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
     """
     with project_context() as (project_root, context):
       test_package = self._test_package(project_root)
-      step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
+      step = CreateSourceAndTestTreeStep(context)
 
       step.run(context)
       (test_package / '__init__.py').unlink()
@@ -424,7 +381,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
       target.write_text('linked content\n', encoding='utf-8')
       init_link = test_package / '__init__.py'
       init_link.symlink_to(target)
-      step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
+      step = CreateSourceAndTestTreeStep(context)
 
       step.run(context)
       step.rollback(context)
@@ -442,7 +399,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
       :return: None
     """
     with project_context() as (project_root, context):
-      step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
+      step = CreateSourceAndTestTreeStep(context)
 
       step.run(context)
       step.run(context)
@@ -469,7 +426,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
       test_package.mkdir(parents=True)
       init_dir = test_package / '__init__.py'
       init_dir.mkdir()
-      step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
+      step = CreateSourceAndTestTreeStep(context)
 
       with self.assertRaises(DralithusProjectError):
         step.run(context)
@@ -489,7 +446,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
       test_package.mkdir(parents=True)
       init_link = test_package / '__init__.py'
       init_link.symlink_to(project_root / 'does-not-exist')
-      step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
+      step = CreateSourceAndTestTreeStep(context)
 
       with self.assertRaises(DralithusProjectError):
         step.run(context)
@@ -515,7 +472,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
       target.write_text('linked content\n', encoding='utf-8')
       init_link = test_package / '__init__.py'
       init_link.symlink_to(target)
-      step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
+      step = CreateSourceAndTestTreeStep(context)
 
       step.run(context)
 
@@ -541,7 +498,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
       target_dir.mkdir()
       init_link = test_package / '__init__.py'
       init_link.symlink_to(target_dir)
-      step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
+      step = CreateSourceAndTestTreeStep(context)
 
       with self.assertRaises(DralithusProjectError):
         step.run(context)
@@ -566,7 +523,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
     with project_context() as (project_root, context):
       tests_path = project_root / 'tests'
       tests_path.write_text('not a directory\n', encoding='utf-8')
-      step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
+      step = CreateSourceAndTestTreeStep(context)
 
       with self.assertRaises(DralithusProjectError):
         step.run(context)
@@ -591,7 +548,7 @@ class TestCreateSourceAndTestTreeStep(unittest.TestCase):
       CreateSourceAndTestTreeStep._create_file)  # pylint: disable=protected-access
 
     with project_context() as (project_root, context):
-      step = CreateSourceAndTestTreeStep(self._PACKAGE_NAME)
+      step = CreateSourceAndTestTreeStep(context)
 
       def fail_src_gitignore(path: Path, content: str) -> None:
         if (path.name == '.gitignore'

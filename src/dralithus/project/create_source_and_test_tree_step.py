@@ -218,20 +218,19 @@ class CreateSourceAndTestTreeStep(ExecutionStep):
       raise DralithusProjectError(
         f'Path is not a regular file: {path}')
 
-  def __init__(self, package_name: str) -> None:
+  def __init__(self, context: ProjectContext) -> None:
     """
       Initialize the source and test tree creation step.
 
-      :param package_name: The Python package name for the project
+      :param context: The shared project creation context
       :return: None
-      :raises DralithusProjectError: When package_name is not a valid
-        Python package name
     """
-    ProjectContext.validate_package_name(package_name)
-    self._package_name = package_name
-    self._src_mkdir = MkdirStep(Path('src') / package_name)
+    super().__init__(context)
+    self._package_name = context.package_name
+    self._src_mkdir = MkdirStep(
+      context, Path('src') / self._package_name)
     self._tests_mkdir = MkdirStep(
-      Path('tests') / package_name / 'test')
+      context, Path('tests') / self._package_name / 'test')
     self._created_files = []
 
   @override
