@@ -38,13 +38,16 @@ class CreatePylintConfigurationStep(ExecutionStep):
     The packaged pylintrc resource is the canonical default generated
     for new projects.
   """
-  def __init__(self) -> None:
+  def __init__(self, context: ProjectContext) -> None:
     """
       Initialize the Pylint configuration creation step.
 
+      :param context: The shared project creation context
       :return: None
     """
+    super().__init__(context)
     self._pylintrc_step = CreateFileStep.from_resource(
+      context,
       Path('pylintrc'),
       'dralithus.project.templates',
       'pylintrc')

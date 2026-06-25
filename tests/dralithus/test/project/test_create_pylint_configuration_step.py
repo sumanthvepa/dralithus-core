@@ -86,7 +86,7 @@ class TestCreatePylintConfigurationStep(unittest.TestCase):
         package_name='sample',
         copyright_holder='Sumanth Vepa',
         copyright_year=2026)
-      step = CreatePylintConfigurationStep()
+      step = CreatePylintConfigurationStep(context)
 
       step.run(context)
 
@@ -107,7 +107,7 @@ class TestCreatePylintConfigurationStep(unittest.TestCase):
         package_name='sample',
         copyright_holder='Sumanth Vepa',
         copyright_year=2026)
-      step = CreatePylintConfigurationStep()
+      step = CreatePylintConfigurationStep(context)
 
       step.run(context)
 
@@ -130,7 +130,7 @@ class TestCreatePylintConfigurationStep(unittest.TestCase):
         copyright_year=2026)
       pylintrc = self._pylintrc(project_root)
       pylintrc.write_text('user config\n', encoding='utf-8')
-      step = CreatePylintConfigurationStep()
+      step = CreatePylintConfigurationStep(context)
 
       step.run(context)
 
@@ -149,7 +149,7 @@ class TestCreatePylintConfigurationStep(unittest.TestCase):
         package_name='sample',
         copyright_holder='Sumanth Vepa',
         copyright_year=2026)
-      step = CreatePylintConfigurationStep()
+      step = CreatePylintConfigurationStep(context)
 
       step.run(context)
       step.rollback(context)
@@ -171,7 +171,7 @@ class TestCreatePylintConfigurationStep(unittest.TestCase):
         copyright_year=2026)
       pylintrc = self._pylintrc(project_root)
       pylintrc.write_text('user config\n', encoding='utf-8')
-      step = CreatePylintConfigurationStep()
+      step = CreatePylintConfigurationStep(context)
 
       step.run(context)
       step.rollback(context)
@@ -191,7 +191,7 @@ class TestCreatePylintConfigurationStep(unittest.TestCase):
         package_name='sample',
         copyright_holder='Sumanth Vepa',
         copyright_year=2026)
-      step = CreatePylintConfigurationStep()
+      step = CreatePylintConfigurationStep(context)
 
       step.run(context, dry_run=True)
 
@@ -211,7 +211,7 @@ class TestCreatePylintConfigurationStep(unittest.TestCase):
         copyright_holder='Sumanth Vepa',
         copyright_year=2026)
       self._pylintrc(project_root).mkdir()
-      step = CreatePylintConfigurationStep()
+      step = CreatePylintConfigurationStep(context)
 
       with self.assertRaises(DralithusProjectError):
         step.run(context, dry_run=True)
