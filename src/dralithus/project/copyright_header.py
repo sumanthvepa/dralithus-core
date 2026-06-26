@@ -57,26 +57,40 @@ class CopyrightHeader:
     return prefix
 
   @staticmethod
-  def _template_context(context: ProjectContext) -> dict[str, object]:
+  def _template_context(
+    context: ProjectContext,
+    description: str
+  ) -> dict[str, object]:
     """
-      Convert a project context into a Jinja2 template context.
+      Build the Jinja2 template context for a file description.
 
       :param context: The shared project creation context
+      :param description: The file description for the header
       :return: The template context dictionary
     """
-    return context.as_dict()
+    values: dict[str, object] = dict(context.as_dict())
+    values['description'] = description
+    return values
 
   @staticmethod
   def _comment_text(text: str, prefix: str) -> str:
     """
       Convert rendered text to line-comment text.
 
+      Lines with content are prefixed with the comment prefix and a
+      space; blank lines get the bare prefix with no trailing space.
+
       :param text: The rendered template text
       :param prefix: The comment prefix to put before each line
       :return: The line-comment header text
     """
-    lines = text.splitlines(keepends=True)
-    return ''.join(f'{prefix} {line}' for line in lines)
+    commented: list[str] = []
+    for line in text.splitlines(keepends=True):
+      if line.rstrip('\n'):
+        commented.append(f'{prefix} {line}')
+      else:
+        commented.append(f'{prefix}{line}')
+    return ''.join(commented)
 
   def __init__(self, template: str) -> None:
     """
@@ -90,23 +104,30 @@ class CopyrightHeader:
   def text(
     self,
     language: Literal['python', 'javascript'],
-    context: ProjectContext
+    context: ProjectContext,
+    description: str
   ) -> str:
     """
       Render the copyright header for a language.
 
       Python headers use leading # comment markers. JavaScript headers
-      use JavaScript comment syntax.
+      use JavaScript comment syntax. The description is the file
+      description that appears in the header, available to the template
+      as the description value.
 
       :param language: The target language, either python or
         javascript
       :param context: The shared project creation context
+      :param description: The file description for the header
       :return: The rendered copyright header text
+      :raises DralithusProjectError: When language is unsupported or
+        the template cannot be rendered
     """
     prefix = self._comment_prefix(language)
     try:
       rendered = Environment(keep_trailing_newline=True).from_string(
-        self._template).render(self._template_context(context))
+        self._template).render(
+        self._template_context(context, description))
     except TemplateError as error:
       raise DralithusProjectError(
         'Could not render copyright header template') from error
