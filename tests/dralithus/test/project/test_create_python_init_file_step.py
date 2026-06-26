@@ -38,9 +38,10 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
     Unit tests for the CreatePythonInitFileStep class.
   """
   _DIRECTORY = Path('tests') / 'mypkg' / 'test'
+  _DESCRIPTION = 'mypkg/test/__init__.py: Unit tests for mypkg.'
   _TEMPLATE = (
-    'Copyright (C) {{ copyright_year }} {{ copyright_holder }}.\n'
-    'Released under the GPL.\n')
+    '{{ description }}\n'
+    'Copyright (C) {{ copyright_year }} {{ copyright_holder }}.\n')
 
   @classmethod
   def _init_py(cls, project_root: Path) -> Path:
@@ -88,13 +89,17 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
       step = CreatePythonInitFileStep(
         context,
         self._DIRECTORY,
-        self._copyright_header())
+        self._copyright_header(),
+        self._DESCRIPTION)
 
       step.run()
 
       self.assertEqual(
-        '# Copyright (C) 2020 Milestone 42.\n'
-        '# Released under the GPL.\n',
+        '"""\n'
+        f'  {self._DESCRIPTION}\n'
+        '"""\n'
+        f'# {self._DESCRIPTION}\n'
+        '# Copyright (C) 2020 Milestone 42.\n',
         self._init_py(project_root).read_text(encoding='utf-8'))
 
   def test_run_uses_project_context_for_header(self) -> None:
@@ -114,13 +119,17 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
       step = CreatePythonInitFileStep(
         context,
         self._DIRECTORY,
-        self._copyright_header())
+        self._copyright_header(),
+        self._DESCRIPTION)
 
       step.run()
 
       self.assertEqual(
-        '# Copyright (C) 2020 Acme Tools.\n'
-        '# Released under the GPL.\n',
+        '"""\n'
+        f'  {self._DESCRIPTION}\n'
+        '"""\n'
+        f'# {self._DESCRIPTION}\n'
+        '# Copyright (C) 2020 Acme Tools.\n',
         self._init_py(project_root).read_text(encoding='utf-8'))
 
   def test_run_preserves_preexisting_init_py(self) -> None:
@@ -138,7 +147,8 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
       step = CreatePythonInitFileStep(
         context,
         self._DIRECTORY,
-        self._copyright_header())
+        self._copyright_header(),
+        self._DESCRIPTION)
 
       step.run()
 
@@ -155,7 +165,8 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
       step = CreatePythonInitFileStep(
         context,
         self._DIRECTORY,
-        self._copyright_header())
+        self._copyright_header(),
+        self._DESCRIPTION)
 
       with self.assertRaises(DralithusProjectError):
         step.run()
@@ -174,7 +185,8 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
       step = CreatePythonInitFileStep(
         context,
         self._DIRECTORY,
-        self._copyright_header())
+        self._copyright_header(),
+        self._DESCRIPTION)
 
       with self.assertRaises(DralithusProjectError):
         step.run()
@@ -192,7 +204,8 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
       step = CreatePythonInitFileStep(
         context,
         self._DIRECTORY,
-        self._copyright_header())
+        self._copyright_header(),
+        self._DESCRIPTION)
 
       step.run()
       step.rollback()
@@ -214,7 +227,8 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
       step = CreatePythonInitFileStep(
         context,
         self._DIRECTORY,
-        self._copyright_header())
+        self._copyright_header(),
+        self._DESCRIPTION)
 
       step.run()
       step.rollback()
@@ -234,7 +248,8 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
       step = CreatePythonInitFileStep(
         context,
         self._DIRECTORY,
-        self._copyright_header())
+        self._copyright_header(),
+        self._DESCRIPTION)
 
       step.run(dry_run=True)
 
@@ -254,7 +269,8 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
       step = CreatePythonInitFileStep(
         context,
         self._DIRECTORY,
-        self._copyright_header())
+        self._copyright_header(),
+        self._DESCRIPTION)
 
       with self.assertRaises(DralithusProjectError):
         step.run(dry_run=True)
@@ -275,7 +291,8 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
       step = CreatePythonInitFileStep(
         context,
         self._DIRECTORY,
-        self._copyright_header())
+        self._copyright_header(),
+        self._DESCRIPTION)
 
       step.run()
       step.run()
