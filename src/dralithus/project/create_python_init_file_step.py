@@ -36,16 +36,20 @@ class CreatePythonInitFileStep(ExecutionStep):
     Represent a project creation step that creates an __init__.py file
     with a copyright notice in one project-relative directory.
   """
+  # pylint: disable-next=too-many-arguments,too-many-positional-arguments
   def __init__(
     self,
     context: ProjectContext,
     directory: Path,
-    copyright_header: CopyrightHeader
+    copyright_header: CopyrightHeader,
+    description: str
   ) -> None:
     """
       Initialize the Python __init__.py creation step.
 
-      The copyright header is rendered here, because the project
+      The generated __init__.py begins with a module docstring holding
+      the description, followed by the copyright header that repeats
+      the same description. Both are rendered here, because the project
       context is known at construction time.
 
       :param context: The shared project creation context
@@ -53,10 +57,13 @@ class CreatePythonInitFileStep(ExecutionStep):
         contain the __init__.py file
       :param copyright_header: The copyright header renderer for the
         generated __init__.py file
+      :param description: The file description for the docstring and
+        the copyright header
       :return: None
     """
     super().__init__(context)
-    content = copyright_header.text('python', context)
+    header = copyright_header.text('python', context, description)
+    content = f'"""\n  {description}\n"""\n{header}'
     self._create_file_step = CreateFileStep(
       context,
       directory / self.init_filename,
