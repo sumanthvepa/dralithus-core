@@ -39,6 +39,7 @@ class TestCopyrightHeader(unittest.TestCase):
   _TEMPLATE = (
     'Copyright (C) {{ copyright_year }} {{ copyright_holder }}.\n'
     'Released under the GPL.\n')
+  _DESCRIPTION = 'example.py: An example module.'
 
   @staticmethod
   def _context(project_root: Path) -> ProjectContext:
@@ -64,7 +65,7 @@ class TestCopyrightHeader(unittest.TestCase):
       context = self._context(Path(temp_directory))
       header = CopyrightHeader('literal header\n')
 
-      self.assertEqual('# literal header\n', header.text('python', context))
+      self.assertEqual('# literal header\n', header.text('python', context, self._DESCRIPTION))
 
   def test_text_renders_python_header(self) -> None:
     """
@@ -79,7 +80,38 @@ class TestCopyrightHeader(unittest.TestCase):
       self.assertEqual(
         '# Copyright (C) 2020 Milestone 42.\n'
         '# Released under the GPL.\n',
-        header.text('python', context))
+        header.text('python', context, self._DESCRIPTION))
+
+  def test_text_renders_description(self) -> None:
+    """
+      Verify text renders the description into the header.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      context = self._context(Path(temp_directory))
+      header = CopyrightHeader('{{ description }}\n')
+
+      self.assertEqual(
+        f'# {self._DESCRIPTION}\n',
+        header.text('python', context, self._DESCRIPTION))
+
+  def test_text_emits_bare_prefix_for_blank_lines(self) -> None:
+    """
+      Verify text emits a bare comment prefix for blank lines, with
+      no trailing space.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      context = self._context(Path(temp_directory))
+      header = CopyrightHeader('first\n\nsecond\n')
+
+      self.assertEqual(
+        '# first\n'
+        '#\n'
+        '# second\n',
+        header.text('python', context, self._DESCRIPTION))
 
   def test_text_renders_javascript_header(self) -> None:
     """
@@ -94,7 +126,7 @@ class TestCopyrightHeader(unittest.TestCase):
       self.assertEqual(
         '// Copyright (C) 2020 Milestone 42.\n'
         '// Released under the GPL.\n',
-        header.text('javascript', context))
+        header.text('javascript', context, self._DESCRIPTION))
 
   def test_text_uses_context_values(self) -> None:
     """
@@ -121,7 +153,7 @@ class TestCopyrightHeader(unittest.TestCase):
         '# venv=env\n'
         '# holder=Milestone 42\n'
         '# year=2020\n',
-        header.text('python', context))
+        header.text('python', context, self._DESCRIPTION))
 
   def test_text_preserves_trailing_newline(self) -> None:
     """
@@ -133,7 +165,7 @@ class TestCopyrightHeader(unittest.TestCase):
       context = self._context(Path(temp_directory))
       header = CopyrightHeader('single line\n')
 
-      self.assertEqual('# single line\n', header.text('python', context))
+      self.assertEqual('# single line\n', header.text('python', context, self._DESCRIPTION))
 
   def test_text_rejects_unknown_language(self) -> None:
     """
@@ -146,7 +178,7 @@ class TestCopyrightHeader(unittest.TestCase):
       header = CopyrightHeader(self._TEMPLATE)
 
       with self.assertRaises(DralithusProjectError):
-        header.text(cast(Any, 'ruby'), context)
+        header.text(cast(Any, 'ruby'), context, self._DESCRIPTION)
 
   def test_from_template_file_reads_template(self) -> None:
     """
@@ -165,7 +197,7 @@ class TestCopyrightHeader(unittest.TestCase):
       self.assertEqual(
         '# Copyright (C) 2020 Milestone 42.\n'
         '# Released under the GPL.\n',
-        header.text('python', context))
+        header.text('python', context, self._DESCRIPTION))
 
   def test_from_template_file_wraps_read_failure(self) -> None:
     """
@@ -203,7 +235,7 @@ class TestCopyrightHeader(unittest.TestCase):
       self.assertEqual(
         '# Copyright (C) 2020 Milestone 42.\n'
         '# Released under the GPL.\n',
-        header.text('python', context))
+        header.text('python', context, self._DESCRIPTION))
 
   def test_from_template_resource_wraps_read_failure(self) -> None:
     """
