@@ -62,7 +62,11 @@ class CreatePythonInitFileStep(ExecutionStep):
       :return: None
     """
     super().__init__(context)
-    header = copyright_header.text('python', context, description)
+    header = copyright_header.text(
+      'python',
+      context.copyright_holder,
+      context.copyright_year,
+      description)
     content = f'"""\n  {description}\n"""\n{header}'
     self._create_file_step = CreateFileStep(
       context,

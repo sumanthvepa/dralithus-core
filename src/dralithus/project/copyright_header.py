@@ -26,7 +26,6 @@ from typing import Literal, Self
 
 from jinja2 import Environment, TemplateError
 
-from dralithus.project.context import ProjectContext
 from dralithus.project.error import DralithusProjectError
 
 
@@ -58,19 +57,23 @@ class CopyrightHeader:
 
   @staticmethod
   def _template_context(
-    context: ProjectContext,
+    copyright_holder: str,
+    copyright_year: int,
     description: str
   ) -> dict[str, object]:
     """
       Build the Jinja2 template context for a file description.
 
-      :param context: The shared project creation context
+      :param copyright_holder: The copyright holder name
+      :param copyright_year: The copyright year
       :param description: The file description for the header
       :return: The template context dictionary
     """
-    values: dict[str, object] = dict(context.as_dict())
-    values['description'] = description
-    return values
+    return {
+      'copyright_holder': copyright_holder,
+      'copyright_year': copyright_year,
+      'description': description,
+    }
 
   @staticmethod
   def _comment_text(text: str, prefix: str) -> str:
@@ -104,7 +107,8 @@ class CopyrightHeader:
   def text(
     self,
     language: Literal['python', 'javascript'],
-    context: ProjectContext,
+    copyright_holder: str,
+    copyright_year: int,
     description: str
   ) -> str:
     """
@@ -117,7 +121,8 @@ class CopyrightHeader:
 
       :param language: The target language, either python or
         javascript
-      :param context: The shared project creation context
+      :param copyright_holder: The copyright holder name
+      :param copyright_year: The copyright year
       :param description: The file description for the header
       :return: The rendered copyright header text
       :raises DralithusProjectError: When language is unsupported or
@@ -127,7 +132,10 @@ class CopyrightHeader:
     try:
       rendered = Environment(keep_trailing_newline=True).from_string(
         self._template).render(
-        self._template_context(context, description))
+        self._template_context(
+          copyright_holder,
+          copyright_year,
+          description))
     except TemplateError as error:
       raise DralithusProjectError(
         'Could not render copyright header template') from error
@@ -154,7 +162,7 @@ class CopyrightHeader:
     cls,
     package: str,
     resource: str,
-    context: ProjectContext
+    context: object
   ) -> Self:
     """
       Create a copyright header renderer from a package resource.

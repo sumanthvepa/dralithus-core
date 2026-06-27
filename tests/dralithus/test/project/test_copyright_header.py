@@ -23,7 +23,7 @@
 from importlib import resources
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Any, cast
+from typing import Any, Literal, cast
 import unittest
 from unittest import mock
 
@@ -40,6 +40,27 @@ class TestCopyrightHeader(unittest.TestCase):
     'Copyright (C) {{ copyright_year }} {{ copyright_holder }}.\n'
     'Released under the GPL.\n')
   _DESCRIPTION = 'example.py: An example module.'
+  _COPYRIGHT_HOLDER = 'Milestone 42'
+  _COPYRIGHT_YEAR = 2020
+
+  @classmethod
+  def _text(
+    cls,
+    header: CopyrightHeader,
+    language: Literal['python', 'javascript']
+  ) -> str:
+    """
+      Render a test copyright header.
+
+      :param header: The copyright header renderer
+      :param language: The target language
+      :return: The rendered copyright header text
+    """
+    return header.text(
+      language,
+      cls._COPYRIGHT_HOLDER,
+      cls._COPYRIGHT_YEAR,
+      cls._DESCRIPTION)
 
   @staticmethod
   def _context(project_root: Path) -> ProjectContext:
@@ -61,11 +82,9 @@ class TestCopyrightHeader(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      context = self._context(Path(temp_directory))
-      header = CopyrightHeader('literal header\n')
+    header = CopyrightHeader('literal header\n')
 
-      self.assertEqual('# literal header\n', header.text('python', context, self._DESCRIPTION))
+    self.assertEqual('# literal header\n', self._text(header, 'python'))
 
   def test_text_renders_python_header(self) -> None:
     """
@@ -73,14 +92,12 @@ class TestCopyrightHeader(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      context = self._context(Path(temp_directory))
-      header = CopyrightHeader(self._TEMPLATE)
+    header = CopyrightHeader(self._TEMPLATE)
 
-      self.assertEqual(
-        '# Copyright (C) 2020 Milestone 42.\n'
-        '# Released under the GPL.\n',
-        header.text('python', context, self._DESCRIPTION))
+    self.assertEqual(
+      '# Copyright (C) 2020 Milestone 42.\n'
+      '# Released under the GPL.\n',
+      self._text(header, 'python'))
 
   def test_text_renders_description(self) -> None:
     """
@@ -88,13 +105,11 @@ class TestCopyrightHeader(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      context = self._context(Path(temp_directory))
-      header = CopyrightHeader('{{ description }}\n')
+    header = CopyrightHeader('{{ description }}\n')
 
-      self.assertEqual(
-        f'# {self._DESCRIPTION}\n',
-        header.text('python', context, self._DESCRIPTION))
+    self.assertEqual(
+      f'# {self._DESCRIPTION}\n',
+      self._text(header, 'python'))
 
   def test_text_emits_bare_prefix_for_blank_lines(self) -> None:
     """
@@ -103,15 +118,13 @@ class TestCopyrightHeader(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      context = self._context(Path(temp_directory))
-      header = CopyrightHeader('first\n\nsecond\n')
+    header = CopyrightHeader('first\n\nsecond\n')
 
-      self.assertEqual(
-        '# first\n'
-        '#\n'
-        '# second\n',
-        header.text('python', context, self._DESCRIPTION))
+    self.assertEqual(
+      '# first\n'
+      '#\n'
+      '# second\n',
+      self._text(header, 'python'))
 
   def test_text_renders_javascript_header(self) -> None:
     """
@@ -119,41 +132,27 @@ class TestCopyrightHeader(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      context = self._context(Path(temp_directory))
-      header = CopyrightHeader(self._TEMPLATE)
+    header = CopyrightHeader(self._TEMPLATE)
 
-      self.assertEqual(
-        '// Copyright (C) 2020 Milestone 42.\n'
-        '// Released under the GPL.\n',
-        header.text('javascript', context, self._DESCRIPTION))
+    self.assertEqual(
+      '// Copyright (C) 2020 Milestone 42.\n'
+      '// Released under the GPL.\n',
+      self._text(header, 'javascript'))
 
-  def test_text_uses_context_values(self) -> None:
+  def test_text_uses_supplied_copyright_values(self) -> None:
     """
-      Verify text renders values from the project context.
+      Verify text renders the supplied copyright values.
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_holder='Milestone 42',
-        copyright_year=2020,
-        venv_name='env')
-      header = CopyrightHeader(
-        'root={{ project_root }}\n'
-        'venv={{ venv_name }}\n'
-        'holder={{ copyright_holder }}\n'
-        'year={{ copyright_year }}\n')
+    header = CopyrightHeader(
+      'holder={{ copyright_holder }}\n'
+      'year={{ copyright_year }}\n')
 
-      self.assertEqual(
-        f'# root={project_root}\n'
-        '# venv=env\n'
-        '# holder=Milestone 42\n'
-        '# year=2020\n',
-        header.text('python', context, self._DESCRIPTION))
+    self.assertEqual(
+      '# holder=Milestone 42\n'
+      '# year=2020\n',
+      self._text(header, 'python'))
 
   def test_text_preserves_trailing_newline(self) -> None:
     """
@@ -161,11 +160,9 @@ class TestCopyrightHeader(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      context = self._context(Path(temp_directory))
-      header = CopyrightHeader('single line\n')
+    header = CopyrightHeader('single line\n')
 
-      self.assertEqual('# single line\n', header.text('python', context, self._DESCRIPTION))
+    self.assertEqual('# single line\n', self._text(header, 'python'))
 
   def test_text_rejects_unknown_language(self) -> None:
     """
@@ -173,12 +170,10 @@ class TestCopyrightHeader(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      context = self._context(Path(temp_directory))
-      header = CopyrightHeader(self._TEMPLATE)
+    header = CopyrightHeader(self._TEMPLATE)
 
-      with self.assertRaises(DralithusProjectError):
-        header.text(cast(Any, 'ruby'), context, self._DESCRIPTION)
+    with self.assertRaises(DralithusProjectError):
+      self._text(header, cast(Any, 'ruby'))
 
   def test_from_template_file_reads_template(self) -> None:
     """
@@ -188,7 +183,6 @@ class TestCopyrightHeader(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = self._context(project_root)
       template_filename = project_root / 'copyright.txt'
       template_filename.write_text(self._TEMPLATE, encoding='utf-8')
 
@@ -197,7 +191,7 @@ class TestCopyrightHeader(unittest.TestCase):
       self.assertEqual(
         '# Copyright (C) 2020 Milestone 42.\n'
         '# Released under the GPL.\n',
-        header.text('python', context, self._DESCRIPTION))
+        self._text(header, 'python'))
 
   def test_from_template_file_wraps_read_failure(self) -> None:
     """
@@ -235,7 +229,7 @@ class TestCopyrightHeader(unittest.TestCase):
       self.assertEqual(
         '# Copyright (C) 2020 Milestone 42.\n'
         '# Released under the GPL.\n',
-        header.text('python', context, self._DESCRIPTION))
+        self._text(header, 'python'))
 
   def test_from_template_resource_wraps_read_failure(self) -> None:
     """
