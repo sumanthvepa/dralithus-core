@@ -28,6 +28,7 @@ from unittest import mock
 
 from dralithus.test import FailingWriteFile, project_context
 from dralithus.project.context import ProjectContext
+from dralithus.project.copyright_header import CopyrightHeader
 from dralithus.project.create_file_step import CreateFileStep
 from dralithus.project.error import DralithusProjectError
 
@@ -139,6 +140,11 @@ class TestCreateFileStep(unittest.TestCase):
         package_name='sample',
         copyright_holder='Milestone 42',
         copyright_year=2020,
+        copyright_header=CopyrightHeader(
+          '{{ description }}\n'
+          'Copyright (C) {{ copyright_year }} {{ copyright_holder }}.\n',
+          'Milestone 42',
+          2020),
         venv_name='env')
       template_directory = project_root / 'templates'
       template_directory.mkdir()
