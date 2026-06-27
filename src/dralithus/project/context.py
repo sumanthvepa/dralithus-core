@@ -20,7 +20,6 @@
 # along with this program.  If not, see
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
-import datetime
 import keyword
 from pathlib import Path
 from typing import TypedDict
@@ -47,17 +46,6 @@ class ProjectContext:
   """
     Hold shared state for project creation steps.
   """
-  @staticmethod
-  def _validate_copyright_year(copyright_year: int) -> None:
-    # 1710 is the year the Statute of Anne came into force — the first
-    # modern copyright act. No meaningful copyright predates it.
-    if copyright_year < 1710:
-      raise DralithusProjectError(
-        f'Copyright year must be 1710 or later: {copyright_year}')
-    if copyright_year > datetime.date.today().year:
-      raise DralithusProjectError(
-        f'Copyright year must not be in the future: {copyright_year}')
-
   @staticmethod
   def _validate_venv_name(venv_name: str) -> None:
     """
@@ -122,7 +110,6 @@ class ProjectContext:
     """
     self._validate_venv_name(venv_name)
     self.validate_package_name(package_name)
-    self._validate_copyright_year(copyright_year)
     self.project_root = project_root
     self.venv_name = venv_name
     self.copyright_holder = copyright_holder

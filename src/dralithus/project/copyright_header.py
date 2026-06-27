@@ -20,6 +20,7 @@
 # along with this program.  If not, see
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
+import datetime
 from importlib import resources
 from pathlib import Path
 from typing import Literal, Self
@@ -37,6 +38,25 @@ class CopyrightHeader:
     time. The text method renders that template for one target source
     language and file description.
   """
+  @staticmethod
+  def _validate_copyright_year(copyright_year: int) -> None:
+    """
+      Validate that copyright_year is a plausible copyright year.
+
+      :param copyright_year: The copyright year to validate
+      :return: None
+      :raises DralithusProjectError: When copyright_year is before
+        1710 or in the future
+    """
+    # 1710 is the year the Statute of Anne came into force — the first
+    # modern copyright act. No meaningful copyright predates it.
+    if copyright_year < 1710:
+      raise DralithusProjectError(
+        f'Copyright year must be 1710 or later: {copyright_year}')
+    if copyright_year > datetime.date.today().year:
+      raise DralithusProjectError(
+        f'Copyright year must not be in the future: {copyright_year}')
+
   def _template_context(self, description: str) -> dict[str, object]:
     """
       Build the Jinja2 template context for a file description.
@@ -102,6 +122,7 @@ class CopyrightHeader:
       :param copyright_year: The copyright year
       :return: None
     """
+    self._validate_copyright_year(copyright_year)
     self._template = template
     self._copyright_holder = copyright_holder
     self._copyright_year = copyright_year
