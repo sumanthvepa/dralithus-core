@@ -26,7 +26,6 @@ from pathlib import Path
 import unittest
 
 from dralithus.test import project_context
-from dralithus.project.copyright_header import CopyrightHeader
 from dralithus.project.create_tests_tree_step import CreateTestsTreeStep
 from dralithus.project.error import DralithusProjectError
 
@@ -45,18 +44,6 @@ class TestCreateTestsTreeStep(unittest.TestCase):
   """
   _PACKAGE_NAME = 'sample'
   _DESCRIPTION = 'sample/test/__init__.py: Unit tests for sample.'
-  _TEMPLATE = (
-    '{{ description }}\n'
-    'Copyright (C) {{ copyright_year }} {{ copyright_holder }}.\n')
-
-  @classmethod
-  def _copyright_header(cls) -> CopyrightHeader:
-    """
-      Return the copyright header renderer for the tests.
-
-      :return: The copyright header renderer
-    """
-    return CopyrightHeader(cls._TEMPLATE, 'Sumanth Vepa', 2026)
 
   @classmethod
   def _tests(cls, project_root: Path) -> Path:
@@ -128,6 +115,20 @@ class TestCreateTestsTreeStep(unittest.TestCase):
     """
     return cls._test_package(project_root) / '__init__.py'
 
+  @classmethod
+  def _expected_init_py(cls) -> str:
+    """
+      Return the expected generated test package __init__.py content.
+
+      :return: The expected generated file text
+    """
+    return (
+      '"""\n'
+      f'  {cls._DESCRIPTION}\n'
+      '"""\n'
+      f'# {cls._DESCRIPTION}\n'
+      '# Copyright (C) 2026 Sumanth Vepa.\n')
+
   # run
 
   def test_run_creates_full_tests_tree(self) -> None:
@@ -137,7 +138,7 @@ class TestCreateTestsTreeStep(unittest.TestCase):
       package __init__.py.
     """
     with project_context() as (project_root, context):
-      step = CreateTestsTreeStep(context, self._copyright_header())
+      step = CreateTestsTreeStep(context)
 
       step.run()
 
@@ -156,16 +157,12 @@ class TestCreateTestsTreeStep(unittest.TestCase):
       header.
     """
     with project_context() as (project_root, context):
-      step = CreateTestsTreeStep(context, self._copyright_header())
+      step = CreateTestsTreeStep(context)
 
       step.run()
 
       self.assertEqual(
-        '"""\n'
-        f'  {self._DESCRIPTION}\n'
-        '"""\n'
-        f'# {self._DESCRIPTION}\n'
-        '# Copyright (C) 2026 Sumanth Vepa.\n',
+        self._expected_init_py(),
         self._init_py(project_root).read_text(encoding='utf-8'))
 
   def test_run_creates_empty_gitignore_files(self) -> None:
@@ -173,7 +170,7 @@ class TestCreateTestsTreeStep(unittest.TestCase):
       Verify the .gitignore files run creates are empty.
     """
     with project_context() as (project_root, context):
-      step = CreateTestsTreeStep(context, self._copyright_header())
+      step = CreateTestsTreeStep(context)
 
       step.run()
 
@@ -198,7 +195,7 @@ class TestCreateTestsTreeStep(unittest.TestCase):
       self._test_package(project_root).mkdir(parents=True)
       self._init_py(project_root).write_text(
         '# user init\n', encoding='utf-8')
-      step = CreateTestsTreeStep(context, self._copyright_header())
+      step = CreateTestsTreeStep(context)
 
       step.run()
 
@@ -216,7 +213,7 @@ class TestCreateTestsTreeStep(unittest.TestCase):
       # A directory at tests/<pkg>/.gitignore makes the package
       # .gitignore child fail after mkdir created tests/<pkg>/test.
       self._package_gitignore(project_root).mkdir(parents=True)
-      step = CreateTestsTreeStep(context, self._copyright_header())
+      step = CreateTestsTreeStep(context)
 
       with self.assertRaises(DralithusProjectError):
         step.run()
@@ -235,7 +232,7 @@ class TestCreateTestsTreeStep(unittest.TestCase):
       skips validating a child whose parent does not exist).
     """
     with project_context() as (project_root, context):
-      step = CreateTestsTreeStep(context, self._copyright_header())
+      step = CreateTestsTreeStep(context)
 
       step.run(dry_run=True)
 
@@ -248,7 +245,7 @@ class TestCreateTestsTreeStep(unittest.TestCase):
     """
     with project_context() as (project_root, context):
       self._tests_gitignore(project_root).mkdir(parents=True)
-      step = CreateTestsTreeStep(context, self._copyright_header())
+      step = CreateTestsTreeStep(context)
 
       with self.assertRaises(DralithusProjectError):
         step.run(dry_run=True)
@@ -260,7 +257,7 @@ class TestCreateTestsTreeStep(unittest.TestCase):
       Verify rollback removes the directories and files run created.
     """
     with project_context() as (project_root, context):
-      step = CreateTestsTreeStep(context, self._copyright_header())
+      step = CreateTestsTreeStep(context)
 
       step.run()
       step.rollback()
@@ -276,7 +273,7 @@ class TestCreateTestsTreeStep(unittest.TestCase):
       self._test_package(project_root).mkdir(parents=True)
       self._init_py(project_root).write_text(
         '# user init\n', encoding='utf-8')
-      step = CreateTestsTreeStep(context, self._copyright_header())
+      step = CreateTestsTreeStep(context)
 
       step.run()
       step.rollback()
@@ -292,7 +289,7 @@ class TestCreateTestsTreeStep(unittest.TestCase):
       Verify a dry-run rollback changes nothing.
     """
     with project_context() as (project_root, context):
-      step = CreateTestsTreeStep(context, self._copyright_header())
+      step = CreateTestsTreeStep(context)
 
       step.run()
       step.rollback(dry_run=True)

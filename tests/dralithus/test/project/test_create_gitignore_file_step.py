@@ -23,10 +23,9 @@
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
 from pathlib import Path
-from tempfile import TemporaryDirectory
 import unittest
 
-from dralithus.project.context import ProjectContext
+from dralithus.test import project_context
 from dralithus.project.create_gitignore_file_step import (
   CreateGitIgnoreFileStep)
 from dralithus.project.error import DralithusProjectError
@@ -54,13 +53,7 @@ class TestCreateGitIgnoreFileStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026)
+    with project_context() as (project_root, context):
       (project_root / self._DIRECTORY).mkdir()
       step = CreateGitIgnoreFileStep(context, self._DIRECTORY)
 
@@ -75,13 +68,7 @@ class TestCreateGitIgnoreFileStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026)
+    with project_context() as (project_root, context):
       (project_root / self._DIRECTORY).mkdir()
       gitignore = self._gitignore(project_root)
       gitignore.write_text('*.log\n', encoding='utf-8')
@@ -97,12 +84,7 @@ class TestCreateGitIgnoreFileStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      context = ProjectContext(
-        project_root=Path(temp_directory),
-        package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026)
+    with project_context() as (_, context):
       step = CreateGitIgnoreFileStep(context, self._DIRECTORY)
 
       with self.assertRaises(DralithusProjectError):
@@ -114,13 +96,7 @@ class TestCreateGitIgnoreFileStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026)
+    with project_context() as (project_root, context):
       (project_root / self._DIRECTORY).mkdir()
       step = CreateGitIgnoreFileStep(context, self._DIRECTORY)
 
@@ -135,13 +111,7 @@ class TestCreateGitIgnoreFileStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026)
+    with project_context() as (project_root, context):
       (project_root / self._DIRECTORY).mkdir()
       gitignore = self._gitignore(project_root)
       gitignore.write_text('*.log\n', encoding='utf-8')
@@ -158,13 +128,7 @@ class TestCreateGitIgnoreFileStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026)
+    with project_context() as (project_root, context):
       (project_root / self._DIRECTORY).mkdir()
       step = CreateGitIgnoreFileStep(context, self._DIRECTORY)
 
@@ -178,13 +142,7 @@ class TestCreateGitIgnoreFileStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026)
+    with project_context() as (project_root, context):
       (project_root / self._DIRECTORY).mkdir()
       self._gitignore(project_root).mkdir()
       step = CreateGitIgnoreFileStep(context, self._DIRECTORY)

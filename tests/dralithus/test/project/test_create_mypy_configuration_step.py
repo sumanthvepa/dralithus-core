@@ -24,10 +24,9 @@
 # -------------------------------------------------------------------
 from importlib import resources
 from pathlib import Path
-from tempfile import TemporaryDirectory
 import unittest
 
-from dralithus.project.context import ProjectContext
+from dralithus.test import project_context
 from dralithus.project.create_mypy_configuration_step import (
   CreateMypyConfigurationStep)
 from dralithus.project.error import DralithusProjectError
@@ -140,13 +139,7 @@ class TestCreateMypyConfigurationStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026)
+    with project_context() as (project_root, context):
       step = CreateMypyConfigurationStep(context)
 
       step.run()
@@ -164,13 +157,7 @@ class TestCreateMypyConfigurationStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026)
+    with project_context() as (project_root, context):
       step = CreateMypyConfigurationStep(context)
 
       step.run()
@@ -185,13 +172,7 @@ class TestCreateMypyConfigurationStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026)
+    with project_context() as (project_root, context):
       step = CreateMypyConfigurationStep(context)
 
       step.run()
@@ -207,13 +188,7 @@ class TestCreateMypyConfigurationStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026)
+    with project_context() as (project_root, context):
       step = CreateMypyConfigurationStep(context)
 
       step.run()
@@ -232,13 +207,7 @@ class TestCreateMypyConfigurationStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026)
+    with project_context() as (project_root, context):
       self._mypy_ini(project_root).write_text(
         'user mypy config\n',
         encoding='utf-8')
@@ -264,13 +233,7 @@ class TestCreateMypyConfigurationStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026)
+    with project_context() as (project_root, context):
       self._parameterized_gitignore(project_root).mkdir(parents=True)
       step = CreateMypyConfigurationStep(context)
 
@@ -287,13 +250,7 @@ class TestCreateMypyConfigurationStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026)
+    with project_context() as (project_root, context):
       step = CreateMypyConfigurationStep(context)
 
       step.run()
@@ -308,13 +265,7 @@ class TestCreateMypyConfigurationStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026)
+    with project_context() as (project_root, context):
       self._mypy_ini(project_root).write_text(
         'user mypy config\n',
         encoding='utf-8')
@@ -335,13 +286,7 @@ class TestCreateMypyConfigurationStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026)
+    with project_context() as (project_root, context):
       step = CreateMypyConfigurationStep(context)
 
       step.run(dry_run=True)
@@ -355,13 +300,7 @@ class TestCreateMypyConfigurationStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026)
+    with project_context() as (project_root, context):
       self._mypy_ini(project_root).mkdir()
       step = CreateMypyConfigurationStep(context)
 

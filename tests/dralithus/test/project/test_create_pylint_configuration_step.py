@@ -24,10 +24,9 @@
 # -------------------------------------------------------------------
 from importlib import resources
 from pathlib import Path
-from tempfile import TemporaryDirectory
 import unittest
 
-from dralithus.project.context import ProjectContext
+from dralithus.test import project_context
 from dralithus.project.create_pylint_configuration_step import (
   CreatePylintConfigurationStep)
 from dralithus.project.error import DralithusProjectError
@@ -79,13 +78,7 @@ class TestCreatePylintConfigurationStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026)
+    with project_context() as (project_root, context):
       step = CreatePylintConfigurationStep(context)
 
       step.run()
@@ -100,13 +93,7 @@ class TestCreatePylintConfigurationStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026)
+    with project_context() as (project_root, context):
       step = CreatePylintConfigurationStep(context)
 
       step.run()
@@ -121,13 +108,7 @@ class TestCreatePylintConfigurationStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026)
+    with project_context() as (project_root, context):
       pylintrc = self._pylintrc(project_root)
       pylintrc.write_text('user config\n', encoding='utf-8')
       step = CreatePylintConfigurationStep(context)
@@ -142,13 +123,7 @@ class TestCreatePylintConfigurationStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026)
+    with project_context() as (project_root, context):
       step = CreatePylintConfigurationStep(context)
 
       step.run()
@@ -162,13 +137,7 @@ class TestCreatePylintConfigurationStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026)
+    with project_context() as (project_root, context):
       pylintrc = self._pylintrc(project_root)
       pylintrc.write_text('user config\n', encoding='utf-8')
       step = CreatePylintConfigurationStep(context)
@@ -184,13 +153,7 @@ class TestCreatePylintConfigurationStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026)
+    with project_context() as (project_root, context):
       step = CreatePylintConfigurationStep(context)
 
       step.run(dry_run=True)
@@ -203,13 +166,7 @@ class TestCreatePylintConfigurationStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026)
+    with project_context() as (project_root, context):
       self._pylintrc(project_root).mkdir()
       step = CreatePylintConfigurationStep(context)
 
