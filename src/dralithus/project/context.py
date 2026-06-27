@@ -25,6 +25,7 @@ import keyword
 from pathlib import Path
 from typing import TypedDict
 
+from dralithus.project.copyright_header import CopyrightHeader
 from dralithus.project.error import DralithusProjectError
 
 
@@ -36,6 +37,7 @@ class ProjectContextDict(TypedDict):
   package_name: str
   copyright_holder: str
   copyright_year: int
+  copyright_header: CopyrightHeader
   venv_name: str
   venv_path: Path
   venv_python: Path
@@ -102,6 +104,7 @@ class ProjectContext:
       package_name: str,
       copyright_holder: str,
       copyright_year: int,
+      copyright_header: CopyrightHeader,
       venv_name: str = 'venv'
   ) -> None:
     """
@@ -111,6 +114,7 @@ class ProjectContext:
       :param package_name: The Python package name
       :param copyright_holder: The copyright holder name
       :param copyright_year: The copyright year
+      :param copyright_header: The shared copyright header renderer
       :param venv_name: The name of the virtual environment directory
       :return: None
       :raises DralithusProjectError: When venv_name or package_name
@@ -123,6 +127,7 @@ class ProjectContext:
     self.venv_name = venv_name
     self.copyright_holder = copyright_holder
     self.copyright_year = copyright_year
+    self.copyright_header = copyright_header
     self.package_name = package_name
 
   @property
@@ -157,6 +162,7 @@ class ProjectContext:
       package_name=self.package_name,
       copyright_holder=self.copyright_holder,
       copyright_year=self.copyright_year,
+      copyright_header=self.copyright_header,
       venv_name=self.venv_name,
       venv_path=self.venv_path,
       venv_python=self.venv_python)

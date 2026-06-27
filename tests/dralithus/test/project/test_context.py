@@ -20,11 +20,13 @@
 # along with this program.  If not, see
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
+import unittest
+import datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
-import unittest
 
 from dralithus.project.context import ProjectContext, ProjectContextDict
+from dralithus.project.copyright_header import CopyrightHeader
 from dralithus.project.error import DralithusProjectError
 
 
@@ -32,6 +34,24 @@ class TestProjectContext(unittest.TestCase):
   """
     Unit tests for the ProjectContext class.
   """
+  @staticmethod
+  def _copyright_header(
+    copyright_holder: str = 'Sumanth Vepa',
+    copyright_year: int = 2026
+  ) -> CopyrightHeader:
+    """
+      Return a copyright header renderer for context tests.
+
+      :param copyright_holder: The copyright holder name
+      :param copyright_year: The copyright year
+      :return: The copyright header renderer
+    """
+    return CopyrightHeader(
+      '{{ description }}\n'
+      'Copyright (C) {{ copyright_year }} {{ copyright_holder }}.\n',
+      copyright_holder,
+      copyright_year)
+
   def test_default_venv_name_is_venv(self) -> None:
     """
       Verify that the default venv name is venv.
@@ -44,7 +64,8 @@ class TestProjectContext(unittest.TestCase):
         project_root=project_root,
         package_name='sample',
         copyright_holder='Sumanth Vepa',
-        copyright_year=2026)
+        copyright_year=2026,
+        copyright_header=self._copyright_header())
 
       self.assertEqual('venv', context.venv_name)
 
@@ -60,7 +81,8 @@ class TestProjectContext(unittest.TestCase):
         project_root=project_root,
         package_name='mypkg',
         copyright_holder='Sumanth Vepa',
-        copyright_year=2026)
+        copyright_year=2026,
+        copyright_header=self._copyright_header())
 
       self.assertEqual('mypkg', context.package_name)
 
@@ -76,10 +98,12 @@ class TestProjectContext(unittest.TestCase):
         project_root=project_root,
         package_name='sample',
         copyright_holder='Milestone 42',
-        copyright_year=2020)
+        copyright_year=2020,
+        copyright_header=self._copyright_header('Milestone 42', 2020))
 
       self.assertEqual('Milestone 42', context.copyright_holder)
       self.assertEqual(2020, context.copyright_year)
+      self.assertIsInstance(context.copyright_header, CopyrightHeader)
 
   def test_default_venv_path_uses_venv_name(self) -> None:
     """
@@ -93,7 +117,8 @@ class TestProjectContext(unittest.TestCase):
         project_root=project_root,
         package_name='sample',
         copyright_holder='Sumanth Vepa',
-        copyright_year=2026)
+        copyright_year=2026,
+        copyright_header=self._copyright_header())
 
       self.assertEqual(project_root / 'venv', context.venv_path)
 
@@ -109,7 +134,8 @@ class TestProjectContext(unittest.TestCase):
         project_root=project_root,
         package_name='sample',
         copyright_holder='Sumanth Vepa',
-        copyright_year=2026)
+        copyright_year=2026,
+        copyright_header=self._copyright_header())
 
       self.assertEqual(project_root / 'venv' / 'bin' / 'python',
                        context.venv_python)
@@ -127,6 +153,7 @@ class TestProjectContext(unittest.TestCase):
         package_name='sample',
         copyright_holder='Sumanth Vepa',
         copyright_year=2026,
+        copyright_header=self._copyright_header(),
         venv_name='env')
 
       self.assertEqual('env', context.venv_name)
@@ -152,6 +179,7 @@ class TestProjectContext(unittest.TestCase):
           package_name='sample',
           copyright_holder='Sumanth Vepa',
           copyright_year=2026,
+          copyright_header=self._copyright_header(),
           venv_name='')
 
   def test_rejects_current_directory_venv_name(self) -> None:
@@ -172,6 +200,7 @@ class TestProjectContext(unittest.TestCase):
           package_name='sample',
           copyright_holder='Sumanth Vepa',
           copyright_year=2026,
+          copyright_header=self._copyright_header(),
           venv_name='.')
 
   def test_rejects_parent_directory_venv_name(self) -> None:
@@ -192,6 +221,7 @@ class TestProjectContext(unittest.TestCase):
           package_name='sample',
           copyright_holder='Sumanth Vepa',
           copyright_year=2026,
+          copyright_header=self._copyright_header(),
           venv_name='..')
 
   def test_rejects_absolute_venv_path(self) -> None:
@@ -212,6 +242,7 @@ class TestProjectContext(unittest.TestCase):
           package_name='sample',
           copyright_holder='Sumanth Vepa',
           copyright_year=2026,
+          copyright_header=self._copyright_header(),
           venv_name=str(project_root / 'venv'))
 
   def test_rejects_nested_venv_name(self) -> None:
@@ -232,6 +263,7 @@ class TestProjectContext(unittest.TestCase):
           package_name='sample',
           copyright_holder='Sumanth Vepa',
           copyright_year=2026,
+          copyright_header=self._copyright_header(),
           venv_name='env/venv')
 
   def test_rejects_empty_package_name(self) -> None:
@@ -251,7 +283,8 @@ class TestProjectContext(unittest.TestCase):
           project_root=project_root,
           package_name='',
           copyright_holder='Sumanth Vepa',
-          copyright_year=2026)
+          copyright_year=2026,
+          copyright_header=self._copyright_header())
 
   def test_rejects_non_identifier_package_name(self) -> None:
     """
@@ -270,7 +303,8 @@ class TestProjectContext(unittest.TestCase):
           project_root=project_root,
           package_name='my-pkg',
           copyright_holder='Sumanth Vepa',
-          copyright_year=2026)
+          copyright_year=2026,
+          copyright_header=self._copyright_header())
 
   def test_rejects_keyword_package_name(self) -> None:
     """
@@ -289,7 +323,8 @@ class TestProjectContext(unittest.TestCase):
           project_root=project_root,
           package_name='class',
           copyright_holder='Sumanth Vepa',
-          copyright_year=2026)
+          copyright_year=2026,
+          copyright_header=self._copyright_header())
 
   def test_rejects_uppercase_package_name(self) -> None:
     """
@@ -308,7 +343,8 @@ class TestProjectContext(unittest.TestCase):
           project_root=project_root,
           package_name='MyPkg',
           copyright_holder='Sumanth Vepa',
-          copyright_year=2026)
+          copyright_year=2026,
+          copyright_header=self._copyright_header())
 
   def test_rejects_copyright_year_before_1710(self) -> None:
     """
@@ -327,7 +363,8 @@ class TestProjectContext(unittest.TestCase):
           project_root=project_root,
           package_name='sample',
           copyright_holder='Sumanth Vepa',
-          copyright_year=1709)
+          copyright_year=1709,
+          copyright_header=self._copyright_header(copyright_year=1709))
 
   def test_rejects_future_copyright_year(self) -> None:
     """
@@ -335,7 +372,6 @@ class TestProjectContext(unittest.TestCase):
 
       :return: None
     """
-    import datetime
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
       future_year = datetime.date.today().year + 1
@@ -348,7 +384,9 @@ class TestProjectContext(unittest.TestCase):
           project_root=project_root,
           package_name='sample',
           copyright_holder='Sumanth Vepa',
-          copyright_year=future_year)
+          copyright_year=future_year,
+          copyright_header=self._copyright_header(
+            copyright_year=future_year))
 
   def test_as_dict_contains_all_fields(self) -> None:
     """
@@ -358,11 +396,13 @@ class TestProjectContext(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
+      copyright_header = self._copyright_header()
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
         copyright_holder='Sumanth Vepa',
-        copyright_year=2026)
+        copyright_year=2026,
+        copyright_header=copyright_header)
 
       result = context.as_dict()
 
@@ -371,6 +411,7 @@ class TestProjectContext(unittest.TestCase):
         'package_name': 'sample',
         'copyright_holder': 'Sumanth Vepa',
         'copyright_year': 2026,
+        'copyright_header': copyright_header,
         'venv_name': 'venv',
         'venv_path': project_root / 'venv',
         'venv_python': project_root / 'venv' / 'bin' / 'python',
@@ -390,6 +431,7 @@ class TestProjectContext(unittest.TestCase):
         package_name='sample',
         copyright_holder='Sumanth Vepa',
         copyright_year=2026,
+        copyright_header=self._copyright_header(),
         venv_name='env')
 
       result = context.as_dict()
