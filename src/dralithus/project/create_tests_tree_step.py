@@ -24,7 +24,6 @@ from pathlib import Path
 from typing import override
 
 from dralithus.project.context import ProjectContext
-from dralithus.project.copyright_header import CopyrightHeader
 from dralithus.project.create_gitignore_file_step import (
   CreateGitIgnoreFileStep)
 from dralithus.project.create_python_init_file_step import (
@@ -72,15 +71,12 @@ class CreateTestsTreeStep(ExecutionStep):
 
   def __init__(
     self,
-    context: ProjectContext,
-    copyright_header: CopyrightHeader
+    context: ProjectContext
   ) -> None:
     """
       Initialize the tests tree creation step.
 
       :param context: The shared project creation context
-      :param copyright_header: The copyright header renderer for the
-        generated test package __init__.py
       :return: None
     """
     super().__init__(context)
@@ -96,7 +92,7 @@ class CreateTestsTreeStep(ExecutionStep):
     self._package_gitignore = CreateGitIgnoreFileStep(context, package)
     self._test_gitignore = CreateGitIgnoreFileStep(context, test_package)
     self._init_py = CreatePythonInitFileStep(
-      context, test_package, copyright_header, description)
+      context, test_package, context.copyright_header, description)
     self._steps: tuple[ExecutionStep, ...] = (
       self._mkdir,
       self._tests_gitignore,
