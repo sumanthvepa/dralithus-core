@@ -25,7 +25,7 @@
 from pathlib import Path
 import unittest
 
-from dralithus.test import project_context
+from dralithus.test.project import project_context
 from dralithus.project.error import DralithusProjectError
 from dralithus.project.mkdir_step import MkdirStep
 

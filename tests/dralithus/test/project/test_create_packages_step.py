@@ -24,7 +24,7 @@ from pathlib import Path
 import unittest
 from unittest import mock
 
-from dralithus.test import FailingWriteFile, project_context
+from dralithus.test.project import FailingWriteFile, project_context
 from dralithus.project.create_packages_step import CreatePackagesStep
 from dralithus.project.error import DralithusProjectError
 from dralithus.project.packages import Packages

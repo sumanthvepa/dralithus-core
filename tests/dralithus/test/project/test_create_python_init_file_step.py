@@ -25,7 +25,7 @@
 from pathlib import Path
 import unittest
 
-from dralithus.test import project_context
+from dralithus.test.project import project_context
 from dralithus.project.copyright_header import CopyrightHeader
 from dralithus.project.create_python_init_file_step import (
   CreatePythonInitFileStep)

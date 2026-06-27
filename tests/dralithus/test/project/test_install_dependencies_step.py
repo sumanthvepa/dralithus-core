@@ -27,7 +27,7 @@ import subprocess
 import unittest
 from unittest import mock
 
-from dralithus.test import project_context
+from dralithus.test.project import project_context
 from dralithus.project.context import ProjectContext
 from dralithus.project.error import DralithusProjectError
 from dralithus.project.install_dependencies_step import (

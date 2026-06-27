@@ -26,7 +26,7 @@ from importlib import resources
 from pathlib import Path
 import unittest
 
-from dralithus.test import project_context
+from dralithus.test.project import project_context
 from dralithus.project.create_mypy_configuration_step import (
   CreateMypyConfigurationStep)
 from dralithus.project.error import DralithusProjectError

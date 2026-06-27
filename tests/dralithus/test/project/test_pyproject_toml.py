@@ -25,7 +25,7 @@ from tempfile import TemporaryDirectory
 import tomllib
 import unittest
 
-from dralithus.test import write_package_artifacts
+from dralithus.test.project import write_package_artifacts
 from dralithus.project.error import DralithusProjectError
 from dralithus.project.packages import Packages
 from dralithus.project.pyproject_toml import PyProjectToml

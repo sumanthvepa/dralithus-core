@@ -25,7 +25,7 @@ import stat
 import sys
 import unittest
 
-from dralithus.test import project_context
+from dralithus.test.project import project_context
 from dralithus.project.create_venv_step import CreateVenvStep
 from dralithus.project.error import DralithusProjectError
 

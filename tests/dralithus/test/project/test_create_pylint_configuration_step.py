@@ -26,7 +26,7 @@ from importlib import resources
 from pathlib import Path
 import unittest
 
-from dralithus.test import project_context
+from dralithus.test.project import project_context
 from dralithus.project.create_pylint_configuration_step import (
   CreatePylintConfigurationStep)
 from dralithus.project.error import DralithusProjectError

@@ -28,7 +28,7 @@ import unittest
 
 from parameterized import parameterized
 
-from dralithus.test import project_context, write_package_artifacts
+from dralithus.test.project import project_context, write_package_artifacts
 from dralithus.project.context import ProjectContext
 from dralithus.project.create_pyproject_step import CreatePyProjectStep
 from dralithus.project.error import DralithusProjectError

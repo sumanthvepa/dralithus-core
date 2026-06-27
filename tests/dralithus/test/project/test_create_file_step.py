@@ -26,7 +26,7 @@ from typing import IO
 import unittest
 from unittest import mock
 
-from dralithus.test import FailingWriteFile, project_context
+from dralithus.test.project import FailingWriteFile, project_context
 from dralithus.project.context import ProjectContext
 from dralithus.project.copyright_header import CopyrightHeader
 from dralithus.project.create_file_step import CreateFileStep
