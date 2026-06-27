@@ -56,7 +56,7 @@ class TestCreateTestsTreeStep(unittest.TestCase):
 
       :return: The copyright header renderer
     """
-    return CopyrightHeader(cls._TEMPLATE)
+    return CopyrightHeader(cls._TEMPLATE, 'Sumanth Vepa', 2026)
 
   @classmethod
   def _tests(cls, project_root: Path) -> Path:

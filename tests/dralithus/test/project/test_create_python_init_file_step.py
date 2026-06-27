@@ -54,13 +54,21 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
     return project_root / cls._DIRECTORY / '__init__.py'
 
   @staticmethod
-  def _copyright_header() -> CopyrightHeader:
+  def _copyright_header(
+    copyright_holder: str = 'Milestone 42',
+    copyright_year: int = 2020
+  ) -> CopyrightHeader:
     """
       Return the copyright header renderer for the tests.
 
+      :param copyright_holder: The copyright holder name
+      :param copyright_year: The copyright year
       :return: The copyright header renderer
     """
-    return CopyrightHeader(TestCreatePythonInitFileStep._TEMPLATE)
+    return CopyrightHeader(
+      TestCreatePythonInitFileStep._TEMPLATE,
+      copyright_holder,
+      copyright_year)
 
   @staticmethod
   def _context(project_root: Path) -> ProjectContext:
@@ -102,9 +110,9 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
         '# Copyright (C) 2020 Milestone 42.\n',
         self._init_py(project_root).read_text(encoding='utf-8'))
 
-  def test_run_uses_project_context_for_header(self) -> None:
+  def test_run_uses_copyright_header_values(self) -> None:
     """
-      Verify run uses ProjectContext values for the header.
+      Verify run uses the fixed values from the copyright header.
 
       :return: None
     """
@@ -119,7 +127,7 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
       step = CreatePythonInitFileStep(
         context,
         self._DIRECTORY,
-        self._copyright_header(),
+        self._copyright_header('Acme Tools', 2020),
         self._DESCRIPTION)
 
       step.run()

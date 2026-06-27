@@ -27,7 +27,6 @@ from typing import Any, Literal, cast
 import unittest
 from unittest import mock
 
-from dralithus.project.context import ProjectContext
 from dralithus.project.copyright_header import CopyrightHeader
 from dralithus.project.error import DralithusProjectError
 
@@ -44,6 +43,19 @@ class TestCopyrightHeader(unittest.TestCase):
   _COPYRIGHT_YEAR = 2020
 
   @classmethod
+  def _copyright_header(cls, template: str) -> CopyrightHeader:
+    """
+      Return a test copyright header renderer.
+
+      :param template: The template string used to render the header
+      :return: The configured copyright header renderer
+    """
+    return CopyrightHeader(
+      template,
+      cls._COPYRIGHT_HOLDER,
+      cls._COPYRIGHT_YEAR)
+
+  @classmethod
   def _text(
     cls,
     header: CopyrightHeader,
@@ -56,25 +68,7 @@ class TestCopyrightHeader(unittest.TestCase):
       :param language: The target language
       :return: The rendered copyright header text
     """
-    return header.text(
-      language,
-      cls._COPYRIGHT_HOLDER,
-      cls._COPYRIGHT_YEAR,
-      cls._DESCRIPTION)
-
-  @staticmethod
-  def _context(project_root: Path) -> ProjectContext:
-    """
-      Return a project context for copyright header tests.
-
-      :param project_root: The project root directory
-      :return: The project context
-    """
-    return ProjectContext(
-      project_root=project_root,
-      package_name='sample',
-      copyright_holder='Milestone 42',
-      copyright_year=2020)
+    return header.text(language, cls._DESCRIPTION)
 
   def test_init_stores_template(self) -> None:
     """
@@ -82,7 +76,7 @@ class TestCopyrightHeader(unittest.TestCase):
 
       :return: None
     """
-    header = CopyrightHeader('literal header\n')
+    header = self._copyright_header('literal header\n')
 
     self.assertEqual('# literal header\n', self._text(header, 'python'))
 
@@ -92,7 +86,7 @@ class TestCopyrightHeader(unittest.TestCase):
 
       :return: None
     """
-    header = CopyrightHeader(self._TEMPLATE)
+    header = self._copyright_header(self._TEMPLATE)
 
     self.assertEqual(
       '# Copyright (C) 2020 Milestone 42.\n'
@@ -105,7 +99,7 @@ class TestCopyrightHeader(unittest.TestCase):
 
       :return: None
     """
-    header = CopyrightHeader('{{ description }}\n')
+    header = self._copyright_header('{{ description }}\n')
 
     self.assertEqual(
       f'# {self._DESCRIPTION}\n',
@@ -118,7 +112,7 @@ class TestCopyrightHeader(unittest.TestCase):
 
       :return: None
     """
-    header = CopyrightHeader('first\n\nsecond\n')
+    header = self._copyright_header('first\n\nsecond\n')
 
     self.assertEqual(
       '# first\n'
@@ -132,7 +126,7 @@ class TestCopyrightHeader(unittest.TestCase):
 
       :return: None
     """
-    header = CopyrightHeader(self._TEMPLATE)
+    header = self._copyright_header(self._TEMPLATE)
 
     self.assertEqual(
       '// Copyright (C) 2020 Milestone 42.\n'
@@ -145,7 +139,7 @@ class TestCopyrightHeader(unittest.TestCase):
 
       :return: None
     """
-    header = CopyrightHeader(
+    header = self._copyright_header(
       'holder={{ copyright_holder }}\n'
       'year={{ copyright_year }}\n')
 
@@ -160,7 +154,7 @@ class TestCopyrightHeader(unittest.TestCase):
 
       :return: None
     """
-    header = CopyrightHeader('single line\n')
+    header = self._copyright_header('single line\n')
 
     self.assertEqual('# single line\n', self._text(header, 'python'))
 
@@ -170,7 +164,7 @@ class TestCopyrightHeader(unittest.TestCase):
 
       :return: None
     """
-    header = CopyrightHeader(self._TEMPLATE)
+    header = self._copyright_header(self._TEMPLATE)
 
     with self.assertRaises(DralithusProjectError):
       self._text(header, cast(Any, 'ruby'))
@@ -182,11 +176,13 @@ class TestCopyrightHeader(unittest.TestCase):
       :return: None
     """
     with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      template_filename = project_root / 'copyright.txt'
+      template_filename = Path(temp_directory) / 'copyright.txt'
       template_filename.write_text(self._TEMPLATE, encoding='utf-8')
 
-      header = CopyrightHeader.from_template_file(template_filename)
+      header = CopyrightHeader.from_template_file(
+        template_filename,
+        self._COPYRIGHT_HOLDER,
+        self._COPYRIGHT_YEAR)
 
       self.assertEqual(
         '# Copyright (C) 2020 Milestone 42.\n'
@@ -203,7 +199,10 @@ class TestCopyrightHeader(unittest.TestCase):
       missing_template = Path(temp_directory) / 'missing.txt'
 
       with self.assertRaises(DralithusProjectError):
-        CopyrightHeader.from_template_file(missing_template)
+        CopyrightHeader.from_template_file(
+          missing_template,
+          self._COPYRIGHT_HOLDER,
+          self._COPYRIGHT_YEAR)
 
   def test_from_template_resource_reads_template(self) -> None:
     """
@@ -213,7 +212,6 @@ class TestCopyrightHeader(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = self._context(project_root)
       template_directory = project_root / 'templates'
       template_directory.mkdir()
       template = template_directory / 'copyright.txt'
@@ -224,7 +222,8 @@ class TestCopyrightHeader(unittest.TestCase):
         header = CopyrightHeader.from_template_resource(
           'example.templates',
           'copyright.txt',
-          context)
+          self._COPYRIGHT_HOLDER,
+          self._COPYRIGHT_YEAR)
 
       self.assertEqual(
         '# Copyright (C) 2020 Milestone 42.\n'
@@ -237,11 +236,9 @@ class TestCopyrightHeader(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      context = self._context(Path(temp_directory))
-
-      with self.assertRaises(DralithusProjectError):
-        CopyrightHeader.from_template_resource(
-          'dralithus.project',
-          'missing-copyright-template.txt',
-          context)
+    with self.assertRaises(DralithusProjectError):
+      CopyrightHeader.from_template_resource(
+        'dralithus.project',
+        'missing-copyright-template.txt',
+        self._COPYRIGHT_HOLDER,
+        self._COPYRIGHT_YEAR)
