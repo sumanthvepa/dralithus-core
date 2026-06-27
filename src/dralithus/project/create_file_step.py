@@ -27,7 +27,7 @@ from typing import Self, override
 
 from jinja2 import Environment, TemplateError
 
-from dralithus.project.context import ProjectContext
+from dralithus.project.context import ProjectContext, ProjectContextDict
 from dralithus.project.error import DralithusProjectError
 from dralithus.project.execution_step import ExecutionStep
 
@@ -133,7 +133,7 @@ class CreateFileStep(ExecutionStep):
         f'Could not read file: {path}') from error
 
   @staticmethod
-  def _template_context(context: ProjectContext) -> dict[str, object]:
+  def _template_context(context: ProjectContext) -> ProjectContextDict:
     """
       Convert a project context into a Jinja2 template context.
 
