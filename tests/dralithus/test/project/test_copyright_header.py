@@ -20,6 +20,7 @@
 # along with this program.  If not, see
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
+import datetime
 from importlib import resources
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -79,6 +80,33 @@ class TestCopyrightHeader(unittest.TestCase):
     header = self._copyright_header('literal header\n')
 
     self.assertEqual('# literal header\n', self._text(header, 'python'))
+
+  def test_rejects_copyright_year_before_1710(self) -> None:
+    """
+      Verify that copyright years before 1710 are rejected.
+
+      :return: None
+    """
+    with self.assertRaisesRegex(
+      DralithusProjectError,
+      'Copyright year must be 1710 or later'
+    ):
+      CopyrightHeader(self._TEMPLATE, self._COPYRIGHT_HOLDER, 1709)
+
+  def test_rejects_future_copyright_year(self) -> None:
+    """
+      Verify that future copyright years are rejected.
+
+      :return: None
+    """
+    future_year = datetime.date.today().year + 1
+
+    with self.assertRaisesRegex(
+      DralithusProjectError,
+      'Copyright year must not be in the future'
+    ):
+      CopyrightHeader(
+        self._TEMPLATE, self._COPYRIGHT_HOLDER, future_year)
 
   def test_text_renders_python_header(self) -> None:
     """
