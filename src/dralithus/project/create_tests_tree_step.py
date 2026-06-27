@@ -29,6 +29,7 @@ from dralithus.project.create_gitignore_file_step import (
   CreateGitIgnoreFileStep)
 from dralithus.project.create_python_init_file_step import (
   CreatePythonInitFileStep)
+from dralithus.project.error import DralithusProjectError
 from dralithus.project.execution_step import ExecutionStep
 from dralithus.project.mkdir_step import MkdirStep
 
@@ -45,6 +46,30 @@ class CreateTestsTreeStep(ExecutionStep):
     child; per-directory and per-file ownership and rollback live
     entirely in those children.
   """
+  def _run_dry_run(self) -> None:
+    """
+      Validate the existing tests tree without changing it.
+
+      Each child file step is validated only when its parent directory
+      already exists, because MkdirStep does not create directories
+      during a dry run.
+
+      :return: None
+      :raises DralithusProjectError: When existing tests tree state
+        cannot be accepted
+    """
+    tests = self._context.project_root / 'tests'
+    package = tests / self._context.package_name
+    test_package = package / 'test'
+    self._mkdir.run(dry_run=True)
+    if tests.is_dir():
+      self._tests_gitignore.run(dry_run=True)
+    if package.is_dir():
+      self._package_gitignore.run(dry_run=True)
+    if test_package.is_dir():
+      self._test_gitignore.run(dry_run=True)
+      self._init_py.run(dry_run=True)
+
   def __init__(
     self,
     context: ProjectContext,
@@ -96,7 +121,15 @@ class CreateTestsTreeStep(ExecutionStep):
       :return: None
       :raises DralithusProjectError: When tests tree creation fails
     """
-    raise NotImplementedError('run() is not yet implemented')
+    if dry_run:
+      self._run_dry_run()
+    else:
+      try:
+        for step in self._steps:
+          step.run()
+      except DralithusProjectError:
+        self.rollback()
+        raise
 
   @override
   def rollback(self, dry_run: bool = False) -> None:
@@ -111,4 +144,5 @@ class CreateTestsTreeStep(ExecutionStep):
       :return: None
       :raises DralithusProjectError: When tests tree removal fails
     """
-    raise NotImplementedError('rollback() is not yet implemented')
+    for step in reversed(self._steps):
+      step.rollback(dry_run)
