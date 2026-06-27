@@ -27,6 +27,7 @@ from tempfile import TemporaryDirectory
 import unittest
 
 from dralithus.project.context import ProjectContext
+from dralithus.project.copyright_header import CopyrightHeader
 from dralithus.project.error import DralithusProjectError
 from dralithus.project.mkdir_step import MkdirStep
 
@@ -35,6 +36,19 @@ class TestMkdirStep(unittest.TestCase):
   """
     Unit tests for the MkdirStep class.
   """
+  @staticmethod
+  def _copyright_header() -> CopyrightHeader:
+    """
+      Return a copyright header renderer for mkdir tests.
+
+      :return: The copyright header renderer
+    """
+    return CopyrightHeader(
+      '{{ description }}\n'
+      'Copyright (C) {{ copyright_year }} {{ copyright_holder }}.\n',
+      'Sumanth Vepa',
+      2026)
+
   def test_run_creates_relative_directory(self) -> None:
     """
       Verify that run creates a project-relative directory.
@@ -47,7 +61,8 @@ class TestMkdirStep(unittest.TestCase):
         project_root=project_root,
         package_name='sample',
         copyright_holder='Sumanth Vepa',
-        copyright_year=2026)
+        copyright_year=2026,
+        copyright_header=self._copyright_header())
       step = MkdirStep(context, Path('src'))
 
       step.run()
@@ -66,7 +81,8 @@ class TestMkdirStep(unittest.TestCase):
         project_root=project_root,
         package_name='sample',
         copyright_holder='Sumanth Vepa',
-        copyright_year=2026)
+        copyright_year=2026,
+        copyright_header=self._copyright_header())
       target = Path('src') / 'dralithus' / 'project'
       step = MkdirStep(context, target)
 
@@ -86,7 +102,8 @@ class TestMkdirStep(unittest.TestCase):
         project_root=project_root,
         package_name='sample',
         copyright_holder='Sumanth Vepa',
-        copyright_year=2026)
+        copyright_year=2026,
+        copyright_header=self._copyright_header())
       step = MkdirStep(context, Path('src'))
 
       step.run(dry_run=True)
@@ -105,7 +122,8 @@ class TestMkdirStep(unittest.TestCase):
         project_root=project_root,
         package_name='sample',
         copyright_holder='Sumanth Vepa',
-        copyright_year=2026)
+        copyright_year=2026,
+        copyright_header=self._copyright_header())
       step = MkdirStep(context, Path('src'))
 
       step.run()
@@ -125,7 +143,8 @@ class TestMkdirStep(unittest.TestCase):
         project_root=project_root,
         package_name='sample',
         copyright_holder='Sumanth Vepa',
-        copyright_year=2026)
+        copyright_year=2026,
+        copyright_header=self._copyright_header())
       step = MkdirStep(context, Path('src'))
 
       step.run()
@@ -148,7 +167,8 @@ class TestMkdirStep(unittest.TestCase):
         project_root=project_root,
         package_name='sample',
         copyright_holder='Sumanth Vepa',
-        copyright_year=2026)
+        copyright_year=2026,
+        copyright_header=self._copyright_header())
       target = Path('src') / 'dralithus' / 'project'
       step = MkdirStep(context, target)
 
@@ -173,7 +193,8 @@ class TestMkdirStep(unittest.TestCase):
         project_root=project_root,
         package_name='sample',
         copyright_holder='Sumanth Vepa',
-        copyright_year=2026)
+        copyright_year=2026,
+        copyright_header=self._copyright_header())
       preexisting_parent = project_root / 'src'
       target = Path('src') / 'dralithus' / 'project'
       preexisting_parent.mkdir()
@@ -198,7 +219,8 @@ class TestMkdirStep(unittest.TestCase):
         project_root=project_root,
         package_name='sample',
         copyright_holder='Sumanth Vepa',
-        copyright_year=2026)
+        copyright_year=2026,
+        copyright_header=self._copyright_header())
       step = MkdirStep(context, Path('src'))
 
       step.run()
@@ -218,7 +240,8 @@ class TestMkdirStep(unittest.TestCase):
         project_root=project_root,
         package_name='sample',
         copyright_holder='Sumanth Vepa',
-        copyright_year=2026)
+        copyright_year=2026,
+        copyright_header=self._copyright_header())
       target = project_root / 'src'
       target.mkdir()
       step = MkdirStep(context, Path('src'))
@@ -240,7 +263,8 @@ class TestMkdirStep(unittest.TestCase):
         project_root=project_root,
         package_name='sample',
         copyright_holder='Sumanth Vepa',
-        copyright_year=2026)
+        copyright_year=2026,
+        copyright_header=self._copyright_header())
       target = project_root / 'src'
       step = MkdirStep(context, Path('src'))
 
@@ -265,7 +289,8 @@ class TestMkdirStep(unittest.TestCase):
         project_root=project_root,
         package_name='sample',
         copyright_holder='Sumanth Vepa',
-        copyright_year=2026)
+        copyright_year=2026,
+        copyright_header=self._copyright_header())
 
       with self.assertRaises(DralithusProjectError):
         step = MkdirStep(context, project_root / 'src')
