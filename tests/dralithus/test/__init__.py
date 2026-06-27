@@ -30,6 +30,7 @@ from tempfile import TemporaryDirectory
 from typing import Any, Callable, IO, Protocol
 
 from dralithus.project.context import ProjectContext
+from dralithus.project.copyright_header import CopyrightHeader
 from dralithus.project.packages import Packages
 
 
@@ -38,6 +39,9 @@ from dralithus.project.packages import Packages
 # distinct from "no expected value was given".
 _UNSET: Any = object()
 _IMPLICIT_DEV_DEPENDENCIES = ['mypy', 'pylint', 'parameterized']
+_COPYRIGHT_TEMPLATE = (
+  '{{ description }}\n'
+  'Copyright (C) {{ copyright_year }} {{ copyright_holder }}.\n')
 
 
 def write_package_artifacts(
@@ -98,11 +102,16 @@ def project_context(
   """
   with TemporaryDirectory() as temp_directory:
     project_root = Path(temp_directory)
+    copyright_header = CopyrightHeader(
+      _COPYRIGHT_TEMPLATE,
+      'Sumanth Vepa',
+      2026)
     yield project_root, ProjectContext(
       project_root=project_root,
       package_name='sample',
       copyright_holder='Sumanth Vepa',
       copyright_year=2026,
+      copyright_header=copyright_header,
       venv_name=venv_name)
 
 
