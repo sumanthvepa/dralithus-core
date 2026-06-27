@@ -62,8 +62,6 @@ class TestCreatePackagesStep(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
       packages_txt = project_root / Packages.PACKAGES_FILENAME
       local_packages_txt = (
@@ -91,8 +89,6 @@ class TestCreatePackagesStep(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
       packages_txt = project_root / Packages.PACKAGES_FILENAME
       packages_txt.write_text('requests\n', encoding='utf-8')
@@ -117,8 +113,6 @@ class TestCreatePackagesStep(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
       local_packages_txt = (
         project_root / Packages.LOCAL_PACKAGES_FILENAME)
@@ -144,8 +138,6 @@ class TestCreatePackagesStep(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
       step = CreatePackagesStep(context)
 
@@ -168,8 +160,6 @@ class TestCreatePackagesStep(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
       packages_txt = project_root / Packages.PACKAGES_FILENAME
       packages_txt.mkdir()
@@ -193,8 +183,6 @@ class TestCreatePackagesStep(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
       step = CreatePackagesStep(context)
 
@@ -236,8 +224,6 @@ class TestCreatePackagesStep(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
       step = CreatePackagesStep(context)
 
@@ -291,8 +277,6 @@ class TestCreatePackagesStep(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
       step = CreatePackagesStep(context)
 
@@ -324,8 +308,6 @@ class TestCreatePackagesStep(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
       (project_root / Packages.PACKAGES_FILENAME).mkdir()
       step = CreatePackagesStep(context)
@@ -348,8 +330,6 @@ class TestCreatePackagesStep(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
       step = CreatePackagesStep(context)
 
@@ -373,8 +353,6 @@ class TestCreatePackagesStep(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
       packages_txt = project_root / Packages.PACKAGES_FILENAME
       packages_txt.write_text('requests\n', encoding='utf-8')
@@ -399,8 +377,6 @@ class TestCreatePackagesStep(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
       step = CreatePackagesStep(context)
 
@@ -425,8 +401,6 @@ class TestCreatePackagesStep(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
       step = CreatePackagesStep(context)
 
@@ -450,8 +424,6 @@ class TestCreatePackagesStep(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
       packages_txt = project_root / Packages.PACKAGES_FILENAME
       step = CreatePackagesStep(context)
@@ -482,8 +454,6 @@ class TestCreatePackagesStep(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
       local_packages_txt = (
         project_root / Packages.LOCAL_PACKAGES_FILENAME)
@@ -519,8 +489,6 @@ class TestCreatePackagesStep(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
       local_packages_txt = (
         project_root / Packages.LOCAL_PACKAGES_FILENAME)
@@ -548,8 +516,6 @@ class TestCreatePackagesStep(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
       packages_txt = project_root / Packages.PACKAGES_FILENAME
       step = CreatePackagesStep(context)

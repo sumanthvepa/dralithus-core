@@ -138,8 +138,6 @@ class TestCreateFileStep(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Milestone 42',
-        copyright_year=2020,
         copyright_header=CopyrightHeader(
           '{{ description }}\n'
           'Copyright (C) {{ copyright_year }} {{ copyright_holder }}.\n',
@@ -151,9 +149,7 @@ class TestCreateFileStep(unittest.TestCase):
       template = template_directory / 'config.ini.j2'
       template.write_text(
         'root={{ project_root }}\n'
-        'venv={{ venv_name }}\n'
-        'holder={{ copyright_holder }}\n'
-        'year={{ copyright_year }}\n',
+        'venv={{ venv_name }}\n',
         encoding='utf-8')
       with mock.patch.object(
         resources, 'files', return_value=template_directory
@@ -168,9 +164,7 @@ class TestCreateFileStep(unittest.TestCase):
 
       self.assertEqual(
         f'root={project_root}\n'
-        'venv=env\n'
-        'holder=Milestone 42\n'
-        'year=2020\n',
+        'venv=env\n',
         self._target(project_root).read_text(encoding='utf-8'))
 
   def test_from_template_resource_wraps_resource_read_failure(self) -> None:

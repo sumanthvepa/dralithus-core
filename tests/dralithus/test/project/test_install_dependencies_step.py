@@ -138,8 +138,6 @@ class TestInstallDependenciesStep(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
       step = InstallDependenciesStep(context)
       with mock.patch('subprocess.run'):
@@ -157,8 +155,6 @@ class TestInstallDependenciesStep(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
       self._make_venv(context)
       step = InstallDependenciesStep(context)
@@ -180,8 +176,6 @@ class TestInstallDependenciesStep(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
@@ -215,8 +209,6 @@ class TestInstallDependenciesStep(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header(),
         venv_name='env')
       self._make_venv(context)
@@ -243,8 +235,6 @@ class TestInstallDependenciesStep(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
@@ -267,8 +257,6 @@ class TestInstallDependenciesStep(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
@@ -298,8 +286,6 @@ class TestInstallDependenciesStep(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
@@ -324,8 +310,6 @@ class TestInstallDependenciesStep(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
@@ -351,8 +335,6 @@ class TestInstallDependenciesStep(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
@@ -377,8 +359,6 @@ class TestInstallDependenciesStep(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
@@ -400,8 +380,6 @@ class TestInstallDependenciesStep(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
@@ -430,8 +408,6 @@ class TestInstallDependenciesStep(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
@@ -458,8 +434,6 @@ class TestInstallDependenciesStep(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
@@ -488,8 +462,6 @@ class TestInstallDependenciesStep(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
       step = InstallDependenciesStep(context)
       with mock.patch('subprocess.run') as run_mock:
@@ -510,8 +482,6 @@ class TestInstallDependenciesStep(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
@@ -538,8 +508,6 @@ class TestInstallDependenciesStep(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
@@ -568,8 +536,6 @@ class TestInstallDependenciesStep(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
@@ -597,8 +563,6 @@ class TestInstallDependenciesStep(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
@@ -623,8 +587,6 @@ class TestInstallDependenciesStep(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
@@ -652,8 +614,6 @@ class TestInstallDependenciesStep(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
@@ -682,8 +642,6 @@ class TestInstallDependenciesStep(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
@@ -708,8 +666,6 @@ class TestInstallDependenciesStep(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
       step = InstallDependenciesStep(context)
       step.rollback(dry_run=True)

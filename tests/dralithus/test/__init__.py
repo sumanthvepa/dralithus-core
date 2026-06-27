@@ -109,8 +109,6 @@ def project_context(
     yield project_root, ProjectContext(
       project_root=project_root,
       package_name='sample',
-      copyright_holder='Sumanth Vepa',
-      copyright_year=2026,
       copyright_header=copyright_header,
       venv_name=venv_name)
 

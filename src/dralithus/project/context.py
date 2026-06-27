@@ -34,8 +34,6 @@ class ProjectContextDict(TypedDict):
   """
   project_root: Path
   package_name: str
-  copyright_holder: str
-  copyright_year: int
   copyright_header: CopyrightHeader
   venv_name: str
   venv_path: Path
@@ -85,13 +83,10 @@ class ProjectContext:
       raise DralithusProjectError(
         f'Package name must be lowercase: {package_name}')
 
-  # pylint: disable-next=too-many-arguments, too-many-positional-arguments
   def __init__(
       self,
       project_root: Path,
       package_name: str,
-      copyright_holder: str,
-      copyright_year: int,
       copyright_header: CopyrightHeader,
       venv_name: str = 'venv'
   ) -> None:
@@ -100,8 +95,6 @@ class ProjectContext:
 
       :param project_root: The root directory of the project
       :param package_name: The Python package name
-      :param copyright_holder: The copyright holder name
-      :param copyright_year: The copyright year
       :param copyright_header: The shared copyright header renderer
       :param venv_name: The name of the virtual environment directory
       :return: None
@@ -112,8 +105,6 @@ class ProjectContext:
     self.validate_package_name(package_name)
     self.project_root = project_root
     self.venv_name = venv_name
-    self.copyright_holder = copyright_holder
-    self.copyright_year = copyright_year
     self.copyright_header = copyright_header
     self.package_name = package_name
 
@@ -147,8 +138,6 @@ class ProjectContext:
     return ProjectContextDict(
       project_root=self.project_root,
       package_name=self.package_name,
-      copyright_holder=self.copyright_holder,
-      copyright_year=self.copyright_year,
       copyright_header=self.copyright_header,
       venv_name=self.venv_name,
       venv_path=self.venv_path,

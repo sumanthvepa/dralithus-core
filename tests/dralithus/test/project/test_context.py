@@ -21,7 +21,6 @@
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
 import unittest
-import datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -63,8 +62,6 @@ class TestProjectContext(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
 
       self.assertEqual('venv', context.venv_name)
@@ -80,30 +77,25 @@ class TestProjectContext(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='mypkg',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
 
       self.assertEqual('mypkg', context.package_name)
 
-  def test_custom_copyright_settings_are_stored(self) -> None:
+  def test_copyright_header_is_stored(self) -> None:
     """
-      Verify that custom copyright settings are stored.
+      Verify that the supplied copyright header is stored.
 
       :return: None
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
+      copyright_header = self._copyright_header('Milestone 42', 2020)
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Milestone 42',
-        copyright_year=2020,
-        copyright_header=self._copyright_header('Milestone 42', 2020))
+        copyright_header=copyright_header)
 
-      self.assertEqual('Milestone 42', context.copyright_holder)
-      self.assertEqual(2020, context.copyright_year)
-      self.assertIsInstance(context.copyright_header, CopyrightHeader)
+      self.assertIs(copyright_header, context.copyright_header)
 
   def test_default_venv_path_uses_venv_name(self) -> None:
     """
@@ -116,8 +108,6 @@ class TestProjectContext(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
 
       self.assertEqual(project_root / 'venv', context.venv_path)
@@ -133,8 +123,6 @@ class TestProjectContext(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
 
       self.assertEqual(project_root / 'venv' / 'bin' / 'python',
@@ -151,8 +139,6 @@ class TestProjectContext(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header(),
         venv_name='env')
 
@@ -177,8 +163,6 @@ class TestProjectContext(unittest.TestCase):
         ProjectContext(
           project_root=project_root,
           package_name='sample',
-          copyright_holder='Sumanth Vepa',
-          copyright_year=2026,
           copyright_header=self._copyright_header(),
           venv_name='')
 
@@ -198,8 +182,6 @@ class TestProjectContext(unittest.TestCase):
         ProjectContext(
           project_root=project_root,
           package_name='sample',
-          copyright_holder='Sumanth Vepa',
-          copyright_year=2026,
           copyright_header=self._copyright_header(),
           venv_name='.')
 
@@ -219,8 +201,6 @@ class TestProjectContext(unittest.TestCase):
         ProjectContext(
           project_root=project_root,
           package_name='sample',
-          copyright_holder='Sumanth Vepa',
-          copyright_year=2026,
           copyright_header=self._copyright_header(),
           venv_name='..')
 
@@ -240,8 +220,6 @@ class TestProjectContext(unittest.TestCase):
         ProjectContext(
           project_root=project_root,
           package_name='sample',
-          copyright_holder='Sumanth Vepa',
-          copyright_year=2026,
           copyright_header=self._copyright_header(),
           venv_name=str(project_root / 'venv'))
 
@@ -261,8 +239,6 @@ class TestProjectContext(unittest.TestCase):
         ProjectContext(
           project_root=project_root,
           package_name='sample',
-          copyright_holder='Sumanth Vepa',
-          copyright_year=2026,
           copyright_header=self._copyright_header(),
           venv_name='env/venv')
 
@@ -282,8 +258,6 @@ class TestProjectContext(unittest.TestCase):
         ProjectContext(
           project_root=project_root,
           package_name='',
-          copyright_holder='Sumanth Vepa',
-          copyright_year=2026,
           copyright_header=self._copyright_header())
 
   def test_rejects_non_identifier_package_name(self) -> None:
@@ -302,8 +276,6 @@ class TestProjectContext(unittest.TestCase):
         ProjectContext(
           project_root=project_root,
           package_name='my-pkg',
-          copyright_holder='Sumanth Vepa',
-          copyright_year=2026,
           copyright_header=self._copyright_header())
 
   def test_rejects_keyword_package_name(self) -> None:
@@ -322,8 +294,6 @@ class TestProjectContext(unittest.TestCase):
         ProjectContext(
           project_root=project_root,
           package_name='class',
-          copyright_holder='Sumanth Vepa',
-          copyright_year=2026,
           copyright_header=self._copyright_header())
 
   def test_rejects_uppercase_package_name(self) -> None:
@@ -342,51 +312,7 @@ class TestProjectContext(unittest.TestCase):
         ProjectContext(
           project_root=project_root,
           package_name='MyPkg',
-          copyright_holder='Sumanth Vepa',
-          copyright_year=2026,
           copyright_header=self._copyright_header())
-
-  def test_rejects_copyright_year_before_1710(self) -> None:
-    """
-      Verify that copyright years before 1710 are rejected.
-
-      :return: None
-    """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-
-      with self.assertRaisesRegex(
-        DralithusProjectError,
-        'Copyright year must be 1710 or later'
-      ):
-        ProjectContext(
-          project_root=project_root,
-          package_name='sample',
-          copyright_holder='Sumanth Vepa',
-          copyright_year=1709,
-          copyright_header=self._copyright_header(copyright_year=1709))
-
-  def test_rejects_future_copyright_year(self) -> None:
-    """
-      Verify that future copyright years are rejected.
-
-      :return: None
-    """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      future_year = datetime.date.today().year + 1
-
-      with self.assertRaisesRegex(
-        DralithusProjectError,
-        'Copyright year must not be in the future'
-      ):
-        ProjectContext(
-          project_root=project_root,
-          package_name='sample',
-          copyright_holder='Sumanth Vepa',
-          copyright_year=future_year,
-          copyright_header=self._copyright_header(
-            copyright_year=future_year))
 
   def test_as_dict_contains_all_fields(self) -> None:
     """
@@ -400,8 +326,6 @@ class TestProjectContext(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=copyright_header)
 
       result = context.as_dict()
@@ -409,8 +333,6 @@ class TestProjectContext(unittest.TestCase):
       expected: ProjectContextDict = {
         'project_root': project_root,
         'package_name': 'sample',
-        'copyright_holder': 'Sumanth Vepa',
-        'copyright_year': 2026,
         'copyright_header': copyright_header,
         'venv_name': 'venv',
         'venv_path': project_root / 'venv',
@@ -429,8 +351,6 @@ class TestProjectContext(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header(),
         venv_name='env')
 

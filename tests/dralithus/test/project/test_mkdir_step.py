@@ -60,8 +60,6 @@ class TestMkdirStep(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
       step = MkdirStep(context, Path('src'))
 
@@ -80,8 +78,6 @@ class TestMkdirStep(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
       target = Path('src') / 'dralithus' / 'project'
       step = MkdirStep(context, target)
@@ -101,8 +97,6 @@ class TestMkdirStep(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
       step = MkdirStep(context, Path('src'))
 
@@ -121,8 +115,6 @@ class TestMkdirStep(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
       step = MkdirStep(context, Path('src'))
 
@@ -142,8 +134,6 @@ class TestMkdirStep(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
       step = MkdirStep(context, Path('src'))
 
@@ -166,8 +156,6 @@ class TestMkdirStep(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
       target = Path('src') / 'dralithus' / 'project'
       step = MkdirStep(context, target)
@@ -192,8 +180,6 @@ class TestMkdirStep(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
       preexisting_parent = project_root / 'src'
       target = Path('src') / 'dralithus' / 'project'
@@ -218,8 +204,6 @@ class TestMkdirStep(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
       step = MkdirStep(context, Path('src'))
 
@@ -239,8 +223,6 @@ class TestMkdirStep(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
       target = project_root / 'src'
       target.mkdir()
@@ -262,8 +244,6 @@ class TestMkdirStep(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
       target = project_root / 'src'
       step = MkdirStep(context, Path('src'))
@@ -288,8 +268,6 @@ class TestMkdirStep(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Sumanth Vepa',
-        copyright_year=2026,
         copyright_header=self._copyright_header())
 
       with self.assertRaises(DralithusProjectError):

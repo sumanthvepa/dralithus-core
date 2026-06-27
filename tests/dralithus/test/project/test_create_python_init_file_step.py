@@ -81,8 +81,6 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
     return ProjectContext(
       project_root=project_root,
       package_name='sample',
-      copyright_holder='Milestone 42',
-      copyright_year=2020,
       copyright_header=TestCreatePythonInitFileStep._copyright_header())
 
   def test_run_creates_init_py_with_copyright_header(self) -> None:
@@ -122,8 +120,6 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
-        copyright_holder='Acme Tools',
-        copyright_year=2020,
         copyright_header=self._copyright_header('Acme Tools', 2020))
       (project_root / self._DIRECTORY).mkdir(parents=True)
       step = CreatePythonInitFileStep(
