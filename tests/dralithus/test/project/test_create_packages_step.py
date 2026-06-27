@@ -21,13 +21,10 @@
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
 from pathlib import Path
-from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
 
-from dralithus.test import FailingWriteFile
-from dralithus.project.context import ProjectContext
-from dralithus.project.copyright_header import CopyrightHeader
+from dralithus.test import FailingWriteFile, project_context
 from dralithus.project.create_packages_step import CreatePackagesStep
 from dralithus.project.error import DralithusProjectError
 from dralithus.project.packages import Packages
@@ -37,19 +34,6 @@ class TestCreatePackagesStep(unittest.TestCase):
   """
     Unit tests for the CreatePackagesStep class.
   """
-  @staticmethod
-  def _copyright_header() -> CopyrightHeader:
-    """
-      Return a copyright header renderer for package-file tests.
-
-      :return: The copyright header renderer
-    """
-    return CopyrightHeader(
-      '{{ description }}\n'
-      'Copyright (C) {{ copyright_year }} {{ copyright_holder }}.\n',
-      'Sumanth Vepa',
-      2026)
-
   def test_run_creates_packages_files(self) -> None:
     """
       Verify that run creates both dependency files in an empty
@@ -57,12 +41,7 @@ class TestCreatePackagesStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_header=self._copyright_header())
+    with project_context() as (project_root, context):
       packages_txt = project_root / Packages.PACKAGES_FILENAME
       local_packages_txt = (
         project_root / Packages.LOCAL_PACKAGES_FILENAME)
@@ -84,12 +63,7 @@ class TestCreatePackagesStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_header=self._copyright_header())
+    with project_context() as (project_root, context):
       packages_txt = project_root / Packages.PACKAGES_FILENAME
       packages_txt.write_text('requests\n', encoding='utf-8')
       step = CreatePackagesStep(context)
@@ -108,12 +82,7 @@ class TestCreatePackagesStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_header=self._copyright_header())
+    with project_context() as (project_root, context):
       local_packages_txt = (
         project_root / Packages.LOCAL_PACKAGES_FILENAME)
       local_packages_txt.write_text('../common-lib\n', encoding='utf-8')
@@ -133,12 +102,7 @@ class TestCreatePackagesStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_header=self._copyright_header())
+    with project_context() as (project_root, context):
       step = CreatePackagesStep(context)
 
       step.run(dry_run=True)
@@ -155,12 +119,7 @@ class TestCreatePackagesStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_header=self._copyright_header())
+    with project_context() as (project_root, context):
       packages_txt = project_root / Packages.PACKAGES_FILENAME
       packages_txt.mkdir()
       step = CreatePackagesStep(context)
@@ -178,12 +137,7 @@ class TestCreatePackagesStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_header=self._copyright_header())
+    with project_context() as (project_root, context):
       step = CreatePackagesStep(context)
 
       step.run()
@@ -219,12 +173,7 @@ class TestCreatePackagesStep(unittest.TestCase):
     real_create_file = (
       CreatePackagesStep._create_file)  # pylint: disable=protected-access
 
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_header=self._copyright_header())
+    with project_context() as (project_root, context):
       step = CreatePackagesStep(context)
 
       def fail_local(path: Path, content: str) -> None:
@@ -272,12 +221,7 @@ class TestCreatePackagesStep(unittest.TestCase):
         return FailingWriteFile(file)
       return file
 
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_header=self._copyright_header())
+    with project_context() as (project_root, context):
       step = CreatePackagesStep(context)
 
       with mock.patch.object(Path, 'open', failing_open):
@@ -303,12 +247,7 @@ class TestCreatePackagesStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_header=self._copyright_header())
+    with project_context() as (project_root, context):
       (project_root / Packages.PACKAGES_FILENAME).mkdir()
       step = CreatePackagesStep(context)
 
@@ -325,12 +264,7 @@ class TestCreatePackagesStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_header=self._copyright_header())
+    with project_context() as (project_root, context):
       step = CreatePackagesStep(context)
 
       step.run()
@@ -348,12 +282,7 @@ class TestCreatePackagesStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_header=self._copyright_header())
+    with project_context() as (project_root, context):
       packages_txt = project_root / Packages.PACKAGES_FILENAME
       packages_txt.write_text('requests\n', encoding='utf-8')
       step = CreatePackagesStep(context)
@@ -372,12 +301,7 @@ class TestCreatePackagesStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_header=self._copyright_header())
+    with project_context() as (project_root, context):
       step = CreatePackagesStep(context)
 
       step.run()
@@ -396,12 +320,7 @@ class TestCreatePackagesStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_header=self._copyright_header())
+    with project_context() as (project_root, context):
       step = CreatePackagesStep(context)
 
       step.run()
@@ -419,12 +338,7 @@ class TestCreatePackagesStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_header=self._copyright_header())
+    with project_context() as (project_root, context):
       packages_txt = project_root / Packages.PACKAGES_FILENAME
       step = CreatePackagesStep(context)
 
@@ -449,12 +363,7 @@ class TestCreatePackagesStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_header=self._copyright_header())
+    with project_context() as (project_root, context):
       local_packages_txt = (
         project_root / Packages.LOCAL_PACKAGES_FILENAME)
       local_packages_txt.symlink_to(project_root / 'does-not-exist')
@@ -484,12 +393,7 @@ class TestCreatePackagesStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_header=self._copyright_header())
+    with project_context() as (project_root, context):
       local_packages_txt = (
         project_root / Packages.LOCAL_PACKAGES_FILENAME)
       local_packages_txt.write_text('../common-lib\n', encoding='utf-8')
@@ -511,12 +415,7 @@ class TestCreatePackagesStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_header=self._copyright_header())
+    with project_context() as (project_root, context):
       packages_txt = project_root / Packages.PACKAGES_FILENAME
       step = CreatePackagesStep(context)
 

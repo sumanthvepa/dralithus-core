@@ -23,13 +23,12 @@
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
 from pathlib import Path
-from tempfile import TemporaryDirectory
 import subprocess
 import unittest
 from unittest import mock
 
+from dralithus.test import project_context
 from dralithus.project.context import ProjectContext
-from dralithus.project.copyright_header import CopyrightHeader
 from dralithus.project.error import DralithusProjectError
 from dralithus.project.install_dependencies_step import (
   InstallDependenciesStep)
@@ -43,19 +42,6 @@ class TestInstallDependenciesStep(unittest.TestCase):
   """
   _FREEZE_OUTPUT = 'requests==2.31.0\nmypy==1.10.0\n'
   _PRE_CONTENT = 'old-pinned==0.0.0\n'
-
-  @staticmethod
-  def _copyright_header() -> CopyrightHeader:
-    """
-      Return a copyright header renderer for dependency install tests.
-
-      :return: The copyright header renderer
-    """
-    return CopyrightHeader(
-      '{{ description }}\n'
-      'Copyright (C) {{ copyright_year }} {{ copyright_holder }}.\n',
-      'Sumanth Vepa',
-      2026)
 
   @staticmethod
   def _venv_python(context: ProjectContext) -> Path:
@@ -132,13 +118,8 @@ class TestInstallDependenciesStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
+    with project_context() as (project_root, context):
       self._write_packages(project_root)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_header=self._copyright_header())
       step = InstallDependenciesStep(context)
       with mock.patch('subprocess.run'):
         with self.assertRaises(DralithusProjectError):
@@ -150,12 +131,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_header=self._copyright_header())
+    with project_context() as (_, context):
       self._make_venv(context)
       step = InstallDependenciesStep(context)
       with mock.patch('subprocess.run'):
@@ -171,12 +147,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_header=self._copyright_header())
+    with project_context() as (project_root, context):
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
       step = InstallDependenciesStep(context)
@@ -204,13 +175,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_header=self._copyright_header(),
-        venv_name='env')
+    with project_context(venv_name='env') as (project_root, context):
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
       step = InstallDependenciesStep(context)
@@ -230,12 +195,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_header=self._copyright_header())
+    with project_context() as (project_root, context):
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
       step = InstallDependenciesStep(context)
@@ -252,12 +212,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_header=self._copyright_header())
+    with project_context() as (project_root, context):
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
       self._write_local_packages(project_root, './libs/a\n./libs/b\n')
@@ -281,12 +236,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_header=self._copyright_header())
+    with project_context() as (project_root, context):
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
       self._write_local_packages(project_root, '../test-lib [dev]\n')
@@ -305,12 +255,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_header=self._copyright_header())
+    with project_context() as (project_root, context):
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
       step = InstallDependenciesStep(context)
@@ -330,12 +275,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_header=self._copyright_header())
+    with project_context() as (project_root, context):
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
       step = InstallDependenciesStep(context)
@@ -354,12 +294,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_header=self._copyright_header())
+    with project_context() as (project_root, context):
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
       step = InstallDependenciesStep(context)
@@ -375,12 +310,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_header=self._copyright_header())
+    with project_context() as (project_root, context):
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
       step = InstallDependenciesStep(context)
@@ -403,12 +333,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_header=self._copyright_header())
+    with project_context() as (project_root, context):
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
       step = InstallDependenciesStep(context)
@@ -429,12 +354,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_header=self._copyright_header())
+    with project_context() as (project_root, context):
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
       requirements = project_root / InstallDependenciesStep.REQUIREMENTS_FILENAME
@@ -457,12 +377,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_header=self._copyright_header())
+    with project_context() as (project_root, context):
       step = InstallDependenciesStep(context)
       with mock.patch('subprocess.run') as run_mock:
         step.run(dry_run=True)
@@ -477,12 +392,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_header=self._copyright_header())
+    with project_context() as (project_root, context):
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
       requirements = project_root / InstallDependenciesStep.REQUIREMENTS_FILENAME
@@ -503,12 +413,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_header=self._copyright_header())
+    with project_context() as (project_root, context):
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
       external = project_root / 'external.txt'
@@ -531,12 +436,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_header=self._copyright_header())
+    with project_context() as (project_root, context):
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
       requirements = project_root / InstallDependenciesStep.REQUIREMENTS_FILENAME
@@ -558,12 +458,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_header=self._copyright_header())
+    with project_context() as (project_root, context):
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
       step = InstallDependenciesStep(context)
@@ -582,12 +477,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_header=self._copyright_header())
+    with project_context() as (project_root, context):
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
       requirements = project_root / InstallDependenciesStep.REQUIREMENTS_FILENAME
@@ -609,12 +499,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_header=self._copyright_header())
+    with project_context() as (project_root, context):
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
       step = InstallDependenciesStep(context)
@@ -637,12 +522,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_header=self._copyright_header())
+    with project_context() as (project_root, context):
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
       step = InstallDependenciesStep(context)
@@ -661,12 +541,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_header=self._copyright_header())
+    with project_context() as (_, context):
       step = InstallDependenciesStep(context)
       step.rollback(dry_run=True)
       step.rollback()

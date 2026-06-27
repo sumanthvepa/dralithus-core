@@ -23,10 +23,9 @@
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
 from pathlib import Path
-from tempfile import TemporaryDirectory
 import unittest
 
-from dralithus.project.context import ProjectContext
+from dralithus.test import project_context
 from dralithus.project.copyright_header import CopyrightHeader
 from dralithus.project.create_python_init_file_step import (
   CreatePythonInitFileStep)
@@ -70,28 +69,13 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
       copyright_holder,
       copyright_year)
 
-  @staticmethod
-  def _context(project_root: Path) -> ProjectContext:
-    """
-      Return a project context for init file tests.
-
-      :param project_root: The project root directory
-      :return: The project context
-    """
-    return ProjectContext(
-      project_root=project_root,
-      package_name='sample',
-      copyright_header=TestCreatePythonInitFileStep._copyright_header())
-
   def test_run_creates_init_py_with_copyright_header(self) -> None:
     """
       Verify run creates __init__.py with the copyright header.
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = self._context(project_root)
+    with project_context() as (project_root, context):
       (project_root / self._DIRECTORY).mkdir(parents=True)
       step = CreatePythonInitFileStep(
         context,
@@ -115,12 +99,7 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_header=self._copyright_header('Acme Tools', 2020))
+    with project_context() as (project_root, context):
       (project_root / self._DIRECTORY).mkdir(parents=True)
       step = CreatePythonInitFileStep(
         context,
@@ -144,9 +123,7 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = self._context(project_root)
+    with project_context() as (project_root, context):
       (project_root / self._DIRECTORY).mkdir(parents=True)
       init_py = self._init_py(project_root)
       init_py.write_text('# existing\n', encoding='utf-8')
@@ -166,8 +143,7 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      context = self._context(Path(temp_directory))
+    with project_context() as (_, context):
       step = CreatePythonInitFileStep(
         context,
         self._DIRECTORY,
@@ -183,9 +159,7 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = self._context(project_root)
+    with project_context() as (project_root, context):
       (project_root / self._DIRECTORY).mkdir(parents=True)
       self._init_py(project_root).mkdir()
       step = CreatePythonInitFileStep(
@@ -203,9 +177,7 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = self._context(project_root)
+    with project_context() as (project_root, context):
       (project_root / self._DIRECTORY).mkdir(parents=True)
       step = CreatePythonInitFileStep(
         context,
@@ -224,9 +196,7 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = self._context(project_root)
+    with project_context() as (project_root, context):
       (project_root / self._DIRECTORY).mkdir(parents=True)
       init_py = self._init_py(project_root)
       init_py.write_text('# existing\n', encoding='utf-8')
@@ -247,9 +217,7 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = self._context(project_root)
+    with project_context() as (project_root, context):
       (project_root / self._DIRECTORY).mkdir(parents=True)
       step = CreatePythonInitFileStep(
         context,
@@ -267,9 +235,7 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = self._context(project_root)
+    with project_context() as (project_root, context):
       (project_root / self._DIRECTORY).mkdir(parents=True)
       self._init_py(project_root).mkdir()
       step = CreatePythonInitFileStep(
@@ -290,9 +256,7 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = self._context(project_root)
+    with project_context() as (project_root, context):
       (project_root / self._DIRECTORY).mkdir(parents=True)
       step = CreatePythonInitFileStep(
         context,
