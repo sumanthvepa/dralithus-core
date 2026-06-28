@@ -27,8 +27,6 @@ import unittest
 from unittest import mock
 
 from dralithus.test.project import FailingWriteFile, project_context
-from dralithus.project.context import ProjectContext
-from dralithus.project.copyright_header import CopyrightHeader
 from dralithus.project.create_file_step import CreateFileStep
 from dralithus.project.error import DralithusProjectError
 
@@ -134,16 +132,7 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    with project_context() as (project_root, _context):
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_header=CopyrightHeader(
-          '{{ description }}\n'
-          'Copyright (C) {{ copyright_year }} {{ copyright_holder }}.\n',
-          'Milestone 42',
-          2020),
-        venv_name='env')
+    with project_context(venv_name='env') as (project_root, context):
       template_directory = project_root / 'templates'
       template_directory.mkdir()
       template = template_directory / 'config.ini.j2'
