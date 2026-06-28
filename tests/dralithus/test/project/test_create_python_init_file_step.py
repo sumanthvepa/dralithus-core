@@ -73,31 +73,6 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
         f'# Copyright (C) {header.copyright_year} {header.copyright_holder}.\n',
         self._init_py(project_root).read_text(encoding='utf-8'))
 
-  def test_run_uses_copyright_header_values(self) -> None:
-    """
-      Verify run uses the fixed values from the copyright header.
-
-      :return: None
-    """
-    with project_context() as (project_root, context):
-      (project_root / self._DIRECTORY).mkdir(parents=True)
-      header = copyright_header('Acme Tools', 2020)
-      step = CreatePythonInitFileStep(
-        context,
-        self._DIRECTORY,
-        header,
-        self._DESCRIPTION)
-
-      step.run()
-
-      self.assertEqual(
-        '"""\n'
-        f'  {self._DESCRIPTION}\n'
-        '"""\n'
-        f'# {self._DESCRIPTION}\n'
-        '# Copyright (C) 2020 Acme Tools.\n',
-        self._init_py(project_root).read_text(encoding='utf-8'))
-
   def test_run_preserves_preexisting_init_py(self) -> None:
     """
       Verify run preserves a pre-existing __init__.py file.
