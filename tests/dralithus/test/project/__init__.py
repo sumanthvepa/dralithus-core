@@ -20,6 +20,7 @@
 # along with this program.  If not, see
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
+import datetime
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
@@ -36,7 +37,7 @@ _COPYRIGHT_TEMPLATE = (
   '{{ description }}\n'
   'Copyright (C) {{ copyright_year }} {{ copyright_holder }}.\n')
 _COPYRIGHT_HOLDER = 'Acme Corporation'
-_COPYRIGHT_YEAR = 2026
+_COPYRIGHT_YEAR = datetime.date.today().year
 
 
 def copyright_header() -> CopyrightHeader:
