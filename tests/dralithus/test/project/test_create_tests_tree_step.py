@@ -26,6 +26,7 @@ from pathlib import Path
 import unittest
 
 from dralithus.test.project import project_context
+from dralithus.project.copyright_header import CopyrightHeader
 from dralithus.project.create_tests_tree_step import CreateTestsTreeStep
 from dralithus.project.error import DralithusProjectError
 
@@ -116,10 +117,11 @@ class TestCreateTestsTreeStep(unittest.TestCase):
     return cls._test_package(project_root) / '__init__.py'
 
   @classmethod
-  def _expected_init_py(cls) -> str:
+  def _expected_init_py(cls, copyright_header: CopyrightHeader) -> str:
     """
       Return the expected generated test package __init__.py content.
 
+      :param copyright_header: The copyright header the step renders
       :return: The expected generated file text
     """
     return (
@@ -127,7 +129,8 @@ class TestCreateTestsTreeStep(unittest.TestCase):
       f'  {cls._DESCRIPTION}\n'
       '"""\n'
       f'# {cls._DESCRIPTION}\n'
-      '# Copyright (C) 2026 Sumanth Vepa.\n')
+      f'# Copyright (C) {copyright_header.copyright_year} '
+      f'{copyright_header.copyright_holder}.\n')
 
   # run
 
@@ -162,7 +165,7 @@ class TestCreateTestsTreeStep(unittest.TestCase):
       step.run()
 
       self.assertEqual(
-        self._expected_init_py(),
+        self._expected_init_py(context.copyright_header),
         self._init_py(project_root).read_text(encoding='utf-8'))
 
   def test_run_creates_empty_gitignore_files(self) -> None:
