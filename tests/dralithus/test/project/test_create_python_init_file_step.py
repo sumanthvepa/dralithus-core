@@ -25,8 +25,7 @@
 from pathlib import Path
 import unittest
 
-from dralithus.test.project import project_context
-from dralithus.project.copyright_header import CopyrightHeader
+from dralithus.test.project import copyright_header, project_context
 from dralithus.project.create_python_init_file_step import (
   CreatePythonInitFileStep)
 from dralithus.project.error import DralithusProjectError
@@ -38,9 +37,6 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
   """
   _DIRECTORY = Path('tests') / 'mypkg' / 'test'
   _DESCRIPTION = 'mypkg/test/__init__.py: Unit tests for mypkg.'
-  _TEMPLATE = (
-    '{{ description }}\n'
-    'Copyright (C) {{ copyright_year }} {{ copyright_holder }}.\n')
 
   @classmethod
   def _init_py(cls, project_root: Path) -> Path:
@@ -51,23 +47,6 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
       :return: The __init__.py path
     """
     return project_root / cls._DIRECTORY / '__init__.py'
-
-  @staticmethod
-  def _copyright_header(
-    copyright_holder: str = 'Milestone 42',
-    copyright_year: int = 2020
-  ) -> CopyrightHeader:
-    """
-      Return the copyright header renderer for the tests.
-
-      :param copyright_holder: The copyright holder name
-      :param copyright_year: The copyright year
-      :return: The copyright header renderer
-    """
-    return CopyrightHeader(
-      TestCreatePythonInitFileStep._TEMPLATE,
-      copyright_holder,
-      copyright_year)
 
   def test_run_creates_init_py_with_copyright_header(self) -> None:
     """
@@ -80,7 +59,7 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
       step = CreatePythonInitFileStep(
         context,
         self._DIRECTORY,
-        self._copyright_header(),
+        copyright_header('Milestone 42', 2020),
         self._DESCRIPTION)
 
       step.run()
@@ -104,7 +83,7 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
       step = CreatePythonInitFileStep(
         context,
         self._DIRECTORY,
-        self._copyright_header('Acme Tools', 2020),
+        copyright_header('Acme Tools', 2020),
         self._DESCRIPTION)
 
       step.run()
@@ -130,7 +109,7 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
       step = CreatePythonInitFileStep(
         context,
         self._DIRECTORY,
-        self._copyright_header(),
+        copyright_header(),
         self._DESCRIPTION)
 
       step.run()
@@ -147,7 +126,7 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
       step = CreatePythonInitFileStep(
         context,
         self._DIRECTORY,
-        self._copyright_header(),
+        copyright_header(),
         self._DESCRIPTION)
 
       with self.assertRaises(DralithusProjectError):
@@ -165,7 +144,7 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
       step = CreatePythonInitFileStep(
         context,
         self._DIRECTORY,
-        self._copyright_header(),
+        copyright_header(),
         self._DESCRIPTION)
 
       with self.assertRaises(DralithusProjectError):
@@ -182,7 +161,7 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
       step = CreatePythonInitFileStep(
         context,
         self._DIRECTORY,
-        self._copyright_header(),
+        copyright_header(),
         self._DESCRIPTION)
 
       step.run()
@@ -203,7 +182,7 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
       step = CreatePythonInitFileStep(
         context,
         self._DIRECTORY,
-        self._copyright_header(),
+        copyright_header(),
         self._DESCRIPTION)
 
       step.run()
@@ -222,7 +201,7 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
       step = CreatePythonInitFileStep(
         context,
         self._DIRECTORY,
-        self._copyright_header(),
+        copyright_header(),
         self._DESCRIPTION)
 
       step.run(dry_run=True)
@@ -241,7 +220,7 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
       step = CreatePythonInitFileStep(
         context,
         self._DIRECTORY,
-        self._copyright_header(),
+        copyright_header(),
         self._DESCRIPTION)
 
       with self.assertRaises(DralithusProjectError):
@@ -261,7 +240,7 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
       step = CreatePythonInitFileStep(
         context,
         self._DIRECTORY,
-        self._copyright_header(),
+        copyright_header(),
         self._DESCRIPTION)
 
       step.run()

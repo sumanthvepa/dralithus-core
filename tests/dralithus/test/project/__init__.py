@@ -37,6 +37,23 @@ _COPYRIGHT_TEMPLATE = (
   'Copyright (C) {{ copyright_year }} {{ copyright_holder }}.\n')
 
 
+def copyright_header(
+  copyright_holder: str = 'Sumanth Vepa',
+  copyright_year: int = 2026
+) -> CopyrightHeader:
+  """
+    Return a copyright header renderer for project tests.
+
+    :param copyright_holder: The copyright holder name
+    :param copyright_year: The copyright year
+    :return: The copyright header renderer
+  """
+  return CopyrightHeader(
+    _COPYRIGHT_TEMPLATE,
+    copyright_holder,
+    copyright_year)
+
+
 def write_package_artifacts(
   project_root: Path,
   production_dependencies: list[str] | None = None,
@@ -95,14 +112,10 @@ def project_context(
   """
   with TemporaryDirectory() as temp_directory:
     project_root = Path(temp_directory)
-    copyright_header = CopyrightHeader(
-      _COPYRIGHT_TEMPLATE,
-      'Sumanth Vepa',
-      2026)
     yield project_root, ProjectContext(
       project_root=project_root,
       package_name='sample',
-      copyright_header=copyright_header,
+      copyright_header=copyright_header(),
       venv_name=venv_name)
 
 
