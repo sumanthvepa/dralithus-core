@@ -44,7 +44,7 @@ class TestCopyrightHeader(unittest.TestCase):
   _COPYRIGHT_YEAR = 2020
 
   @classmethod
-  def _copyright_header(cls, template: str) -> CopyrightHeader:
+  def _header_from_template(cls, template: str) -> CopyrightHeader:
     """
       Return a test copyright header renderer.
 
@@ -77,8 +77,7 @@ class TestCopyrightHeader(unittest.TestCase):
 
       :return: None
     """
-    header = self._copyright_header('literal header\n')
-
+    header = self._header_from_template('literal header\n')
     self.assertEqual('# literal header\n', self._text(header, 'python'))
 
   def test_rejects_copyright_year_before_1710(self) -> None:
@@ -114,8 +113,7 @@ class TestCopyrightHeader(unittest.TestCase):
 
       :return: None
     """
-    header = self._copyright_header(self._TEMPLATE)
-
+    header = self._header_from_template(self._TEMPLATE)
     self.assertEqual(self._COPYRIGHT_HOLDER, header.copyright_holder)
 
   def test_copyright_year_returns_year(self) -> None:
@@ -124,8 +122,7 @@ class TestCopyrightHeader(unittest.TestCase):
 
       :return: None
     """
-    header = self._copyright_header(self._TEMPLATE)
-
+    header = self._header_from_template(self._TEMPLATE)
     self.assertEqual(self._COPYRIGHT_YEAR, header.copyright_year)
 
   def test_copyright_holder_is_read_only(self) -> None:
@@ -134,8 +131,7 @@ class TestCopyrightHeader(unittest.TestCase):
 
       :return: None
     """
-    header = self._copyright_header(self._TEMPLATE)
-
+    header = self._header_from_template(self._TEMPLATE)
     with self.assertRaises(AttributeError):
       setattr(header, 'copyright_holder', 'Other')
 
@@ -145,8 +141,7 @@ class TestCopyrightHeader(unittest.TestCase):
 
       :return: None
     """
-    header = self._copyright_header(self._TEMPLATE)
-
+    header = self._header_from_template(self._TEMPLATE)
     with self.assertRaises(AttributeError):
       setattr(header, 'copyright_year', 1999)
 
@@ -156,8 +151,7 @@ class TestCopyrightHeader(unittest.TestCase):
 
       :return: None
     """
-    header = self._copyright_header(self._TEMPLATE)
-
+    header = self._header_from_template(self._TEMPLATE)
     self.assertEqual(
       '# Copyright (C) 2020 Milestone 42.\n'
       '# Released under the GPL.\n',
@@ -169,8 +163,7 @@ class TestCopyrightHeader(unittest.TestCase):
 
       :return: None
     """
-    header = self._copyright_header('{{ description }}\n')
-
+    header = self._header_from_template('{{ description }}\n')
     self.assertEqual(
       f'# {self._DESCRIPTION}\n',
       self._text(header, 'python'))
@@ -182,8 +175,7 @@ class TestCopyrightHeader(unittest.TestCase):
 
       :return: None
     """
-    header = self._copyright_header('first\n\nsecond\n')
-
+    header = self._header_from_template('first\n\nsecond\n')
     self.assertEqual(
       '# first\n'
       '#\n'
@@ -196,8 +188,7 @@ class TestCopyrightHeader(unittest.TestCase):
 
       :return: None
     """
-    header = self._copyright_header(self._TEMPLATE)
-
+    header = self._header_from_template(self._TEMPLATE)
     self.assertEqual(
       '// Copyright (C) 2020 Milestone 42.\n'
       '// Released under the GPL.\n',
@@ -209,10 +200,9 @@ class TestCopyrightHeader(unittest.TestCase):
 
       :return: None
     """
-    header = self._copyright_header(
+    header = self._header_from_template(
       'holder={{ copyright_holder }}\n'
       'year={{ copyright_year }}\n')
-
     self.assertEqual(
       '# holder=Milestone 42\n'
       '# year=2020\n',
@@ -224,8 +214,7 @@ class TestCopyrightHeader(unittest.TestCase):
 
       :return: None
     """
-    header = self._copyright_header('single line\n')
-
+    header = self._header_from_template('single line\n')
     self.assertEqual('# single line\n', self._text(header, 'python'))
 
   def test_text_rejects_unknown_language(self) -> None:
@@ -234,8 +223,7 @@ class TestCopyrightHeader(unittest.TestCase):
 
       :return: None
     """
-    header = self._copyright_header(self._TEMPLATE)
-
+    header = self._header_from_template(self._TEMPLATE)
     with self.assertRaises(DralithusProjectError):
       self._text(header, cast(Any, 'ruby'))
 
