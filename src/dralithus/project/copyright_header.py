@@ -127,6 +127,24 @@ class CopyrightHeader:
     self._copyright_holder = copyright_holder
     self._copyright_year = copyright_year
 
+  @property
+  def copyright_holder(self) -> str:
+    """
+      Return the copyright holder name.
+
+      :return: The copyright holder name
+    """
+    return self._copyright_holder
+
+  @property
+  def copyright_year(self) -> int:
+    """
+      Return the copyright year.
+
+      :return: The copyright year
+    """
+    return self._copyright_year
+
   def text(
     self,
     language: Literal['python', 'javascript'],
