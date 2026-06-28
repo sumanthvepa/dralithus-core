@@ -61,6 +61,32 @@ class TestProjectContext(unittest.TestCase):
         venv_name=venv_name)
       test_function(project_root, context)
 
+  def reject_in_temporary_directory(
+    self,
+    package_name: str,
+    venv_name: str,
+    header: CopyrightHeader,
+    exception_message: str
+  ) -> None:
+    """
+      Run the supplied test function with a temporary project context
+      and expect it to raise DralithusProjectError.
+
+      :param package_name: Package name to use.
+      :param venv_name: Venv name to use.
+      :param header: Copyright header to use.
+      :param exception_message: Exception message to use.
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      with self.assertRaisesRegex(DralithusProjectError, exception_message):
+        ProjectContext(
+          project_root=project_root,
+          package_name=package_name,
+          copyright_header=header,
+          venv_name=venv_name)
+
   def test_default_venv_name_is_venv(self) -> None:
     """
       Verify that the default venv name is venv.
@@ -155,18 +181,11 @@ class TestProjectContext(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-
-      with self.assertRaisesRegex(
-          DralithusProjectError,
-          'Venv name must not be empty'
-      ):
-        ProjectContext(
-          project_root=project_root,
-          package_name='sample',
-          copyright_header=copyright_header(),
-          venv_name='')
+    self.reject_in_temporary_directory(
+      'sample',
+      '',
+      copyright_header(),
+      'Venv name must not be empty')
 
   def test_rejects_current_directory_venv_name(self) -> None:
     """
@@ -174,18 +193,11 @@ class TestProjectContext(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-
-      with self.assertRaisesRegex(
-          DralithusProjectError,
-          'Venv name must not contain path components'
-      ):
-        ProjectContext(
-          project_root=project_root,
-          package_name='sample',
-          copyright_header=copyright_header(),
-          venv_name='.')
+    self.reject_in_temporary_directory(
+      'sample',
+      '.',
+      copyright_header(),
+      'Venv name must not contain path components')
 
   def test_rejects_parent_directory_venv_name(self) -> None:
     """
@@ -193,18 +205,11 @@ class TestProjectContext(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-
-      with self.assertRaisesRegex(
-          DralithusProjectError,
-          'Venv name must not contain path components'
-      ):
-        ProjectContext(
-          project_root=project_root,
-          package_name='sample',
-          copyright_header=copyright_header(),
-          venv_name='..')
+    self.reject_in_temporary_directory(
+      'sample',
+      '..',
+      copyright_header(),
+      'Venv name must not contain path components')
 
   def test_rejects_absolute_venv_path(self) -> None:
     """
@@ -212,18 +217,11 @@ class TestProjectContext(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-
-      with self.assertRaisesRegex(
-          DralithusProjectError,
-          'Venv name must not contain path components'
-      ):
-        ProjectContext(
-          project_root=project_root,
-          package_name='sample',
-          copyright_header=copyright_header(),
-          venv_name=str(project_root / 'venv'))
+    self.reject_in_temporary_directory(
+      'sample',
+      '/tmp/venv',
+      copyright_header(),
+      'Venv name must not contain path components')
 
   def test_rejects_nested_venv_name(self) -> None:
     """
@@ -231,18 +229,11 @@ class TestProjectContext(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-
-      with self.assertRaisesRegex(
-          DralithusProjectError,
-          'Venv name must not contain path components'
-      ):
-        ProjectContext(
-          project_root=project_root,
-          package_name='sample',
-          copyright_header=copyright_header(),
-          venv_name='env/venv')
+    self.reject_in_temporary_directory(
+      'sample',
+      'env/venv',
+      copyright_header(),
+      'Venv name must not contain path components')
 
   def test_rejects_empty_package_name(self) -> None:
     """
@@ -250,17 +241,11 @@ class TestProjectContext(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-
-      with self.assertRaisesRegex(
-          DralithusProjectError,
-          'Package name must not be empty'
-      ):
-        ProjectContext(
-          project_root=project_root,
-          package_name='',
-          copyright_header=copyright_header())
+    self.reject_in_temporary_directory(
+      '',
+      'venv',
+      copyright_header(),
+      'Package name must not be empty')
 
   def test_rejects_non_identifier_package_name(self) -> None:
     """
@@ -268,17 +253,11 @@ class TestProjectContext(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-
-      with self.assertRaisesRegex(
-          DralithusProjectError,
-          'Package name is not a valid identifier'
-      ):
-        ProjectContext(
-          project_root=project_root,
-          package_name='my-pkg',
-          copyright_header=copyright_header())
+    self.reject_in_temporary_directory(
+      'my-pkg',
+      'venv',
+      copyright_header(),
+      'Package name is not a valid identifier')
 
   def test_rejects_keyword_package_name(self) -> None:
     """
@@ -286,17 +265,11 @@ class TestProjectContext(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-
-      with self.assertRaisesRegex(
-          DralithusProjectError,
-          'Package name must not be a Python keyword'
-      ):
-        ProjectContext(
-          project_root=project_root,
-          package_name='class',
-          copyright_header=copyright_header())
+    self.reject_in_temporary_directory(
+      'class',
+      'venv',
+      copyright_header(),
+      'Package name must not be a Python keyword')
 
   def test_rejects_uppercase_package_name(self) -> None:
     """
@@ -304,17 +277,11 @@ class TestProjectContext(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-
-      with self.assertRaisesRegex(
-          DralithusProjectError,
-          'Package name must be lowercase'
-      ):
-        ProjectContext(
-          project_root=project_root,
-          package_name='MyPkg',
-          copyright_header=copyright_header())
+    self.reject_in_temporary_directory(
+      'MyPkg',
+      'venv',
+      copyright_header(),
+      'Package name must be lowercase')
 
   def test_as_dict_contains_all_fields(self) -> None:
     """
