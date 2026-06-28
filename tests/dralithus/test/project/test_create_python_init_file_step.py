@@ -80,10 +80,11 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
     """
     with project_context() as (project_root, context):
       (project_root / self._DIRECTORY).mkdir(parents=True)
+      header = copyright_header('Acme Tools', 2020)
       step = CreatePythonInitFileStep(
         context,
         self._DIRECTORY,
-        copyright_header('Acme Tools', 2020),
+        header,
         self._DESCRIPTION)
 
       step.run()

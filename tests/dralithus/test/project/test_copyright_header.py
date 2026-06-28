@@ -108,6 +108,48 @@ class TestCopyrightHeader(unittest.TestCase):
       CopyrightHeader(
         self._TEMPLATE, self._COPYRIGHT_HOLDER, future_year)
 
+  def test_copyright_holder_returns_holder(self) -> None:
+    """
+      Verify the copyright_holder property returns the holder.
+
+      :return: None
+    """
+    header = self._copyright_header(self._TEMPLATE)
+
+    self.assertEqual(self._COPYRIGHT_HOLDER, header.copyright_holder)
+
+  def test_copyright_year_returns_year(self) -> None:
+    """
+      Verify the copyright_year property returns the year.
+
+      :return: None
+    """
+    header = self._copyright_header(self._TEMPLATE)
+
+    self.assertEqual(self._COPYRIGHT_YEAR, header.copyright_year)
+
+  def test_copyright_holder_is_read_only(self) -> None:
+    """
+      Verify the copyright_holder property cannot be assigned.
+
+      :return: None
+    """
+    header = self._copyright_header(self._TEMPLATE)
+
+    with self.assertRaises(AttributeError):
+      setattr(header, 'copyright_holder', 'Other')
+
+  def test_copyright_year_is_read_only(self) -> None:
+    """
+      Verify the copyright_year property cannot be assigned.
+
+      :return: None
+    """
+    header = self._copyright_header(self._TEMPLATE)
+
+    with self.assertRaises(AttributeError):
+      setattr(header, 'copyright_year', 1999)
+
   def test_text_renders_python_header(self) -> None:
     """
       Verify text renders a Python comment header.
