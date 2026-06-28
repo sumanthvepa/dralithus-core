@@ -35,23 +35,20 @@ _IMPLICIT_DEV_DEPENDENCIES = ['mypy', 'pylint', 'parameterized']
 _COPYRIGHT_TEMPLATE = (
   '{{ description }}\n'
   'Copyright (C) {{ copyright_year }} {{ copyright_holder }}.\n')
+_COPYRIGHT_HOLDER = 'Acme Corp.'
+_COPYRIGHT_YEAR = 2026
 
 
-def copyright_header(
-  copyright_holder: str = 'Sumanth Vepa',
-  copyright_year: int = 2026
-) -> CopyrightHeader:
+def copyright_header() -> CopyrightHeader:
   """
     Return a copyright header renderer for project tests.
 
-    :param copyright_holder: The copyright holder name
-    :param copyright_year: The copyright year
     :return: The copyright header renderer
   """
   return CopyrightHeader(
     _COPYRIGHT_TEMPLATE,
-    copyright_holder,
-    copyright_year)
+    _COPYRIGHT_HOLDER,
+    _COPYRIGHT_YEAR)
 
 
 def write_package_artifacts(
