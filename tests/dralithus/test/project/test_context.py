@@ -38,7 +38,7 @@ class TestProjectContext(unittest.TestCase):
   @staticmethod
   def run_in_temporary_directory(
       package_name: str,
-      venv_name: str,
+      venv_name: str | None,
       header: CopyrightHeader,
       test_function: Callable[[Path, ProjectContext], None]
   ) -> None:
@@ -46,7 +46,7 @@ class TestProjectContext(unittest.TestCase):
       Run the supplied test function with a temporary project context.
 
       :param package_name: Package name to use.
-      :param venv_name: Venv name to use.
+      :param venv_name: Venv name to use, or None to use the default.
       :param header: Copyright header to use.
       :param test_function: Function to call with the project root and
                             default project context.
@@ -54,11 +54,17 @@ class TestProjectContext(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name=package_name,
-        copyright_header=header,
-        venv_name=venv_name)
+      if venv_name is None:
+        context = ProjectContext(
+          project_root=project_root,
+          package_name=package_name,
+          copyright_header=header)
+      else:
+        context = ProjectContext(
+          project_root=project_root,
+          package_name=package_name,
+          copyright_header=header,
+          venv_name=venv_name)
       test_function(project_root, context)
 
   def reject_in_temporary_directory(
@@ -95,7 +101,7 @@ class TestProjectContext(unittest.TestCase):
     """
     self.run_in_temporary_directory(
       'sample',
-      'venv',
+      None,
       copyright_header(),
       lambda _project_root, context:
       self.assertEqual('venv', context.venv_name))
@@ -108,7 +114,7 @@ class TestProjectContext(unittest.TestCase):
     """
     self.run_in_temporary_directory(
       'mypkg',
-      'venv',
+      None,
       copyright_header(),
       lambda _project_root, context:
       self.assertEqual('mypkg', context.package_name))
@@ -122,7 +128,7 @@ class TestProjectContext(unittest.TestCase):
     header = copyright_header()
     self.run_in_temporary_directory(
       'sample',
-      'venv',
+      None,
       header,
       lambda _project_root, context:
       self.assertIs(header, context.copyright_header))
@@ -135,7 +141,7 @@ class TestProjectContext(unittest.TestCase):
     """
     self.run_in_temporary_directory(
       'sample',
-      'venv',
+      None,
       copyright_header(),
       lambda project_root, context:
       self.assertEqual(project_root / 'venv', context.venv_path))
@@ -148,7 +154,7 @@ class TestProjectContext(unittest.TestCase):
     """
     self.run_in_temporary_directory(
       'sample',
-      'venv',
+      None,
       copyright_header(),
       lambda project_root, context:
       self.assertEqual(project_root / 'venv' / 'bin' / 'python',
@@ -304,7 +310,7 @@ class TestProjectContext(unittest.TestCase):
 
     self.run_in_temporary_directory(
       'sample',
-      'venv',
+      None,
       copyright_header(),
       check_as_dict)
 
