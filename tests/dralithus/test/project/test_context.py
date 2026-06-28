@@ -71,7 +71,7 @@ class TestProjectContext(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      header = copyright_header('Milestone 42', 2020)
+      header = copyright_header()
       context = ProjectContext(
         project_root=project_root,
         package_name='sample',
