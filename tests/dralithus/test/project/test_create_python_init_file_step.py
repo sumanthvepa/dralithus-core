@@ -56,10 +56,11 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
     """
     with project_context() as (project_root, context):
       (project_root / self._DIRECTORY).mkdir(parents=True)
+      header = copyright_header()
       step = CreatePythonInitFileStep(
         context,
         self._DIRECTORY,
-        copyright_header('Milestone 42', 2020),
+        header,
         self._DESCRIPTION)
 
       step.run()
@@ -69,7 +70,7 @@ class TestCreatePythonInitFileStep(unittest.TestCase):
         f'  {self._DESCRIPTION}\n'
         '"""\n'
         f'# {self._DESCRIPTION}\n'
-        '# Copyright (C) 2020 Milestone 42.\n',
+        f'# Copyright (C) {header.copyright_year} {header.copyright_holder}.\n',
         self._init_py(project_root).read_text(encoding='utf-8'))
 
   def test_run_uses_copyright_header_values(self) -> None:
