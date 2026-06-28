@@ -138,13 +138,6 @@ class TestProjectContext(unittest.TestCase):
         project_root: Path,
         context: ProjectContext
     ) -> None:
-      """
-        Check that the custom venv name updates derived paths.
-
-        :param project_root: Temporary project root.
-        :param context: Project context to inspect.
-        :return: None
-      """
       self.assertEqual('env', context.venv_name)
       self.assertEqual(project_root / 'env', context.venv_path)
       self.assertEqual(project_root / 'env' / 'bin' / 'python',
@@ -330,19 +323,8 @@ class TestProjectContext(unittest.TestCase):
       :return: None
     """
 
-    def check_as_dict(
-        project_root: Path,
-        context: ProjectContext
-    ) -> None:
-      """
-        Check that as_dict returns all fields with correct values.
-
-        :param project_root: Temporary project root.
-        :param context: Project context to inspect.
-        :return: None
-      """
+    def check_as_dict(project_root: Path, context: ProjectContext) -> None:
       result = context.as_dict()
-
       expected: ProjectContextDict = {
         'project_root': project_root,
         'package_name': 'sample',
@@ -365,18 +347,16 @@ class TestProjectContext(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_header=copyright_header(),
-        venv_name='env')
-
+    def check_as_dict(project_root: Path, context: ProjectContext) -> None:
       result = context.as_dict()
-
       self.assertEqual('env', result['venv_name'])
       self.assertEqual(project_root / 'env', result['venv_path'])
       self.assertEqual(
         project_root / 'env' / 'bin' / 'python',
         result['venv_python'])
+
+    self.run_in_temporary_directory(
+      'sample',
+      'env',
+      copyright_header(),
+      check_as_dict)
