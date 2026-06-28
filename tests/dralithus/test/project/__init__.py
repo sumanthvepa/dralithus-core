@@ -35,7 +35,7 @@ _IMPLICIT_DEV_DEPENDENCIES = ['mypy', 'pylint', 'parameterized']
 _COPYRIGHT_TEMPLATE = (
   '{{ description }}\n'
   'Copyright (C) {{ copyright_year }} {{ copyright_holder }}.\n')
-_COPYRIGHT_HOLDER = 'Acme Corp.'
+_COPYRIGHT_HOLDER = 'Acme Corporation'
 _COPYRIGHT_YEAR = 2026
 
 
