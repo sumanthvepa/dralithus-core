@@ -21,9 +21,11 @@
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
 import unittest
+from collections.abc import Callable
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+from dralithus.project.copyright_header import CopyrightHeader
 from dralithus.test.project import copyright_header
 from dralithus.project.context import ProjectContext, ProjectContextDict
 from dralithus.project.error import DralithusProjectError
@@ -33,20 +35,44 @@ class TestProjectContext(unittest.TestCase):
   """
     Unit tests for the ProjectContext class.
   """
-  def test_default_venv_name_is_venv(self) -> None:
+  @staticmethod
+  def run_in_temporary_directory(
+      package_name: str,
+      venv_name: str,
+      header: CopyrightHeader,
+      test_function: Callable[[Path, ProjectContext], None]
+  ) -> None:
     """
-      Verify that the default venv name is venv.
+      Run the supplied test function with a temporary project context.
 
+      :param package_name: Package name to use.
+      :param venv_name: Venv name to use.
+      :param header: Copyright header to use.
+      :param test_function: Function to call with the project root and
+                            default project context.
       :return: None
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
       context = ProjectContext(
         project_root=project_root,
-        package_name='sample',
-        copyright_header=copyright_header())
+        package_name=package_name,
+        copyright_header=header,
+        venv_name=venv_name)
+      test_function(project_root, context)
 
-      self.assertEqual('venv', context.venv_name)
+  def test_default_venv_name_is_venv(self) -> None:
+    """
+      Verify that the default venv name is venv.
+
+      :return: None
+    """
+    self.run_in_temporary_directory(
+      'sample',
+      'venv',
+      copyright_header(),
+      lambda _project_root, context:
+      self.assertEqual('venv', context.venv_name))
 
   def test_custom_package_name_is_stored(self) -> None:
     """
@@ -54,14 +80,12 @@ class TestProjectContext(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='mypkg',
-        copyright_header=copyright_header())
-
-      self.assertEqual('mypkg', context.package_name)
+    self.run_in_temporary_directory(
+      'mypkg',
+      'venv',
+      copyright_header(),
+      lambda _project_root, context:
+      self.assertEqual('mypkg', context.package_name))
 
   def test_copyright_header_is_stored(self) -> None:
     """
@@ -69,15 +93,13 @@ class TestProjectContext(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      header = copyright_header()
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_header=header)
-
-      self.assertIs(header, context.copyright_header)
+    header = copyright_header()
+    self.run_in_temporary_directory(
+      'sample',
+      'venv',
+      header,
+      lambda _project_root, context:
+      self.assertIs(header, context.copyright_header))
 
   def test_default_venv_path_uses_venv_name(self) -> None:
     """
@@ -85,14 +107,12 @@ class TestProjectContext(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_header=copyright_header())
-
-      self.assertEqual(project_root / 'venv', context.venv_path)
+    self.run_in_temporary_directory(
+      'sample',
+      'venv',
+      copyright_header(),
+      lambda project_root, context:
+      self.assertEqual(project_root / 'venv', context.venv_path))
 
   def test_default_venv_python_uses_venv_path(self) -> None:
     """
@@ -100,15 +120,13 @@ class TestProjectContext(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_header=copyright_header())
-
+    self.run_in_temporary_directory(
+      'sample',
+      'venv',
+      copyright_header(),
+      lambda project_root, context:
       self.assertEqual(project_root / 'venv' / 'bin' / 'python',
-                       context.venv_python)
+                       context.venv_python))
 
   def test_custom_venv_name_updates_derived_paths(self) -> None:
     """
@@ -116,18 +134,27 @@ class TestProjectContext(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_header=copyright_header(),
-        venv_name='env')
+    def check_venv_paths(
+        project_root: Path,
+        context: ProjectContext
+    ) -> None:
+      """
+        Check that the custom venv name updates derived paths.
 
+        :param project_root: Temporary project root.
+        :param context: Project context to inspect.
+        :return: None
+      """
       self.assertEqual('env', context.venv_name)
       self.assertEqual(project_root / 'env', context.venv_path)
       self.assertEqual(project_root / 'env' / 'bin' / 'python',
                        context.venv_python)
+
+    self.run_in_temporary_directory(
+      'sample',
+      'env',
+      copyright_header(),
+      check_venv_paths)
 
   def test_rejects_empty_venv_name(self) -> None:
     """
@@ -139,8 +166,8 @@ class TestProjectContext(unittest.TestCase):
       project_root = Path(temp_directory)
 
       with self.assertRaisesRegex(
-        DralithusProjectError,
-        'Venv name must not be empty'
+          DralithusProjectError,
+          'Venv name must not be empty'
       ):
         ProjectContext(
           project_root=project_root,
@@ -158,8 +185,8 @@ class TestProjectContext(unittest.TestCase):
       project_root = Path(temp_directory)
 
       with self.assertRaisesRegex(
-        DralithusProjectError,
-        'Venv name must not contain path components'
+          DralithusProjectError,
+          'Venv name must not contain path components'
       ):
         ProjectContext(
           project_root=project_root,
@@ -177,8 +204,8 @@ class TestProjectContext(unittest.TestCase):
       project_root = Path(temp_directory)
 
       with self.assertRaisesRegex(
-        DralithusProjectError,
-        'Venv name must not contain path components'
+          DralithusProjectError,
+          'Venv name must not contain path components'
       ):
         ProjectContext(
           project_root=project_root,
@@ -196,8 +223,8 @@ class TestProjectContext(unittest.TestCase):
       project_root = Path(temp_directory)
 
       with self.assertRaisesRegex(
-        DralithusProjectError,
-        'Venv name must not contain path components'
+          DralithusProjectError,
+          'Venv name must not contain path components'
       ):
         ProjectContext(
           project_root=project_root,
@@ -215,8 +242,8 @@ class TestProjectContext(unittest.TestCase):
       project_root = Path(temp_directory)
 
       with self.assertRaisesRegex(
-        DralithusProjectError,
-        'Venv name must not contain path components'
+          DralithusProjectError,
+          'Venv name must not contain path components'
       ):
         ProjectContext(
           project_root=project_root,
@@ -234,8 +261,8 @@ class TestProjectContext(unittest.TestCase):
       project_root = Path(temp_directory)
 
       with self.assertRaisesRegex(
-        DralithusProjectError,
-        'Package name must not be empty'
+          DralithusProjectError,
+          'Package name must not be empty'
       ):
         ProjectContext(
           project_root=project_root,
@@ -252,8 +279,8 @@ class TestProjectContext(unittest.TestCase):
       project_root = Path(temp_directory)
 
       with self.assertRaisesRegex(
-        DralithusProjectError,
-        'Package name is not a valid identifier'
+          DralithusProjectError,
+          'Package name is not a valid identifier'
       ):
         ProjectContext(
           project_root=project_root,
@@ -270,8 +297,8 @@ class TestProjectContext(unittest.TestCase):
       project_root = Path(temp_directory)
 
       with self.assertRaisesRegex(
-        DralithusProjectError,
-        'Package name must not be a Python keyword'
+          DralithusProjectError,
+          'Package name must not be a Python keyword'
       ):
         ProjectContext(
           project_root=project_root,
@@ -288,8 +315,8 @@ class TestProjectContext(unittest.TestCase):
       project_root = Path(temp_directory)
 
       with self.assertRaisesRegex(
-        DralithusProjectError,
-        'Package name must be lowercase'
+          DralithusProjectError,
+          'Package name must be lowercase'
       ):
         ProjectContext(
           project_root=project_root,
@@ -302,25 +329,35 @@ class TestProjectContext(unittest.TestCase):
 
       :return: None
     """
-    with TemporaryDirectory() as temp_directory:
-      project_root = Path(temp_directory)
-      header = copyright_header()
-      context = ProjectContext(
-        project_root=project_root,
-        package_name='sample',
-        copyright_header=header)
 
+    def check_as_dict(
+        project_root: Path,
+        context: ProjectContext
+    ) -> None:
+      """
+        Check that as_dict returns all fields with correct values.
+
+        :param project_root: Temporary project root.
+        :param context: Project context to inspect.
+        :return: None
+      """
       result = context.as_dict()
 
       expected: ProjectContextDict = {
         'project_root': project_root,
         'package_name': 'sample',
-        'copyright_header': header,
+        'copyright_header': context.copyright_header,
         'venv_name': 'venv',
         'venv_path': project_root / 'venv',
         'venv_python': project_root / 'venv' / 'bin' / 'python',
       }
       self.assertEqual(expected, result)
+
+    self.run_in_temporary_directory(
+      'sample',
+      'venv',
+      copyright_header(),
+      check_as_dict)
 
   def test_as_dict_reflects_custom_venv_name(self) -> None:
     """
