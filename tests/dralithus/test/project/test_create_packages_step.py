@@ -379,17 +379,15 @@ class TestCreatePackagesStep(unittest.TestCase):
       self.assertFalse(
         (project_root / Packages.PACKAGES_FILENAME).exists())
 
-  def test_rollback_preserves_file_appearing_after_stale_check(
+  def test_rollback_preserves_preexisting_local_packages_txt(
     self
   ) -> None:
     """
-      Verify rollback preserves a file the step did not create.
+      Verify rollback preserves pre-existing local-packages.txt.
 
-      Simulates the time-of-check to time-of-use race: an existing
-      local-packages.txt is hidden from Path.exists during run, as
-      it would be for a file created concurrently after the check.
-      Ownership must come from exclusive creation, so rollback must
-      leave the file alone.
+      The step creates the missing packages.txt but does not claim
+      the pre-existing local-packages.txt, so rollback must leave
+      local-packages.txt alone while removing packages.txt.
 
       :return: None
     """
