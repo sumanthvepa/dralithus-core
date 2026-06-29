@@ -49,7 +49,8 @@ class _RecordingStep(ExecutionStep):
       context: ProjectContext,
       name: str,
       log: list[str],
-      fails: bool = False) -> None:
+      fails: bool = False
+  ) -> None:
     """
       Initialize the recording step.
 
@@ -111,7 +112,8 @@ class _RecordingComposite(CompositeExecutionStep):
       self,
       context: ProjectContext,
       steps: Sequence[ExecutionStep],
-      log: list[str]) -> None:
+      log: list[str]
+  ) -> None:
     """
       Initialize the recording composite.
 
@@ -139,7 +141,8 @@ class TestCompositeExecutionStep(unittest.TestCase):
       self,
       names: list[str],
       log: list[str],
-      failing: str | None = None) -> _RecordingComposite:
+      failing: str | None = None
+  ) -> _RecordingComposite:
     """
       Build a recording composite over child steps named by names.
 
