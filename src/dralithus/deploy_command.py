@@ -142,6 +142,10 @@ def make_applications(parameters: set[str], verbosity: int) -> set[Application]:
   """
     Create a set of applications from the command line parameters.
 
+    Note: This application-loading path may be incomplete. Unlike
+    make_environments(), it does not yet raise a user-facing
+    CommandLineError for missing or invalid applications.
+
     :param parameters: The parameters for the command line
     :param verbosity: The verbosity level of the command
     :return: A set of Application objects
@@ -150,13 +154,15 @@ def make_applications(parameters: set[str], verbosity: int) -> set[Application]:
   assert len(applications) > 0
   return applications
 
+
 def make(cmdln: CommandLine) -> DeployCommand:
   """
-    Create a help command from the command line arguments.
+    Create a 'deploy' command from the command line arguments.
 
     :param cmdln: The command line object containing the parsed arguments
-    :return: The help command object
+    :return: The deploy command object
   """
-  environments = make_environments(cmdln.program, cmdln.global_options, cmdln.command_options, cmdln.verbosity)
+  environments = make_environments(
+    cmdln.program, cmdln.global_options, cmdln.command_options, cmdln.verbosity)
   applications = make_applications(cmdln.parameters, cmdln.verbosity)
   return DeployCommand(environments, applications, cmdln.verbosity)
