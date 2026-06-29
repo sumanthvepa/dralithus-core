@@ -26,6 +26,7 @@ from collections.abc import Sequence
 from typing import override
 
 from dralithus.project.context import ProjectContext
+from dralithus.project.error import DralithusProjectError
 from dralithus.project.execution_step import ExecutionStep
 
 
@@ -85,7 +86,15 @@ class CompositeExecutionStep(ExecutionStep):
       :return: None
       :raises DralithusProjectError: When the composite step fails
     """
-    raise NotImplementedError('run() is not implemented yet')
+    if dry_run:
+      self._run_dry_run()
+    else:
+      try:
+        for step in self._steps:
+          step.run()
+      except DralithusProjectError:
+        self.rollback()
+        raise
 
   @override
   def rollback(self, dry_run: bool = False) -> None:
@@ -99,4 +108,5 @@ class CompositeExecutionStep(ExecutionStep):
       :return: None
       :raises DralithusProjectError: When rollback fails
     """
-    raise NotImplementedError('rollback() is not implemented yet')
+    for step in reversed(self._steps):
+      step.rollback(dry_run)
