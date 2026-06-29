@@ -554,6 +554,25 @@ class TestCreatePyProjectTomlStep(unittest.TestCase):
 
       self.assertFalse((project_root / 'pyproject.toml').exists())
 
+  def test_rollback_is_idempotent_after_removing_pyproject(self) -> None:
+    """
+      Verify rollback can be called again after removing pyproject.toml.
+
+      :return: None
+    """
+    with project_context() as (project_root, context):
+      self._create_venv(context)
+      step = CreatePyProjectTomlStep(
+        context,
+        'sample-project',
+        'Sample project')
+
+      step.run()
+      step.rollback()
+      step.rollback()
+
+      self.assertFalse((project_root / 'pyproject.toml').exists())
+
   def test_rollback_removes_pyproject_after_multiple_runs(self) -> None:
     """
       Verify rollback removes pyproject.toml after multiple run calls.

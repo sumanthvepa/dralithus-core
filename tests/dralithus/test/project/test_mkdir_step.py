@@ -88,6 +88,21 @@ class TestMkdirStep(unittest.TestCase):
 
       self.assertFalse((project_root / 'src').exists())
 
+  def test_rollback_is_idempotent_after_removing_directory(self) -> None:
+    """
+      Verify rollback can be called again after removing a directory.
+
+      :return: None
+    """
+    with project_context() as (project_root, context):
+      step = MkdirStep(context, Path('src'))
+
+      step.run()
+      step.rollback()
+      step.rollback()
+
+      self.assertFalse((project_root / 'src').exists())
+
   def test_rollback_removes_directory_after_multiple_runs(self) -> None:
     """
       Verify rollback removes a directory after multiple run calls.

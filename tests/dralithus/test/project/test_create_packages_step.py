@@ -280,6 +280,22 @@ class TestCreatePackagesStep(unittest.TestCase):
       self.assertFalse(self._packages_txt(project_root).exists())
       self.assertFalse(self._local_packages_txt(project_root).exists())
 
+  def test_rollback_is_idempotent_after_removing_files(self) -> None:
+    """
+      Verify rollback can be called again after removing created files.
+
+      :return: None
+    """
+    with project_context() as (project_root, context):
+      step = CreatePackagesStep(context)
+
+      step.run()
+      step.rollback()
+      step.rollback()
+
+      self.assertFalse(self._packages_txt(project_root).exists())
+      self.assertFalse(self._local_packages_txt(project_root).exists())
+
   def test_rollback_keeps_preexisting_files(self) -> None:
     """
       Verify that rollback leaves pre-existing dependency files in
