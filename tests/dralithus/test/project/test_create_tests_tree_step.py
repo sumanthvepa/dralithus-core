@@ -142,9 +142,7 @@ class TestCreateTestsTreeStep(unittest.TestCase):
     """
     with project_context() as (project_root, context):
       step = CreateTestsTreeStep(context)
-
       step.run()
-
       self.assertTrue(self._tests(project_root).is_dir())
       self.assertTrue(self._package(project_root).is_dir())
       self.assertTrue(self._test_package(project_root).is_dir())
@@ -161,9 +159,7 @@ class TestCreateTestsTreeStep(unittest.TestCase):
     """
     with project_context() as (project_root, context):
       step = CreateTestsTreeStep(context)
-
       step.run()
-
       self.assertEqual(
         self._expected_init_py(context.copyright_header),
         self._init_py(project_root).read_text(encoding='utf-8'))
@@ -174,9 +170,7 @@ class TestCreateTestsTreeStep(unittest.TestCase):
     """
     with project_context() as (project_root, context):
       step = CreateTestsTreeStep(context)
-
       step.run()
-
       self.assertEqual(
         '',
         self._tests_gitignore(project_root).read_text(encoding='utf-8'))
@@ -187,7 +181,7 @@ class TestCreateTestsTreeStep(unittest.TestCase):
         '',
         self._test_gitignore(project_root).read_text(encoding='utf-8'))
 
-  def test_run_preserves_representative_preexisting_artifacts(
+  def test_run_preserves_preexisting_init_py(
     self
   ) -> None:
     """
@@ -199,9 +193,7 @@ class TestCreateTestsTreeStep(unittest.TestCase):
       self._init_py(project_root).write_text(
         '# user init\n', encoding='utf-8')
       step = CreateTestsTreeStep(context)
-
       step.run()
-
       self.assertEqual(
         '# user init\n',
         self._init_py(project_root).read_text(encoding='utf-8'))
@@ -217,10 +209,8 @@ class TestCreateTestsTreeStep(unittest.TestCase):
       # .gitignore child fail after mkdir created tests/<pkg>/test.
       self._package_gitignore(project_root).mkdir(parents=True)
       step = CreateTestsTreeStep(context)
-
       with self.assertRaises(DralithusProjectError):
         step.run()
-
       self.assertFalse(self._test_package(project_root).exists())
       self.assertFalse(self._tests_gitignore(project_root).exists())
       self.assertTrue(self._package(project_root).is_dir())
@@ -236,9 +226,7 @@ class TestCreateTestsTreeStep(unittest.TestCase):
     """
     with project_context() as (project_root, context):
       step = CreateTestsTreeStep(context)
-
       step.run(dry_run=True)
-
       self.assertFalse(self._tests(project_root).exists())
 
   def test_run_dry_run_rejects_unusable_existing_target(self) -> None:
@@ -249,7 +237,6 @@ class TestCreateTestsTreeStep(unittest.TestCase):
     with project_context() as (project_root, context):
       self._tests_gitignore(project_root).mkdir(parents=True)
       step = CreateTestsTreeStep(context)
-
       with self.assertRaises(DralithusProjectError):
         step.run(dry_run=True)
 
@@ -261,13 +248,11 @@ class TestCreateTestsTreeStep(unittest.TestCase):
     """
     with project_context() as (project_root, context):
       step = CreateTestsTreeStep(context)
-
       step.run()
       step.rollback()
-
       self.assertFalse(self._tests(project_root).exists())
 
-  def test_rollback_preserves_preexisting_artifacts(self) -> None:
+  def test_rollback_preserves_preexisting_init_py(self) -> None:
     """
       Verify rollback leaves pre-existing directories and files in
       place.
@@ -277,10 +262,8 @@ class TestCreateTestsTreeStep(unittest.TestCase):
       self._init_py(project_root).write_text(
         '# user init\n', encoding='utf-8')
       step = CreateTestsTreeStep(context)
-
       step.run()
       step.rollback()
-
       self.assertTrue(self._test_package(project_root).is_dir())
       self.assertEqual(
         '# user init\n',
@@ -293,10 +276,8 @@ class TestCreateTestsTreeStep(unittest.TestCase):
     """
     with project_context() as (project_root, context):
       step = CreateTestsTreeStep(context)
-
       step.run()
       step.rollback(dry_run=True)
-
       self.assertTrue(self._tests(project_root).is_dir())
       self.assertTrue(self._test_package(project_root).is_dir())
       self.assertTrue(self._init_py(project_root).is_file())
