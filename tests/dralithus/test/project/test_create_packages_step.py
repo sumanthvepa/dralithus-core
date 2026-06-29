@@ -34,6 +34,26 @@ class TestCreatePackagesStep(unittest.TestCase):
   """
     Unit tests for the CreatePackagesStep class.
   """
+  @staticmethod
+  def _packages_txt(project_root: Path) -> Path:
+    """
+      Return the project packages.txt path.
+
+      :param project_root: The project root directory
+      :return: The packages.txt path
+    """
+    return project_root / Packages.PACKAGES_FILENAME
+
+  @staticmethod
+  def _local_packages_txt(project_root: Path) -> Path:
+    """
+      Return the project local-packages.txt path.
+
+      :param project_root: The project root directory
+      :return: The local-packages.txt path
+    """
+    return project_root / Packages.LOCAL_PACKAGES_FILENAME
+
   def test_run_creates_packages_files(self) -> None:
     """
       Verify that run creates both dependency files in an empty
@@ -42,9 +62,8 @@ class TestCreatePackagesStep(unittest.TestCase):
       :return: None
     """
     with project_context() as (project_root, context):
-      packages_txt = project_root / Packages.PACKAGES_FILENAME
-      local_packages_txt = (
-        project_root / Packages.LOCAL_PACKAGES_FILENAME)
+      packages_txt = self._packages_txt(project_root)
+      local_packages_txt = self._local_packages_txt(project_root)
       step = CreatePackagesStep(context)
 
       step.run()
@@ -64,7 +83,7 @@ class TestCreatePackagesStep(unittest.TestCase):
       :return: None
     """
     with project_context() as (project_root, context):
-      packages_txt = project_root / Packages.PACKAGES_FILENAME
+      packages_txt = self._packages_txt(project_root)
       packages_txt.write_text('requests\n', encoding='utf-8')
       step = CreatePackagesStep(context)
 
@@ -72,8 +91,7 @@ class TestCreatePackagesStep(unittest.TestCase):
 
       self.assertEqual(
         'requests\n', packages_txt.read_text(encoding='utf-8'))
-      self.assertTrue(
-        (project_root / Packages.LOCAL_PACKAGES_FILENAME).is_file())
+      self.assertTrue(self._local_packages_txt(project_root).is_file())
 
   def test_run_keeps_existing_local_packages_txt(self) -> None:
     """
@@ -83,8 +101,7 @@ class TestCreatePackagesStep(unittest.TestCase):
       :return: None
     """
     with project_context() as (project_root, context):
-      local_packages_txt = (
-        project_root / Packages.LOCAL_PACKAGES_FILENAME)
+      local_packages_txt = self._local_packages_txt(project_root)
       local_packages_txt.write_text('../common-lib\n', encoding='utf-8')
       step = CreatePackagesStep(context)
 
@@ -93,8 +110,7 @@ class TestCreatePackagesStep(unittest.TestCase):
       self.assertEqual(
         '../common-lib\n',
         local_packages_txt.read_text(encoding='utf-8'))
-      self.assertTrue(
-        (project_root / Packages.PACKAGES_FILENAME).is_file())
+      self.assertTrue(self._packages_txt(project_root).is_file())
 
   def test_run_dry_run_creates_nothing(self) -> None:
     """
@@ -107,10 +123,8 @@ class TestCreatePackagesStep(unittest.TestCase):
 
       step.run(dry_run=True)
 
-      self.assertFalse(
-        (project_root / Packages.PACKAGES_FILENAME).exists())
-      self.assertFalse(
-        (project_root / Packages.LOCAL_PACKAGES_FILENAME).exists())
+      self.assertFalse(self._packages_txt(project_root).exists())
+      self.assertFalse(self._local_packages_txt(project_root).exists())
 
   def test_run_raises_when_packages_txt_unreadable(self) -> None:
     """
@@ -120,7 +134,7 @@ class TestCreatePackagesStep(unittest.TestCase):
       :return: None
     """
     with project_context() as (project_root, context):
-      packages_txt = project_root / Packages.PACKAGES_FILENAME
+      packages_txt = self._packages_txt(project_root)
       packages_txt.mkdir()
       step = CreatePackagesStep(context)
 
@@ -142,12 +156,10 @@ class TestCreatePackagesStep(unittest.TestCase):
 
       step.run()
 
-      packages_text = (
-        project_root / Packages.PACKAGES_FILENAME).read_text(
-          encoding='utf-8')
-      local_text = (
-        project_root / Packages.LOCAL_PACKAGES_FILENAME).read_text(
-          encoding='utf-8')
+      packages_text = self._packages_txt(project_root).read_text(
+        encoding='utf-8')
+      local_text = self._local_packages_txt(project_root).read_text(
+        encoding='utf-8')
       self.assertEqual(
         '# Third-party packages, one per line.\n'
         '# Append " [dev]" to mark a development-only dependency.\n',
@@ -190,10 +202,8 @@ class TestCreatePackagesStep(unittest.TestCase):
       self.assertEqual(
         f'Could not write dependency file: {project_root}',
         str(context_manager.exception))
-      self.assertFalse(
-        (project_root / Packages.PACKAGES_FILENAME).exists())
-      self.assertFalse(
-        (project_root / Packages.LOCAL_PACKAGES_FILENAME).exists())
+      self.assertFalse(self._packages_txt(project_root).exists())
+      self.assertFalse(self._local_packages_txt(project_root).exists())
 
   def test_run_write_failure_after_creation_removes_file(self) -> None:
     """
@@ -231,10 +241,8 @@ class TestCreatePackagesStep(unittest.TestCase):
       self.assertEqual(
         f'Could not write dependency file: {project_root}',
         str(context_manager.exception))
-      self.assertFalse(
-        (project_root / Packages.PACKAGES_FILENAME).exists())
-      self.assertFalse(
-        (project_root / Packages.LOCAL_PACKAGES_FILENAME).exists())
+      self.assertFalse(self._packages_txt(project_root).exists())
+      self.assertFalse(self._local_packages_txt(project_root).exists())
 
   def test_run_failure_removes_partially_created_files(self) -> None:
     """
@@ -248,14 +256,13 @@ class TestCreatePackagesStep(unittest.TestCase):
       :return: None
     """
     with project_context() as (project_root, context):
-      (project_root / Packages.PACKAGES_FILENAME).mkdir()
+      self._packages_txt(project_root).mkdir()
       step = CreatePackagesStep(context)
 
       with self.assertRaises(DralithusProjectError):
         step.run()
 
-      self.assertFalse(
-        (project_root / Packages.LOCAL_PACKAGES_FILENAME).exists())
+      self.assertFalse(self._local_packages_txt(project_root).exists())
 
   def test_rollback_removes_created_files(self) -> None:
     """
@@ -270,10 +277,8 @@ class TestCreatePackagesStep(unittest.TestCase):
       step.run()
       step.rollback()
 
-      self.assertFalse(
-        (project_root / Packages.PACKAGES_FILENAME).exists())
-      self.assertFalse(
-        (project_root / Packages.LOCAL_PACKAGES_FILENAME).exists())
+      self.assertFalse(self._packages_txt(project_root).exists())
+      self.assertFalse(self._local_packages_txt(project_root).exists())
 
   def test_rollback_keeps_preexisting_files(self) -> None:
     """
@@ -283,7 +288,7 @@ class TestCreatePackagesStep(unittest.TestCase):
       :return: None
     """
     with project_context() as (project_root, context):
-      packages_txt = project_root / Packages.PACKAGES_FILENAME
+      packages_txt = self._packages_txt(project_root)
       packages_txt.write_text('requests\n', encoding='utf-8')
       step = CreatePackagesStep(context)
 
@@ -292,8 +297,7 @@ class TestCreatePackagesStep(unittest.TestCase):
 
       self.assertEqual(
         'requests\n', packages_txt.read_text(encoding='utf-8'))
-      self.assertFalse(
-        (project_root / Packages.LOCAL_PACKAGES_FILENAME).exists())
+      self.assertFalse(self._local_packages_txt(project_root).exists())
 
   def test_rollback_removes_files_after_multiple_runs(self) -> None:
     """
@@ -308,10 +312,8 @@ class TestCreatePackagesStep(unittest.TestCase):
       step.run()
       step.rollback()
 
-      self.assertFalse(
-        (project_root / Packages.PACKAGES_FILENAME).exists())
-      self.assertFalse(
-        (project_root / Packages.LOCAL_PACKAGES_FILENAME).exists())
+      self.assertFalse(self._packages_txt(project_root).exists())
+      self.assertFalse(self._local_packages_txt(project_root).exists())
 
   def test_rollback_dry_run_keeps_files(self) -> None:
     """
@@ -326,10 +328,8 @@ class TestCreatePackagesStep(unittest.TestCase):
       step.run()
       step.rollback(dry_run=True)
 
-      self.assertTrue(
-        (project_root / Packages.PACKAGES_FILENAME).is_file())
-      self.assertTrue(
-        (project_root / Packages.LOCAL_PACKAGES_FILENAME).is_file())
+      self.assertTrue(self._packages_txt(project_root).is_file())
+      self.assertTrue(self._local_packages_txt(project_root).is_file())
 
   def test_rollback_accepts_already_removed_file(self) -> None:
     """
@@ -339,7 +339,7 @@ class TestCreatePackagesStep(unittest.TestCase):
       :return: None
     """
     with project_context() as (project_root, context):
-      packages_txt = project_root / Packages.PACKAGES_FILENAME
+      packages_txt = self._packages_txt(project_root)
       step = CreatePackagesStep(context)
 
       step.run()
@@ -347,8 +347,7 @@ class TestCreatePackagesStep(unittest.TestCase):
       step.rollback()
 
       self.assertFalse(packages_txt.exists())
-      self.assertFalse(
-        (project_root / Packages.LOCAL_PACKAGES_FILENAME).exists())
+      self.assertFalse(self._local_packages_txt(project_root).exists())
 
   def test_run_raises_on_dangling_local_packages_symlink(self) -> None:
     """
@@ -364,8 +363,7 @@ class TestCreatePackagesStep(unittest.TestCase):
       :return: None
     """
     with project_context() as (project_root, context):
-      local_packages_txt = (
-        project_root / Packages.LOCAL_PACKAGES_FILENAME)
+      local_packages_txt = self._local_packages_txt(project_root)
       local_packages_txt.symlink_to(project_root / 'does-not-exist')
       step = CreatePackagesStep(context)
 
@@ -376,8 +374,7 @@ class TestCreatePackagesStep(unittest.TestCase):
         step.run()
 
       self.assertTrue(local_packages_txt.is_symlink())
-      self.assertFalse(
-        (project_root / Packages.PACKAGES_FILENAME).exists())
+      self.assertFalse(self._packages_txt(project_root).exists())
 
   def test_rollback_preserves_preexisting_local_packages_txt(
     self
@@ -392,8 +389,7 @@ class TestCreatePackagesStep(unittest.TestCase):
       :return: None
     """
     with project_context() as (project_root, context):
-      local_packages_txt = (
-        project_root / Packages.LOCAL_PACKAGES_FILENAME)
+      local_packages_txt = self._local_packages_txt(project_root)
       local_packages_txt.write_text('../common-lib\n', encoding='utf-8')
       step = CreatePackagesStep(context)
 
@@ -404,8 +400,7 @@ class TestCreatePackagesStep(unittest.TestCase):
       self.assertEqual(
         '../common-lib\n',
         local_packages_txt.read_text(encoding='utf-8'))
-      self.assertFalse(
-        (project_root / Packages.PACKAGES_FILENAME).exists())
+      self.assertFalse(self._packages_txt(project_root).exists())
 
   def test_rollback_wraps_removal_failure(self) -> None:
     """
@@ -414,7 +409,7 @@ class TestCreatePackagesStep(unittest.TestCase):
       :return: None
     """
     with project_context() as (project_root, context):
-      packages_txt = project_root / Packages.PACKAGES_FILENAME
+      packages_txt = self._packages_txt(project_root)
       step = CreatePackagesStep(context)
 
       step.run()
