@@ -162,7 +162,7 @@ class CreateVenvStep(ExecutionStep):
       Delete the virtual environment.
 
       :param venv_dir: The project virtual environment directory
-      :return: None
+      :return: True if the venv was deleted
     """
     try:
       shutil.rmtree(venv_dir)
@@ -196,4 +196,5 @@ class CreateVenvStep(ExecutionStep):
       :raises DralithusProjectError: When venv removal fails
     """
     if self._created_venv and not dry_run:
-      self._created_venv = self._delete_venv(self._context.venv_path)
+      self._delete_venv(self._context.venv_path)
+      self._created_venv = False

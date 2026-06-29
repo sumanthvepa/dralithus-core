@@ -116,6 +116,22 @@ class TestCreateVenvStep(unittest.TestCase):
 
       self.assertFalse(target.exists())
 
+  def test_rollback_is_idempotent_after_removing_venv(self) -> None:
+    """
+      Verify rollback can be called again after removing a venv.
+
+      :return: None
+    """
+    with project_context() as (project_root, context):
+      step = CreateVenvStep(context, self._python_executable())
+      target = project_root / 'venv'
+
+      step.run()
+      step.rollback()
+      step.rollback()
+
+      self.assertFalse(target.exists())
+
   def test_rollback_removes_venv_after_multiple_runs(self) -> None:
     """
       Verify rollback removes a venv after multiple run calls.
