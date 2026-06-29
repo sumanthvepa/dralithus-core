@@ -21,6 +21,7 @@
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
 from pathlib import Path
+import sys
 from tempfile import TemporaryDirectory
 import tomllib
 import unittest
@@ -37,6 +38,11 @@ class TestPyProjectToml(unittest.TestCase):
     Unit tests for the PyProjectToml class.
   """
   _implicit_dev_dependencies = ['mypy', 'pylint', 'parameterized']
+  # These tests exercise pyproject generation for the interpreter
+  # running the suite, so the expected requirement follows that
+  # interpreter instead of hard-coding a project policy value.
+  _python_requirement = (
+    f'>={sys.version_info.major}.{sys.version_info.minor}')
 
   @classmethod
   def _packages(
@@ -62,6 +68,8 @@ class TestPyProjectToml(unittest.TestCase):
         dev_dependencies=dev_dependencies,
         local_dependencies=local_dependencies,
         local_dev_dependencies=local_dev_dependencies)
+    # Packages eagerly reads the artifact contents, so it is safe to
+    # return after the temporary project root has been removed.
     return packages
 
   @classmethod
@@ -71,7 +79,7 @@ class TestPyProjectToml(unittest.TestCase):
     name: str = 'example-project',
     description: str = 'An example project',
     package_name: str = 'example',
-    python_requirement: str = '>=3.13',
+    python_requirement: str | None = None,
     dependencies: list[str] | None = None,
     dev_dependencies: list[str] | None = None,
     version: str = '0.1.0',
@@ -92,6 +100,8 @@ class TestPyProjectToml(unittest.TestCase):
       dependencies = []
     if dev_dependencies is None:
       dev_dependencies = cls._implicit_dev_dependencies
+    if python_requirement is None:
+      python_requirement = cls._python_requirement
     return PyProjectToml(
       name=name,
       description=description,
@@ -117,7 +127,7 @@ class TestPyProjectToml(unittest.TestCase):
       'version = "0.1.0"\n'
       'description = "An example project"\n'
       'readme = "README.md"\n'
-      'requires-python = ">=3.13"\n'
+      f'requires-python = "{TestPyProjectToml._python_requirement}"\n'
       'dependencies = []\n'
       '\n'
       '[project.optional-dependencies]\n'
@@ -141,14 +151,14 @@ class TestPyProjectToml(unittest.TestCase):
       name='my-project',
       description='My project',
       package_name='my_pkg',
-      python_requirement='>=3.14',
+      python_requirement=self._python_requirement,
       dependencies=['requests', 'click'],
       dev_dependencies=['mypy', 'pylint', 'parameterized'],
       version='1.2.3')
     self.assertEqual(pp.name, 'my-project')
     self.assertEqual(pp.description, 'My project')
     self.assertEqual(pp.package_name, 'my_pkg')
-    self.assertEqual(pp.python_requirement, '>=3.14')
+    self.assertEqual(pp.python_requirement, self._python_requirement)
     self.assertEqual(
       pp.packages.production_dependencies,
       ['requests', 'click'])
@@ -167,7 +177,7 @@ class TestPyProjectToml(unittest.TestCase):
       name='x',
       description='y',
       package_name='z',
-      python_requirement='>=3.13',
+      python_requirement=self._python_requirement,
       packages=self._packages())
     self.assertEqual(pp.version, '0.1.0')
 
@@ -207,7 +217,7 @@ class TestPyProjectToml(unittest.TestCase):
     pp = self._make(
       name='foo',
       description='Foo desc',
-      python_requirement='>=3.13',
+      python_requirement=self._python_requirement,
       version='1.2.3',
       dependencies=['requests'])
     parsed = tomllib.loads(pp.to_toml())
@@ -216,7 +226,7 @@ class TestPyProjectToml(unittest.TestCase):
     self.assertEqual(parsed['project']['description'], 'Foo desc')
     self.assertEqual(parsed['project']['readme'], 'README.md')
     self.assertEqual(
-      parsed['project']['requires-python'], '>=3.13')
+      parsed['project']['requires-python'], self._python_requirement)
     self.assertEqual(parsed['project']['dependencies'], ['requests'])
 
   def test_to_toml_renders_dev_dependencies(self) -> None:
@@ -259,6 +269,18 @@ class TestPyProjectToml(unittest.TestCase):
     self.assertEqual(
       parsed['project']['description'], 'He said "hi"')
 
+  def test_to_toml_escapes_backslashes_in_strings(self) -> None:
+    """
+      Verify backslashes in string values are escaped so the output
+      still parses as valid TOML.
+
+      :return: None
+    """
+    pp = self._make(description='Path C:\\Tools')
+    parsed = tomllib.loads(pp.to_toml())
+    self.assertEqual(
+      parsed['project']['description'], 'Path C:\\Tools')
+
   def test_to_toml_ignores_unmarked_local_dependencies(self) -> None:
     """
       Verify unmarked local dependencies are not rendered in pyproject.
@@ -269,7 +291,7 @@ class TestPyProjectToml(unittest.TestCase):
       name='example-project',
       description='An example project',
       package_name='example',
-      python_requirement='>=3.13',
+      python_requirement=self._python_requirement,
       packages=self._packages(local_dependencies=['../common-lib']))
     parsed = tomllib.loads(pp.to_toml())
     self.assertEqual(parsed['project']['dependencies'], [])
@@ -291,7 +313,7 @@ class TestPyProjectToml(unittest.TestCase):
     self.assertEqual(pp.version, '0.1.0')
     self.assertEqual(pp.description, 'An example project')
     self.assertEqual(pp.package_name, 'example')
-    self.assertEqual(pp.python_requirement, '>=3.13')
+    self.assertEqual(pp.python_requirement, self._python_requirement)
     self.assertEqual(pp.packages.production_dependencies, [])
     self.assertEqual(
       pp.packages.dev_dependencies,
@@ -549,8 +571,8 @@ class TestPyProjectToml(unittest.TestCase):
 
       :return: None
     """
-    expected = self._make(python_requirement='>=3.13')
-    actual = self._make(python_requirement='>=3.14')
+    expected = self._make(python_requirement='>=0.0')
+    actual = self._make()
     with self.assertRaises(DralithusProjectError):
       actual.matches(expected)
 
