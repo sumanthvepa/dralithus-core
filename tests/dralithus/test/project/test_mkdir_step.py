@@ -207,7 +207,7 @@ class TestMkdirStep(unittest.TestCase):
       self.assertTrue(target.is_dir())
       self.assertTrue((target / 'module.py').is_file())
 
-  def test_run_rejects_absolute_directory(self) -> None:
+  def test_init_rejects_absolute_directory(self) -> None:
     """
       Verify that absolute directory paths are rejected.
 
