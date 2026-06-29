@@ -140,7 +140,7 @@ class TestCreateSourceTreeStep(unittest.TestCase):
         self._src_package_gitignore(project_root).read_text(
           encoding='utf-8'))
 
-  def test_run_preserves_representative_preexisting_artifacts(
+  def test_run_preserves_preexisting_src_gitignore(
     self
   ) -> None:
     """
@@ -221,7 +221,7 @@ class TestCreateSourceTreeStep(unittest.TestCase):
       self.assertFalse(self._src(project_root).exists())
       self.assertFalse(self._src_package(project_root).exists())
 
-  def test_rollback_preserves_preexisting_artifacts(self) -> None:
+  def test_rollback_preserves_preexisting_src_gitignore(self) -> None:
     """
       Verify rollback leaves pre-existing directories and files in
       place.
