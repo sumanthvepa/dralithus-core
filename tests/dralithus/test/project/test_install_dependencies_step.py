@@ -90,6 +90,16 @@ class TestInstallDependenciesStep(unittest.TestCase):
     (project_root / Packages.LOCAL_PACKAGES_FILENAME).write_text(
       contents, encoding='utf-8')
 
+  @staticmethod
+  def _requirements(project_root: Path) -> Path:
+    """
+      Return the requirements.txt path in a project root.
+
+      :param project_root: The project root directory
+      :return: The requirements.txt path
+    """
+    return project_root / InstallDependenciesStep.REQUIREMENTS_FILENAME
+
   @classmethod
   def _ok_result(cls) -> mock.Mock:
     """
@@ -165,7 +175,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
          *packages.production_dependencies,
          *packages.dev_dependencies])
       self.assertEqual(commands[-1], [python, '-m', 'pip', 'freeze'])
-      requirements = project_root / InstallDependenciesStep.REQUIREMENTS_FILENAME
+      requirements = self._requirements(project_root)
       self.assertEqual(
         requirements.read_text(encoding='utf-8'), self._FREEZE_OUTPUT)
 
@@ -248,10 +258,9 @@ class TestInstallDependenciesStep(unittest.TestCase):
       self.assertFalse(any('-e' in command for command in commands))
       self.assertIn('../test-lib', commands[1])
 
-  def test_run_uses_text_mode_for_subprocess(self) -> None:
+  def test_run_uses_expected_subprocess_options(self) -> None:
     """
-      Verify that every subprocess call uses text mode so the freeze
-      output is a string and is written without error.
+      Verify every subprocess call uses the expected run options.
 
       :return: None
     """
@@ -263,7 +272,10 @@ class TestInstallDependenciesStep(unittest.TestCase):
         run_mock.return_value = self._ok_result()
         step.run()
       self.assertTrue(
-        all(call.kwargs.get('text') is True
+        all(call.kwargs.get('cwd') == project_root
+            and call.kwargs.get('check') is True
+            and call.kwargs.get('capture_output') is True
+            and call.kwargs.get('text') is True
             for call in run_mock.call_args_list))
 
   # run(): failure handling
@@ -284,7 +296,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
         run_mock.side_effect = [self._ok_result(), error]
         with self.assertRaises(DralithusProjectError):
           step.run()
-      requirements = project_root / InstallDependenciesStep.REQUIREMENTS_FILENAME
+      requirements = self._requirements(project_root)
       self.assertFalse(requirements.exists())
 
   def test_run_wraps_subprocess_os_error(self) -> None:
@@ -319,7 +331,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
         run_mock.return_value = self._ok_result()
         with self.assertRaises(DralithusProjectError):
           step.run()
-      requirements = project_root / InstallDependenciesStep.REQUIREMENTS_FILENAME
+      requirements = self._requirements(project_root)
       self.assertFalse(requirements.exists())
       self.assertEqual(
         {entry.name for entry in project_root.iterdir()},
@@ -342,7 +354,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
         run_mock.return_value = self._ok_result()
         with self.assertRaises(DralithusProjectError):
           step.run()
-      requirements = project_root / InstallDependenciesStep.REQUIREMENTS_FILENAME
+      requirements = self._requirements(project_root)
       self.assertFalse(requirements.exists())
 
   def test_run_preserves_existing_requirements_on_write_failure(
@@ -357,7 +369,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
     with project_context() as (project_root, context):
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
-      requirements = project_root / InstallDependenciesStep.REQUIREMENTS_FILENAME
+      requirements = self._requirements(project_root)
       requirements.write_text(self._PRE_CONTENT, encoding='utf-8')
       step = InstallDependenciesStep(context)
       with mock.patch('subprocess.run') as run_mock, \
@@ -382,7 +394,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
       with mock.patch('subprocess.run') as run_mock:
         step.run(dry_run=True)
       run_mock.assert_not_called()
-      requirements = project_root / InstallDependenciesStep.REQUIREMENTS_FILENAME
+      requirements = self._requirements(project_root)
       self.assertFalse(requirements.exists())
 
   def test_run_regenerates_existing_requirements(self) -> None:
@@ -395,7 +407,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
     with project_context() as (project_root, context):
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
-      requirements = project_root / InstallDependenciesStep.REQUIREMENTS_FILENAME
+      requirements = self._requirements(project_root)
       requirements.write_text(self._PRE_CONTENT, encoding='utf-8')
       step = InstallDependenciesStep(context)
       with mock.patch('subprocess.run') as run_mock:
@@ -418,7 +430,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
       self._write_packages(project_root, 'requests\n')
       external = project_root / 'external.txt'
       external.write_text(self._PRE_CONTENT, encoding='utf-8')
-      requirements = project_root / InstallDependenciesStep.REQUIREMENTS_FILENAME
+      requirements = self._requirements(project_root)
       requirements.symlink_to(external)
       step = InstallDependenciesStep(context)
       with mock.patch('subprocess.run') as run_mock:
@@ -439,7 +451,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
     with project_context() as (project_root, context):
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
-      requirements = project_root / InstallDependenciesStep.REQUIREMENTS_FILENAME
+      requirements = self._requirements(project_root)
       requirements.mkdir()
       step = InstallDependenciesStep(context)
       with mock.patch('subprocess.run') as run_mock:
@@ -462,7 +474,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
       step = InstallDependenciesStep(context)
-      requirements = project_root / InstallDependenciesStep.REQUIREMENTS_FILENAME
+      requirements = self._requirements(project_root)
       with mock.patch('subprocess.run') as run_mock:
         run_mock.return_value = self._ok_result()
         step.run()
@@ -480,7 +492,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
     with project_context() as (project_root, context):
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
-      requirements = project_root / InstallDependenciesStep.REQUIREMENTS_FILENAME
+      requirements = self._requirements(project_root)
       requirements.write_text(self._PRE_CONTENT, encoding='utf-8')
       step = InstallDependenciesStep(context)
       with mock.patch('subprocess.run') as run_mock:
@@ -503,7 +515,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
       step = InstallDependenciesStep(context)
-      requirements = project_root / InstallDependenciesStep.REQUIREMENTS_FILENAME
+      requirements = self._requirements(project_root)
       with mock.patch('subprocess.run') as run_mock:
         run_mock.return_value = self._ok_result()
         step.run()
@@ -526,7 +538,7 @@ class TestInstallDependenciesStep(unittest.TestCase):
       self._make_venv(context)
       self._write_packages(project_root, 'requests\n')
       step = InstallDependenciesStep(context)
-      requirements = project_root / InstallDependenciesStep.REQUIREMENTS_FILENAME
+      requirements = self._requirements(project_root)
       with mock.patch('subprocess.run') as run_mock:
         run_mock.return_value = self._ok_result()
         step.run()
