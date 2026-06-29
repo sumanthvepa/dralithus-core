@@ -1,8 +1,10 @@
 """
-  create_pyproject_step.py: Define the CreatePyProjectStep class.
+  create_pyproject_toml_step.py: Define the CreatePyProjectTomlStep
+  class.
 """
 # -------------------------------------------------------------------
-# create_pyproject_step.py: Define the CreatePyProjectStep class.
+# create_pyproject_toml_step.py: Define the CreatePyProjectTomlStep
+# class.
 #
 # Copyright (C) 2026 Sumanth Vepa.
 #
@@ -30,7 +32,7 @@ from dralithus.project.packages import Packages
 from dralithus.project.pyproject_toml import PyProjectToml
 
 
-class CreatePyProjectStep(ExecutionStep):
+class CreatePyProjectTomlStep(ExecutionStep):
   """
     Represent a project creation step that creates pyproject.toml.
   """

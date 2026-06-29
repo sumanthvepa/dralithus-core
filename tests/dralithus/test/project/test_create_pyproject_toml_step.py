@@ -1,8 +1,10 @@
 """
-  test_create_pyproject_step.py: Unit tests for create_pyproject_step.
+  test_create_pyproject_toml_step.py: Unit tests for
+  create_pyproject_toml_step.
 """
 # -------------------------------------------------------------------
-# test_create_pyproject_step.py: Unit tests for create_pyproject_step.
+# test_create_pyproject_toml_step.py: Unit tests for
+# create_pyproject_toml_step.
 #
 # Copyright (C) 2026 Sumanth Vepa.
 #
@@ -30,16 +32,16 @@ from parameterized import parameterized
 
 from dralithus.test.project import project_context, write_package_artifacts
 from dralithus.project.context import ProjectContext
-from dralithus.project.create_pyproject_step import CreatePyProjectStep
+from dralithus.project.create_pyproject_toml_step import CreatePyProjectTomlStep
 from dralithus.project.error import DralithusProjectError
 from dralithus.project.packages import Packages
 from dralithus.project.pyproject_toml import PyProjectToml
 
 
 # pylint: disable-next=too-many-public-methods,too-many-lines
-class TestCreatePyProjectStep(unittest.TestCase):
+class TestCreatePyProjectTomlStep(unittest.TestCase):
   """
-    Unit tests for the CreatePyProjectStep class.
+    Unit tests for the CreatePyProjectTomlStep class.
   """
   _implicit_dev_dependencies = ['mypy', 'pylint', 'parameterized']
 
@@ -253,7 +255,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
     """
     with project_context() as (_project_root, context):
       self._create_venv(context)
-      step = CreatePyProjectStep(
+      step = CreatePyProjectTomlStep(
         context,
         project_name='sample-project',
         project_description='Sample project')
@@ -270,7 +272,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
     """
     with project_context(venv_name='env') as (project_root, context):
       self._create_venv(context)
-      step = CreatePyProjectStep(
+      step = CreatePyProjectTomlStep(
         context,
         project_name='sample-project',
         project_description='Sample project')
@@ -297,7 +299,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
         'requests\n'
         'rich\n',
         encoding='utf-8')
-      step = CreatePyProjectStep(
+      step = CreatePyProjectTomlStep(
         context,
         'sample-project',
         'Sample project')
@@ -324,7 +326,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
         '../common-lib\n'
         '../test-lib [dev]\n',
         encoding='utf-8')
-      step = CreatePyProjectStep(
+      step = CreatePyProjectTomlStep(
         context,
         'sample-project',
         'Sample project')
@@ -355,7 +357,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
       (project_root / Packages.LOCAL_PACKAGES_FILENAME).write_text(
         '../common-lib\n',
         encoding='utf-8')
-      step = CreatePyProjectStep(
+      step = CreatePyProjectTomlStep(
         context,
         'sample-project',
         'Sample project')
@@ -376,7 +378,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
     """
     with project_context() as (project_root, context):
       self._create_venv(context)
-      step = CreatePyProjectStep(
+      step = CreatePyProjectTomlStep(
         context,
         'sample-project',
         'Sample project')
@@ -393,7 +395,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
     """
     with project_context() as (_project_root, context):
       self._create_venv(context, create_packages_txt=False)
-      step = CreatePyProjectStep(
+      step = CreatePyProjectTomlStep(
         context,
         'sample-project',
         'Sample project')
@@ -408,7 +410,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
       :return: None
     """
     with project_context() as (_project_root, context):
-      step = CreatePyProjectStep(
+      step = CreatePyProjectTomlStep(
         context,
         'sample-project',
         'Sample project')
@@ -424,7 +426,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
     """
     with project_context() as (_project_root, context):
       context.venv_path.mkdir()
-      step = CreatePyProjectStep(
+      step = CreatePyProjectTomlStep(
         context,
         'sample-project',
         'Sample project')
@@ -443,7 +445,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
       (context.venv_path / 'pyvenv.cfg').write_text(
         'home = /usr/bin\n',
         encoding='utf-8')
-      step = CreatePyProjectStep(
+      step = CreatePyProjectTomlStep(
         context,
         'sample-project',
         'Sample project')
@@ -462,7 +464,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
       pyproject = project_root / 'pyproject.toml'
       text = self._pyproject_text()
       pyproject.write_text(text, encoding='utf-8')
-      step = CreatePyProjectStep(
+      step = CreatePyProjectTomlStep(
         context,
         'sample-project',
         'Sample project')
@@ -480,7 +482,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
     with project_context() as (project_root, context):
       self._create_venv(context)
       (project_root / 'pyproject.toml').mkdir()
-      step = CreatePyProjectStep(
+      step = CreatePyProjectTomlStep(
         context,
         'sample-project',
         'Sample project')
@@ -526,7 +528,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
           encoding='utf-8')
       text = self._malformed_pyproject_text(malformed_case)
       (project_root / 'pyproject.toml').write_text(text, encoding='utf-8')
-      step = CreatePyProjectStep(
+      step = CreatePyProjectTomlStep(
         context,
         'sample-project',
         'Sample project')
@@ -542,7 +544,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
     """
     with project_context() as (project_root, context):
       self._create_venv(context)
-      step = CreatePyProjectStep(
+      step = CreatePyProjectTomlStep(
         context,
         'sample-project',
         'Sample project')
@@ -560,7 +562,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
     """
     with project_context() as (project_root, context):
       self._create_venv(context)
-      step = CreatePyProjectStep(
+      step = CreatePyProjectTomlStep(
         context,
         'sample-project',
         'Sample project')
@@ -581,7 +583,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
       self._create_venv(context)
       pyproject = project_root / 'pyproject.toml'
       pyproject.write_text(self._pyproject_text(), encoding='utf-8')
-      step = CreatePyProjectStep(
+      step = CreatePyProjectTomlStep(
         context,
         'sample-project',
         'Sample project')
@@ -599,7 +601,7 @@ class TestCreatePyProjectStep(unittest.TestCase):
     """
     with project_context() as (project_root, context):
       self._create_venv(context)
-      step = CreatePyProjectStep(
+      step = CreatePyProjectTomlStep(
         context,
         'sample-project',
         'Sample project')
