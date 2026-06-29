@@ -59,7 +59,8 @@ class CompositeExecutionStep(ExecutionStep):
   def __init__(
       self,
       context: ProjectContext,
-      steps: Sequence[ExecutionStep]) -> None:
+      steps: Sequence[ExecutionStep]
+  ) -> None:
     """
       Initialize the composite execution step.
 
@@ -75,7 +76,7 @@ class CompositeExecutionStep(ExecutionStep):
     """
       Run the composite execution step.
 
-      In a dry run, delegate to the subclass _run_dry_run(). Otherwise
+      In a dry run, delegate to the subclass _run_dry_run(). Otherwise,
       run the children in order and, on any failure, roll back the
       step's own completed children before re-raising.
 
