@@ -23,15 +23,15 @@
 from pathlib import Path
 from typing import override
 
+from dralithus.project.composite_execution_step import (
+  CompositeExecutionStep)
 from dralithus.project.context import ProjectContext
 from dralithus.project.create_gitignore_file_step import (
   CreateGitIgnoreFileStep)
-from dralithus.project.error import DralithusProjectError
-from dralithus.project.execution_step import ExecutionStep
 from dralithus.project.mkdir_step import MkdirStep
 
 
-class CreateSourceTreeStep(ExecutionStep):
+class CreateSourceTreeStep(CompositeExecutionStep):
   """
     Create the src package tree for a new Milestone 42 Python project.
 
@@ -41,6 +41,7 @@ class CreateSourceTreeStep(ExecutionStep):
     CreateGitIgnoreFileStep children; per-directory and per-file
     ownership and rollback live entirely in those children.
   """
+  @override
   def _run_dry_run(self) -> None:
     """
       Validate the existing source tree without changing it.
@@ -68,55 +69,10 @@ class CreateSourceTreeStep(ExecutionStep):
       :param context: The shared project creation context
       :return: None
     """
-    super().__init__(context)
     package = Path('src') / context.package_name
     self._mkdir = MkdirStep(context, package)
     self._src_gitignore = CreateGitIgnoreFileStep(context, Path('src'))
     self._package_gitignore = CreateGitIgnoreFileStep(context, package)
-    self._steps: tuple[ExecutionStep, ...] = (
-      self._mkdir,
-      self._src_gitignore,
-      self._package_gitignore)
-
-  @override
-  def run(self, dry_run: bool = False) -> None:
-    """
-      Run the source tree creation step.
-
-      Runs the directory and .gitignore children in order. On any
-      failure the step rolls back its own completed children before
-      re-raising, because the orchestrator never rolls back a step
-      whose own run raised. In a dry run, each child .gitignore step
-      is validated only when its parent directory already exists,
-      because MkdirStep does not create directories during a dry run.
-
-      :param dry_run: True if the step should validate without
-        changing the file system
-      :return: None
-      :raises DralithusProjectError: When source tree creation fails
-    """
-    if dry_run:
-      self._run_dry_run()
-    else:
-      try:
-        for step in self._steps:
-          step.run()
-      except DralithusProjectError:
-        self.rollback()
-        raise
-
-  @override
-  def rollback(self, dry_run: bool = False) -> None:
-    """
-      Roll back the source tree creation step.
-
-      Rolls back the children in reverse order. Each child removes
-      only what its own run created; pre-existing directories and
-      files are left in place.
-
-      :param dry_run: True if the step should change nothing
-      :return: None
-      :raises DralithusProjectError: When source tree removal fails
-    """
-    for step in reversed(self._steps):
-      step.rollback(dry_run)
+    super().__init__(
+      context,
+      (self._mkdir, self._src_gitignore, self._package_gitignore))
