@@ -80,9 +80,7 @@ class TestCreatePylintConfigurationStep(unittest.TestCase):
     """
     with project_context() as (project_root, context):
       step = CreatePylintConfigurationStep(context)
-
       step.run()
-
       self.assertEqual(
         self._pylintrc_template_content(),
         self._pylintrc(project_root).read_text(encoding='utf-8'))
@@ -95,14 +93,12 @@ class TestCreatePylintConfigurationStep(unittest.TestCase):
     """
     with project_context() as (project_root, context):
       step = CreatePylintConfigurationStep(context)
-
       step.run()
-
       self.assertIn(
         self._INIT_HOOK,
         self._pylintrc(project_root).read_text(encoding='utf-8'))
 
-  def test_run_preserves_representative_preexisting_artifacts(self) -> None:
+  def test_run_preserves_preexisting_pylintrc(self) -> None:
     """
       Verify run preserves a pre-existing regular pylintrc.
 
@@ -112,9 +108,7 @@ class TestCreatePylintConfigurationStep(unittest.TestCase):
       pylintrc = self._pylintrc(project_root)
       pylintrc.write_text('user config\n', encoding='utf-8')
       step = CreatePylintConfigurationStep(context)
-
       step.run()
-
       self.assertEqual('user config\n', pylintrc.read_text(encoding='utf-8'))
 
   def test_rollback_removes_created_artifacts(self) -> None:
@@ -125,13 +119,11 @@ class TestCreatePylintConfigurationStep(unittest.TestCase):
     """
     with project_context() as (project_root, context):
       step = CreatePylintConfigurationStep(context)
-
       step.run()
       step.rollback()
-
       self.assertFalse(self._pylintrc(project_root).exists())
 
-  def test_rollback_preserves_preexisting_artifacts(self) -> None:
+  def test_rollback_preserves_preexisting_pylintrc(self) -> None:
     """
       Verify rollback preserves a pre-existing regular pylintrc.
 
@@ -141,10 +133,8 @@ class TestCreatePylintConfigurationStep(unittest.TestCase):
       pylintrc = self._pylintrc(project_root)
       pylintrc.write_text('user config\n', encoding='utf-8')
       step = CreatePylintConfigurationStep(context)
-
       step.run()
       step.rollback()
-
       self.assertEqual('user config\n', pylintrc.read_text(encoding='utf-8'))
 
   def test_run_dry_run_creates_nothing(self) -> None:
@@ -155,9 +145,7 @@ class TestCreatePylintConfigurationStep(unittest.TestCase):
     """
     with project_context() as (project_root, context):
       step = CreatePylintConfigurationStep(context)
-
       step.run(dry_run=True)
-
       self.assertFalse(self._pylintrc(project_root).exists())
 
   def test_run_dry_run_rejects_unusable_existing_target(self) -> None:
@@ -169,6 +157,5 @@ class TestCreatePylintConfigurationStep(unittest.TestCase):
     with project_context() as (project_root, context):
       self._pylintrc(project_root).mkdir()
       step = CreatePylintConfigurationStep(context)
-
       with self.assertRaises(DralithusProjectError):
         step.run(dry_run=True)
