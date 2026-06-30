@@ -23,17 +23,17 @@
 from pathlib import Path
 from typing import override
 
+from dralithus.project.composite_execution_step import (
+  CompositeExecutionStep)
 from dralithus.project.context import ProjectContext
 from dralithus.project.create_gitignore_file_step import (
   CreateGitIgnoreFileStep)
 from dralithus.project.create_python_init_file_step import (
   CreatePythonInitFileStep)
-from dralithus.project.error import DralithusProjectError
-from dralithus.project.execution_step import ExecutionStep
 from dralithus.project.mkdir_step import MkdirStep
 
 
-class CreateTestsTreeStep(ExecutionStep):
+class CreateTestsTreeStep(CompositeExecutionStep):
   """
     Create the tests package tree for a new Milestone 42 Python project.
 
@@ -45,6 +45,7 @@ class CreateTestsTreeStep(ExecutionStep):
     child; per-directory and per-file ownership and rollback live
     entirely in those children.
   """
+  @override
   def _run_dry_run(self) -> None:
     """
       Validate the existing tests tree without changing it.
@@ -79,7 +80,6 @@ class CreateTestsTreeStep(ExecutionStep):
       :param context: The shared project creation context
       :return: None
     """
-    super().__init__(context)
     package_name = context.package_name
     tests = Path('tests')
     package = tests / package_name
@@ -93,52 +93,10 @@ class CreateTestsTreeStep(ExecutionStep):
     self._test_gitignore = CreateGitIgnoreFileStep(context, test_package)
     self._init_py = CreatePythonInitFileStep(
       context, test_package, context.copyright_header, description)
-    self._steps: tuple[ExecutionStep, ...] = (
-      self._mkdir,
-      self._tests_gitignore,
-      self._package_gitignore,
-      self._test_gitignore,
-      self._init_py)
-
-  @override
-  def run(self, dry_run: bool = False) -> None:
-    """
-      Run the tests tree creation step.
-
-      Runs the directory, .gitignore and __init__.py children in
-      order. On any failure the step rolls back its own completed
-      children before re-raising, because the orchestrator never rolls
-      back a step whose own run raised. In a dry run, each child file
-      step is validated only when its parent directory already exists,
-      because MkdirStep does not create directories during a dry run.
-
-      :param dry_run: True if the step should validate without
-        changing the file system
-      :return: None
-      :raises DralithusProjectError: When tests tree creation fails
-    """
-    if dry_run:
-      self._run_dry_run()
-    else:
-      try:
-        for step in self._steps:
-          step.run()
-      except DralithusProjectError:
-        self.rollback()
-        raise
-
-  @override
-  def rollback(self, dry_run: bool = False) -> None:
-    """
-      Roll back the tests tree creation step.
-
-      Rolls back the children in reverse order. Each child removes
-      only what its own run created; pre-existing directories and
-      files are left in place.
-
-      :param dry_run: True if the step should change nothing
-      :return: None
-      :raises DralithusProjectError: When tests tree removal fails
-    """
-    for step in reversed(self._steps):
-      step.rollback(dry_run)
+    super().__init__(
+      context,
+      (self._mkdir,
+       self._tests_gitignore,
+       self._package_gitignore,
+       self._test_gitignore,
+       self._init_py))
