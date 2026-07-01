@@ -40,7 +40,10 @@ class TestProjectContext(unittest.TestCase):
       package_name: str,
       venv_name: str | None,
       header: CopyrightHeader,
-      test_function: Callable[[Path, ProjectContext], None]
+      test_function: Callable[[Path, ProjectContext], None],
+      project_name: str | None = None,
+      project_description: str = '',
+      project_version: str = '0.1.0'
   ) -> None:
     """
       Run the supplied test function with a temporary project context.
@@ -50,21 +53,24 @@ class TestProjectContext(unittest.TestCase):
       :param header: Copyright header to use.
       :param test_function: Function to call with the project root and
                             default project context.
+      :param project_name: Project name to use.
+      :param project_description: Project description to use.
+      :param project_version: Project version to use.
       :return: None
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      if venv_name is None:
-        context = ProjectContext(
-          project_root=project_root,
-          package_name=package_name,
-          copyright_header=header)
-      else:
-        context = ProjectContext(
-          project_root=project_root,
-          package_name=package_name,
-          copyright_header=header,
-          venv_name=venv_name)
+      kwargs: dict = {
+        'project_name': project_name or package_name,
+        'project_description': project_description,
+        'project_version': project_version,
+        'project_root': project_root,
+        'package_name': package_name,
+        'copyright_header': header,
+      }
+      if venv_name is not None:
+        kwargs['venv_name'] = venv_name
+      context = ProjectContext(**kwargs)
       test_function(project_root, context)
 
   def reject_in_temporary_directory(
@@ -88,6 +94,9 @@ class TestProjectContext(unittest.TestCase):
       project_root = Path(temp_directory)
       with self.assertRaisesRegex(DralithusProjectError, exception_message):
         ProjectContext(
+          project_name='sample',
+          project_description='',
+          project_version='0.1.0',
           project_root=project_root,
           package_name=package_name,
           copyright_header=header,
@@ -299,6 +308,9 @@ class TestProjectContext(unittest.TestCase):
     def check_as_dict(project_root: Path, context: ProjectContext) -> None:
       result = context.as_dict()
       expected: ProjectContextDict = {
+        'project_name': 'sample',
+        'project_description': '',
+        'project_version': '0.1.0',
         'project_root': project_root,
         'package_name': 'sample',
         'copyright_header': context.copyright_header,
@@ -333,3 +345,207 @@ class TestProjectContext(unittest.TestCase):
       'env',
       copyright_header(),
       check_as_dict)
+
+  def test_default_project_name_is_package_name(self) -> None:
+    """
+      Verify omitting project_name stores package_name as
+      project_name.
+
+      :return: None
+    """
+    self.run_in_temporary_directory(
+      'sample',
+      None,
+      copyright_header(),
+      lambda _project_root, context:
+      self.assertEqual('sample', context.project_name))
+
+  def test_custom_project_name_is_stored(self) -> None:
+    """
+      Verify a distribution name different from the package name is
+      stored.
+
+      :return: None
+    """
+    self.run_in_temporary_directory(
+      'sample',
+      None,
+      copyright_header(),
+      lambda _project_root, context:
+      self.assertEqual('sample-project', context.project_name),
+      project_name='sample-project')
+
+  def test_project_description_is_stored(self) -> None:
+    """
+      Verify the description is stored.
+
+      :return: None
+    """
+    self.run_in_temporary_directory(
+      'sample',
+      None,
+      copyright_header(),
+      lambda _project_root, context:
+      self.assertEqual('Sample project.', context.project_description),
+      project_description='Sample project.')
+
+  def test_default_project_description_is_empty(self) -> None:
+    """
+      Verify existing-style constructors get an empty description.
+
+      :return: None
+    """
+    self.run_in_temporary_directory(
+      'sample',
+      None,
+      copyright_header(),
+      lambda _project_root, context:
+      self.assertEqual('', context.project_description))
+
+  def test_default_project_version_is_0_1_0(self) -> None:
+    """
+      Verify the default version matches CreatePyProjectTomlStep.
+
+      :return: None
+    """
+    self.run_in_temporary_directory(
+      'sample',
+      None,
+      copyright_header(),
+      lambda _project_root, context:
+      self.assertEqual('0.1.0', context.project_version))
+
+  def test_custom_project_version_is_stored(self) -> None:
+    """
+      Verify an explicit version is stored.
+
+      :return: None
+    """
+    self.run_in_temporary_directory(
+      'sample',
+      None,
+      copyright_header(),
+      lambda _project_root, context:
+      self.assertEqual('1.2.3', context.project_version),
+      project_version='1.2.3')
+
+  def test_rejects_empty_project_name(self) -> None:
+    """
+      Verify empty project names are rejected.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      with self.assertRaisesRegex(
+          DralithusProjectError, 'Project name must not be empty'):
+        ProjectContext(
+          project_name='',
+          project_description='',
+          project_version='0.1.0',
+          project_root=project_root,
+          package_name='sample',
+          copyright_header=copyright_header(),
+          venv_name='venv')
+
+  def test_rejects_project_name_with_surrounding_whitespace(self) -> None:
+    """
+      Verify accidental whitespace in project names is rejected.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      with self.assertRaises(DralithusProjectError):
+        ProjectContext(
+          project_name=' sample',
+          project_description='',
+          project_version='0.1.0',
+          project_root=project_root,
+          package_name='sample',
+          copyright_header=copyright_header(),
+          venv_name='venv')
+
+  def test_rejects_project_description_with_surrounding_whitespace(
+      self
+  ) -> None:
+    """
+      Verify descriptions with accidental leading/trailing whitespace
+      are rejected.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      with self.assertRaises(DralithusProjectError):
+        ProjectContext(
+          project_name='sample',
+          project_description=' Sample project.',
+          project_version='0.1.0',
+          project_root=project_root,
+          package_name='sample',
+          copyright_header=copyright_header(),
+          venv_name='venv')
+
+  def test_rejects_empty_project_version(self) -> None:
+    """
+      Verify empty project versions are rejected.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      with self.assertRaisesRegex(
+          DralithusProjectError, 'Project version must not be empty'):
+        ProjectContext(
+          project_name='sample',
+          project_description='',
+          project_version='',
+          project_root=project_root,
+          package_name='sample',
+          copyright_header=copyright_header(),
+          venv_name='venv')
+
+  def test_rejects_project_version_with_surrounding_whitespace(
+      self
+  ) -> None:
+    """
+      Verify accidental whitespace in versions is rejected.
+
+      :return: None
+    """
+    with TemporaryDirectory() as temp_directory:
+      project_root = Path(temp_directory)
+      with self.assertRaises(DralithusProjectError):
+        ProjectContext(
+          project_name='sample',
+          project_description='',
+          project_version=' 0.1.0',
+          project_root=project_root,
+          package_name='sample',
+          copyright_header=copyright_header(),
+          venv_name='venv')
+
+  def test_as_dict_contains_custom_project_metadata(self) -> None:
+    """
+      Verify as_dict() reflects explicit metadata values.
+
+      :return: None
+    """
+    def check_as_dict(
+        _project_root: Path,
+        context: ProjectContext
+    ) -> None:
+      result = context.as_dict()
+      self.assertEqual('sample-project', result['project_name'])
+      self.assertEqual('Sample project.', result['project_description'])
+      self.assertEqual('1.2.3', result['project_version'])
+
+    self.run_in_temporary_directory(
+      'sample',
+      None,
+      copyright_header(),
+      check_as_dict,
+      project_name='sample-project',
+      project_description='Sample project.',
+      project_version='1.2.3')

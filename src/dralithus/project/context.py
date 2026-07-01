@@ -32,6 +32,9 @@ class ProjectContextDict(TypedDict):
   """
     Typed dictionary representation of a ProjectContext.
   """
+  project_name: str
+  project_description: str
+  project_version: str
   project_root: Path
   package_name: str
   copyright_header: CopyrightHeader
@@ -62,6 +65,56 @@ class ProjectContext:
         f'Venv name must not contain path components: {venv_name}')
 
   @staticmethod
+  def _validate_project_name(project_name: str) -> None:
+    """
+      Validate the project name.
+
+      :param project_name: The project name to validate
+      :return: None
+      :raises DralithusProjectError: When project_name is empty or
+        has leading or trailing whitespace
+    """
+    if project_name == '':
+      raise DralithusProjectError('Project name must not be empty')
+    if project_name.strip() != project_name:
+      raise DralithusProjectError(
+        f'Project name must not contain leading or trailing '
+        f'whitespace: {project_name}')
+
+  @staticmethod
+  def _validate_project_description(project_description: str) -> None:
+    """
+      Validate the project description.
+
+      :param project_description: The project description to validate
+      :return: None
+      :raises DralithusProjectError: When project_description has
+        leading or trailing whitespace
+    """
+    if project_description != '':
+      if project_description.strip() != project_description:
+        raise DralithusProjectError(
+          'Project description must not contain leading or trailing '
+          'whitespace')
+
+  @staticmethod
+  def _validate_project_version(project_version: str) -> None:
+    """
+      Validate the project version.
+
+      :param project_version: The project version to validate
+      :return: None
+      :raises DralithusProjectError: When project_version is empty or
+        has leading or trailing whitespace
+    """
+    if project_version == '':
+      raise DralithusProjectError('Project version must not be empty')
+    if project_version.strip() != project_version:
+      raise DralithusProjectError(
+        f'Project version must not contain leading or trailing '
+        f'whitespace: {project_version}')
+
+  @staticmethod
   def validate_package_name(package_name: str) -> None:
     """
       Validate that package_name is a valid Python package name.
@@ -85,6 +138,9 @@ class ProjectContext:
 
   def __init__(
       self,
+      project_name: str,
+      project_description: str,
+      project_version: str,
       project_root: Path,
       package_name: str,
       copyright_header: CopyrightHeader,
@@ -93,20 +149,28 @@ class ProjectContext:
     """
       Initialize the project context.
 
+      :param project_name: The distribution/project name
+      :param project_description: The project description
+      :param project_version: The project version
       :param project_root: The root directory of the project
       :param package_name: The Python package name
       :param copyright_header: The shared copyright header renderer
       :param venv_name: The name of the virtual environment directory
       :return: None
-      :raises DralithusProjectError: When venv_name or package_name
-        is invalid
+      :raises DralithusProjectError: When a supplied value is invalid
     """
+    self._validate_project_name(project_name)
+    self._validate_project_description(project_description)
+    self._validate_project_version(project_version)
     self._validate_venv_name(venv_name)
     self.validate_package_name(package_name)
     self.project_root = project_root
     self.venv_name = venv_name
     self.copyright_header = copyright_header
     self.package_name = package_name
+    self.project_name = project_name
+    self.project_description = project_description
+    self.project_version = project_version
 
   @property
   def venv_path(self) -> Path:
@@ -136,6 +200,9 @@ class ProjectContext:
         derived property of this context
     """
     return ProjectContextDict(
+      project_name=self.project_name,
+      project_description=self.project_description,
+      project_version=self.project_version,
       project_root=self.project_root,
       package_name=self.package_name,
       copyright_header=self.copyright_header,

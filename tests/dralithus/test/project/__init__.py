@@ -111,6 +111,9 @@ def project_context(
   with TemporaryDirectory() as temp_directory:
     project_root = Path(temp_directory)
     yield project_root, ProjectContext(
+      project_name='sample',
+      project_description='Sample Project',
+      project_version='0.1.0',
       project_root=project_root,
       package_name='sample',
       copyright_header=copyright_header(),

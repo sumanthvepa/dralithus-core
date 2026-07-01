@@ -23,11 +23,10 @@
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
 from collections.abc import Sequence
-from pathlib import Path
 import unittest
 from typing import override
 
-from dralithus.test.project import copyright_header
+from dralithus.test.project import project_context
 from dralithus.project.composite_execution_step import (
   CompositeExecutionStep)
 from dralithus.project.context import ProjectContext
@@ -137,8 +136,9 @@ class TestCompositeExecutionStep(unittest.TestCase):
     lightweight recording fakes so the tests exercise the base's
     orchestration rather than any real file system behavior.
   """
+  @staticmethod
   def _composite(
-      self,
+      context: ProjectContext,
       names: list[str],
       log: list[str],
       failing: str | None = None
@@ -146,30 +146,17 @@ class TestCompositeExecutionStep(unittest.TestCase):
     """
       Build a recording composite over child steps named by names.
 
+      :param context: The shared project creation context
       :param names: The child step names, in order
       :param log: The shared list that records calls
       :param failing: The name of the child whose run() should fail,
         or None if no child should fail
       :return: A recording composite over the named child steps
     """
-    context = self._context()
     steps = [
       _RecordingStep(context, name, log, fails=name == failing)
       for name in names]
     return _RecordingComposite(context, steps, log)
-
-  @staticmethod
-  def _context() -> ProjectContext:
-    """
-      Return a project context for orchestration tests.
-
-      The base's run() and rollback() do not touch the file system,
-      so the project root need not exist.
-
-      :return: A project context with a valid package name
-    """
-    return ProjectContext(
-      Path('/nonexistent/project'), 'sample', copyright_header())
 
   # construction
 
@@ -179,9 +166,10 @@ class TestCompositeExecutionStep(unittest.TestCase):
       _run_dry_run() is abstract.
     """
     with self.assertRaises(TypeError):
-      # noinspection PyAbstractClass
-      # pylint: disable-next=abstract-class-instantiated
-      CompositeExecutionStep(self._context(), [])  # type: ignore[abstract]
+      with project_context() as (_, context):
+        # noinspection PyAbstractClass
+        # pylint: disable-next=abstract-class-instantiated
+        CompositeExecutionStep(context, [])  # type: ignore[abstract]
 
   # run
 
@@ -191,9 +179,10 @@ class TestCompositeExecutionStep(unittest.TestCase):
       children were given.
     """
     log: list[str] = []
-    composite = self._composite(['a', 'b', 'c'], log)
+    with project_context() as (_, context):
+      composite = TestCompositeExecutionStep._composite(context, ['a', 'b', 'c'], log)
 
-    composite.run()
+      composite.run()
 
     self.assertEqual(
       ['run a dry_run=False',
@@ -207,10 +196,12 @@ class TestCompositeExecutionStep(unittest.TestCase):
       run() rolls back the step's children and re-raises the error.
     """
     log: list[str] = []
-    composite = self._composite(['a', 'b', 'c'], log, failing='b')
+    with project_context() as (_, context):
+      composite = TestCompositeExecutionStep._composite(
+        context, ['a', 'b', 'c'], log, failing='b')
 
-    with self.assertRaises(DralithusProjectError):
-      composite.run()
+      with self.assertRaises(DralithusProjectError):
+        composite.run()
 
     self.assertEqual(
       ['run a dry_run=False',
@@ -226,9 +217,10 @@ class TestCompositeExecutionStep(unittest.TestCase):
       does not run the children directly.
     """
     log: list[str] = []
-    composite = self._composite(['a', 'b'], log)
+    with project_context() as (_, context):
+      composite = TestCompositeExecutionStep._composite(context, ['a', 'b'], log)
 
-    composite.run(dry_run=True)
+      composite.run(dry_run=True)
 
     self.assertEqual(['dry_run'], log)
 
@@ -240,9 +232,10 @@ class TestCompositeExecutionStep(unittest.TestCase):
       of the order the children were given.
     """
     log: list[str] = []
-    composite = self._composite(['a', 'b', 'c'], log)
+    with project_context() as (_, context):
+      composite = TestCompositeExecutionStep._composite(context, ['a', 'b', 'c'], log)
 
-    composite.rollback()
+      composite.rollback()
 
     self.assertEqual(
       ['rollback c dry_run=False',
@@ -256,9 +249,10 @@ class TestCompositeExecutionStep(unittest.TestCase):
       dry_run set to True.
     """
     log: list[str] = []
-    composite = self._composite(['a', 'b', 'c'], log)
+    with project_context() as (_, context):
+      composite = TestCompositeExecutionStep._composite(context, ['a', 'b', 'c'], log)
 
-    composite.rollback(dry_run=True)
+      composite.rollback(dry_run=True)
 
     self.assertEqual(
       ['rollback c dry_run=True',
