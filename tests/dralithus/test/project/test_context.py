@@ -39,45 +39,45 @@ class TestProjectContext(unittest.TestCase):
   """
   @staticmethod
   def run_in_temporary_directory(
+      project_name: str,
+      project_description: str,
+      project_version: str,
+      project_copyright: CopyrightHeader,
       package_name: str,
       venv_name: str | None,
-      header: CopyrightHeader,
-      test_function: Callable[[Path, ProjectContext], None],
-      project_name: str | None = None,
-      project_description: str = '',
-      project_version: str = '0.1.0'
+      test_function: Callable[[Path, ProjectContext], None]
   ) -> None:
     """
       Run the supplied test function with a temporary project context.
 
-      :param package_name: Package name to use.
-      :param venv_name: Venv name to use, or None to use the default.
-      :param header: Copyright header to use.
-      :param test_function: Function to call with the project root and
-                            default project context.
       :param project_name: Project name to use.
       :param project_description: Project description to use.
       :param project_version: Project version to use.
+      :param project_copyright: Copyright header to use.
+      :param package_name: Package name to use.
+      :param venv_name: Venv name to use, or None to use the default.
+      :param test_function: Function to call with the project root and
+                            default project context.
       :return: None
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
       if venv_name is None:
         context = ProjectContext(
-          project_name=project_name or package_name,
+          project_name=project_name,
           project_description=project_description,
           project_version=project_version,
+          project_copyright=project_copyright,
           project_root=project_root,
-          package_name=package_name,
-          copyright_header=header)
+          package_name=package_name)
       else:
         context = ProjectContext(
-          project_name=project_name or package_name,
+          project_name=project_name,
           project_description=project_description,
           project_version=project_version,
+          project_copyright=project_copyright,
           project_root=project_root,
           package_name=package_name,
-          copyright_header=header,
           venv_name=venv_name)
       test_function(project_root, context)
 
@@ -105,9 +105,9 @@ class TestProjectContext(unittest.TestCase):
           project_name='sample',
           project_description='',
           project_version='0.1.0',
+          project_copyright=header,
           project_root=project_root,
           package_name=package_name,
-          copyright_header=header,
           venv_name=venv_name)
 
   def test_default_venv_name_is_venv(self) -> None:
@@ -118,8 +118,11 @@ class TestProjectContext(unittest.TestCase):
     """
     self.run_in_temporary_directory(
       'sample',
-      None,
+      '',
+      '0.1.0',
       copyright_header(),
+      'sample',
+      None,
       lambda _project_root, context:
       self.assertEqual('venv', context.venv_name))
 
@@ -130,9 +133,12 @@ class TestProjectContext(unittest.TestCase):
       :return: None
     """
     self.run_in_temporary_directory(
+      'sample',
+      '',
+      '0.1.0',
+      copyright_header(),
       'mypkg',
       None,
-      copyright_header(),
       lambda _project_root, context:
       self.assertEqual('mypkg', context.package_name))
 
@@ -145,8 +151,11 @@ class TestProjectContext(unittest.TestCase):
     header = copyright_header()
     self.run_in_temporary_directory(
       'sample',
-      None,
+      '',
+      '0.1.0',
       header,
+      'sample',
+      None,
       lambda _project_root, context:
       self.assertIs(header, context.copyright_header))
 
@@ -158,8 +167,11 @@ class TestProjectContext(unittest.TestCase):
     """
     self.run_in_temporary_directory(
       'sample',
-      None,
+      '',
+      '0.1.0',
       copyright_header(),
+      'sample',
+      None,
       lambda project_root, context:
       self.assertEqual(project_root / 'venv', context.venv_path))
 
@@ -171,8 +183,11 @@ class TestProjectContext(unittest.TestCase):
     """
     self.run_in_temporary_directory(
       'sample',
-      None,
+      '',
+      '0.1.0',
       copyright_header(),
+      'sample',
+      None,
       lambda project_root, context:
       self.assertEqual(project_root / 'venv' / 'bin' / 'python',
                        context.venv_python))
@@ -194,8 +209,11 @@ class TestProjectContext(unittest.TestCase):
 
     self.run_in_temporary_directory(
       'sample',
-      'env',
+      '',
+      '0.1.0',
       copyright_header(),
+      'sample',
+      'env',
       check_venv_paths)
 
   def test_rejects_empty_venv_name(self) -> None:
@@ -319,9 +337,9 @@ class TestProjectContext(unittest.TestCase):
         'project_name': 'sample',
         'project_description': '',
         'project_version': '0.1.0',
+        'project_copyright': context.copyright_header,
         'project_root': project_root,
         'package_name': 'sample',
-        'copyright_header': context.copyright_header,
         'venv_name': 'venv',
         'venv_path': project_root / 'venv',
         'venv_python': project_root / 'venv' / 'bin' / 'python',
@@ -330,8 +348,11 @@ class TestProjectContext(unittest.TestCase):
 
     self.run_in_temporary_directory(
       'sample',
-      None,
+      '',
+      '0.1.0',
       copyright_header(),
+      'sample',
+      None,
       check_as_dict)
 
   def test_as_dict_reflects_custom_venv_name(self) -> None:
@@ -350,21 +371,26 @@ class TestProjectContext(unittest.TestCase):
 
     self.run_in_temporary_directory(
       'sample',
-      'env',
+      '',
+      '0.1.0',
       copyright_header(),
+      'sample',
+      'env',
       check_as_dict)
 
-  def test_helper_uses_package_name_when_project_name_omitted(self) -> None:
+  def test_package_name_can_be_project_name(self) -> None:
     """
-      Verify the test helper uses package_name when project_name is
-      omitted.
+      Verify the test helper can use the package name as project name.
 
       :return: None
     """
     self.run_in_temporary_directory(
       'sample',
-      None,
+      '',
+      '0.1.0',
       copyright_header(),
+      'sample',
+      None,
       lambda _project_root, context:
       self.assertEqual('sample', context.project_name))
 
@@ -376,12 +402,14 @@ class TestProjectContext(unittest.TestCase):
       :return: None
     """
     self.run_in_temporary_directory(
+      'sample-project',
+      '',
+      '0.1.0',
+      copyright_header(),
       'sample',
       None,
-      copyright_header(),
       lambda _project_root, context:
-      self.assertEqual('sample-project', context.project_name),
-      project_name='sample-project')
+      self.assertEqual('sample-project', context.project_name))
 
   def test_project_description_is_stored(self) -> None:
     """
@@ -391,37 +419,44 @@ class TestProjectContext(unittest.TestCase):
     """
     self.run_in_temporary_directory(
       'sample',
-      None,
+      'Sample project.',
+      '0.1.0',
       copyright_header(),
+      'sample',
+      None,
       lambda _project_root, context:
-      self.assertEqual('Sample project.', context.project_description),
-      project_description='Sample project.')
+      self.assertEqual('Sample project.', context.project_description))
 
-  def test_helper_uses_empty_project_description_when_omitted(self) -> None:
+  def test_empty_project_description_is_stored(self) -> None:
     """
-      Verify the test helper uses an empty project description when
-      omitted.
+      Verify the test helper can use an empty project description.
 
       :return: None
     """
     self.run_in_temporary_directory(
       'sample',
-      None,
+      '',
+      '0.1.0',
       copyright_header(),
+      'sample',
+      None,
       lambda _project_root, context:
       self.assertEqual('', context.project_description))
 
-  def test_helper_uses_0_1_0_project_version_when_omitted(self) -> None:
+  def test_0_1_0_project_version_is_stored(self) -> None:
     """
-      Verify the test helper uses the CreatePyProjectTomlStep default
-      version when omitted.
+      Verify the test helper can use the CreatePyProjectTomlStep
+      default version.
 
       :return: None
     """
     self.run_in_temporary_directory(
       'sample',
-      None,
+      '',
+      '0.1.0',
       copyright_header(),
+      'sample',
+      None,
       lambda _project_root, context:
       self.assertEqual('0.1.0', context.project_version))
 
@@ -433,11 +468,13 @@ class TestProjectContext(unittest.TestCase):
     """
     self.run_in_temporary_directory(
       'sample',
-      None,
+      '',
+      '1.2.3',
       copyright_header(),
+      'sample',
+      None,
       lambda _project_root, context:
-      self.assertEqual('1.2.3', context.project_version),
-      project_version='1.2.3')
+      self.assertEqual('1.2.3', context.project_version))
 
   def test_rejects_empty_project_name(self) -> None:
     """
@@ -453,9 +490,9 @@ class TestProjectContext(unittest.TestCase):
           project_name='',
           project_description='',
           project_version='0.1.0',
+          project_copyright=copyright_header(),
           project_root=project_root,
           package_name='sample',
-          copyright_header=copyright_header(),
           venv_name='venv')
 
   def test_rejects_project_name_with_surrounding_whitespace(self) -> None:
@@ -471,9 +508,9 @@ class TestProjectContext(unittest.TestCase):
           project_name=' sample',
           project_description='',
           project_version='0.1.0',
+          project_copyright=copyright_header(),
           project_root=project_root,
           package_name='sample',
-          copyright_header=copyright_header(),
           venv_name='venv')
 
   def test_rejects_project_description_with_surrounding_whitespace(
@@ -492,9 +529,9 @@ class TestProjectContext(unittest.TestCase):
           project_name='sample',
           project_description=' Sample project.',
           project_version='0.1.0',
+          project_copyright=copyright_header(),
           project_root=project_root,
           package_name='sample',
-          copyright_header=copyright_header(),
           venv_name='venv')
 
   def test_rejects_empty_project_version(self) -> None:
@@ -511,9 +548,9 @@ class TestProjectContext(unittest.TestCase):
           project_name='sample',
           project_description='',
           project_version='',
+          project_copyright=copyright_header(),
           project_root=project_root,
           package_name='sample',
-          copyright_header=copyright_header(),
           venv_name='venv')
 
   def test_rejects_project_version_with_surrounding_whitespace(
@@ -531,9 +568,9 @@ class TestProjectContext(unittest.TestCase):
           project_name='sample',
           project_description='',
           project_version=' 0.1.0',
+          project_copyright=copyright_header(),
           project_root=project_root,
           package_name='sample',
-          copyright_header=copyright_header(),
           venv_name='venv')
 
   def test_as_dict_contains_custom_project_metadata(self) -> None:
@@ -552,10 +589,10 @@ class TestProjectContext(unittest.TestCase):
       self.assertEqual('1.2.3', result['project_version'])
 
     self.run_in_temporary_directory(
+      'sample-project',
+      'Sample project.',
+      '1.2.3',
+      copyright_header(),
       'sample',
       None,
-      copyright_header(),
-      check_as_dict,
-      project_name='sample-project',
-      project_description='Sample project.',
-      project_version='1.2.3')
+      check_as_dict)
