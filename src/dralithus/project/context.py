@@ -136,6 +136,7 @@ class ProjectContext:
       raise DralithusProjectError(
         f'Package name must be lowercase: {package_name}')
 
+  # pylint: disable-next=too-many-arguments,too-many-positional-arguments
   def __init__(
       self,
       project_name: str,

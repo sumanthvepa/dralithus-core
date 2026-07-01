@@ -31,6 +31,8 @@ from dralithus.project.context import ProjectContext, ProjectContextDict
 from dralithus.project.error import DralithusProjectError
 
 
+# pylint: disable=too-many-public-methods
+# pylint: disable=too-many-arguments,too-many-positional-arguments
 class TestProjectContext(unittest.TestCase):
   """
     Unit tests for the ProjectContext class.
@@ -60,17 +62,23 @@ class TestProjectContext(unittest.TestCase):
     """
     with TemporaryDirectory() as temp_directory:
       project_root = Path(temp_directory)
-      kwargs: dict = {
-        'project_name': project_name or package_name,
-        'project_description': project_description,
-        'project_version': project_version,
-        'project_root': project_root,
-        'package_name': package_name,
-        'copyright_header': header,
-      }
-      if venv_name is not None:
-        kwargs['venv_name'] = venv_name
-      context = ProjectContext(**kwargs)
+      if venv_name is None:
+        context = ProjectContext(
+          project_name=project_name or package_name,
+          project_description=project_description,
+          project_version=project_version,
+          project_root=project_root,
+          package_name=package_name,
+          copyright_header=header)
+      else:
+        context = ProjectContext(
+          project_name=project_name or package_name,
+          project_description=project_description,
+          project_version=project_version,
+          project_root=project_root,
+          package_name=package_name,
+          copyright_header=header,
+          venv_name=venv_name)
       test_function(project_root, context)
 
   def reject_in_temporary_directory(
@@ -346,10 +354,10 @@ class TestProjectContext(unittest.TestCase):
       copyright_header(),
       check_as_dict)
 
-  def test_default_project_name_is_package_name(self) -> None:
+  def test_helper_uses_package_name_when_project_name_omitted(self) -> None:
     """
-      Verify omitting project_name stores package_name as
-      project_name.
+      Verify the test helper uses package_name when project_name is
+      omitted.
 
       :return: None
     """
@@ -389,9 +397,10 @@ class TestProjectContext(unittest.TestCase):
       self.assertEqual('Sample project.', context.project_description),
       project_description='Sample project.')
 
-  def test_default_project_description_is_empty(self) -> None:
+  def test_helper_uses_empty_project_description_when_omitted(self) -> None:
     """
-      Verify existing-style constructors get an empty description.
+      Verify the test helper uses an empty project description when
+      omitted.
 
       :return: None
     """
@@ -402,9 +411,10 @@ class TestProjectContext(unittest.TestCase):
       lambda _project_root, context:
       self.assertEqual('', context.project_description))
 
-  def test_default_project_version_is_0_1_0(self) -> None:
+  def test_helper_uses_0_1_0_project_version_when_omitted(self) -> None:
     """
-      Verify the default version matches CreatePyProjectTomlStep.
+      Verify the test helper uses the CreatePyProjectTomlStep default
+      version when omitted.
 
       :return: None
     """
