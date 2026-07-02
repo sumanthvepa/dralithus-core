@@ -45,7 +45,7 @@ from dralithus.project.packages import Packages
 # pylint: disable-next=too-many-instance-attributes
 class CreatePythonProjectStep(CompositeExecutionStep):
   """
-    Create a complete Milestone 42 Python project.
+    Create a complete Python project.
 
     Wire the leaf and composite project creation steps in dependency
     order and delegate orchestration, rollback, and dry-run validation
