@@ -1,8 +1,8 @@
 """
-  project.py: Define the Project base class.
+  project.py: Define project facade classes.
 """
 # -------------------------------------------------------------------
-# project.py: Define the Project base class.
+# project.py: Define project facade classes.
 #
 # Copyright (C) 2026 Sumanth Vepa.
 #
@@ -20,14 +20,18 @@
 # along with this program.  If not, see
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
-from dralithus.project.execution_step import ExecutionStep
+from abc import ABC, abstractmethod
+from pathlib import Path
+from typing import override
+
 from dralithus.project.context import ProjectContext
-from dralithus.project.error import DralithusProjectError
+from dralithus.project.create_python_project_step import (
+  CreatePythonProjectStep)
 
 
-class Project:  # pylint: disable=too-few-public-methods
+class Project(ABC):  # pylint: disable=too-few-public-methods
   """
-    Represent a project that can be created.
+    Represent the abstract project lifecycle API.
   """
   def __init__(self, context: ProjectContext) -> None:
     """
@@ -37,23 +41,74 @@ class Project:  # pylint: disable=too-few-public-methods
       :return: None
     """
     self._context = context
-    self._creation_steps: list[ExecutionStep] = []
 
+  @abstractmethod
   def create(self, dry_run: bool = False) -> None:
     """
-      Create the project by running its creation steps.
+      Create the project.
 
       :param dry_run: True if creation should report what it would
         do without changing the file system
       :return: None
-      :raises DralithusProjectError: If project creation fails.
+      :raises NotImplementedError: Always, in abstract implementations
     """
-    completed_steps: list[ExecutionStep] = []
-    try:
-      for step in self._creation_steps:
-        step.run(dry_run)
-        completed_steps.append(step)
-    except DralithusProjectError:
-      for step in reversed(completed_steps):
-        step.rollback(dry_run)
-      raise
+    raise NotImplementedError
+
+  @abstractmethod
+  def update(self, dry_run: bool = False) -> None:
+    """
+      Update the project.
+
+      :param dry_run: True if update should report what it would do
+        without changing the file system
+      :return: None
+      :raises NotImplementedError: Always, in abstract implementations
+    """
+    raise NotImplementedError
+
+
+class PythonProject(Project):
+  """
+    Represent a Python project facade.
+  """
+  def __init__(
+      self,
+      context: ProjectContext,
+      python_executable: Path
+  ) -> None:
+    """
+      Initialize the Python project facade.
+
+      :param context: The shared project creation context
+      :param python_executable: The Python executable used to create
+        the project virtual environment
+      :return: None
+    """
+    super().__init__(context)
+    self._create_step = CreatePythonProjectStep(
+      context,
+      python_executable)
+
+  @override
+  def create(self, dry_run: bool = False) -> None:
+    """
+      Create the Python project.
+
+      :param dry_run: True if creation should report what it would
+        do without changing the file system
+      :return: None
+    """
+    self._create_step.run(dry_run)
+
+  @override
+  def update(self, dry_run: bool = False) -> None:
+    """
+      Update the Python project.
+
+      :param dry_run: True if update should report what it would do
+        without changing the file system
+      :return: None
+      :raises NotImplementedError: Always for this release
+    """
+    raise NotImplementedError(
+      'PythonProject.update() is not implemented yet')
