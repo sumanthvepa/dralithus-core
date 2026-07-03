@@ -22,8 +22,13 @@
 # -------------------------------------------------------------------
 from pathlib import Path
 import unittest
+from unittest import mock
 
-from dralithus.project.project import PythonProject
+from dralithus.test.project import project_context
+from dralithus.project.project import Project, PythonProject
+
+
+_MODULE = 'dralithus.project.project'
 
 
 class TestPythonProject(unittest.TestCase):
@@ -33,6 +38,17 @@ class TestPythonProject(unittest.TestCase):
   _PROJECT_CLASS = PythonProject
   _PYTHON = Path('/usr/bin/python3')
 
+  def test_project_is_abstract(self) -> None:
+    """
+      Verify that Project cannot be instantiated directly.
+
+      :return: None
+    """
+    with project_context() as (_project_root, context):
+      with self.assertRaises(TypeError):
+        # noinspection PyAbstractClass
+        Project(context)  # type: ignore[abstract]  # pylint: disable=abstract-class-instantiated
+
   def test_create_delegates_to_create_step_with_dry_run_false(
       self
   ) -> None:
@@ -41,9 +57,12 @@ class TestPythonProject(unittest.TestCase):
 
       :return: None
     """
-    self.fail(
-      'TODO checkpoint 2: add red assertion for '
-      'PythonProject.create(dry_run=False) facade delegation')
+    with project_context() as (_project_root, context):
+      with mock.patch(f'{_MODULE}.CreatePythonProjectStep') as step_class:
+        project = self._PROJECT_CLASS(context, self._PYTHON)
+        project.create(dry_run=False)
+      step_class.assert_called_once_with(context, self._PYTHON)
+      step_class.return_value.run.assert_called_once_with(False)
 
   def test_create_delegates_to_create_step_with_dry_run_true(
       self
@@ -53,9 +72,12 @@ class TestPythonProject(unittest.TestCase):
 
       :return: None
     """
-    self.fail(
-      'TODO checkpoint 2: add red assertion for '
-      'PythonProject.create(dry_run=True) facade delegation')
+    with project_context() as (_project_root, context):
+      with mock.patch(f'{_MODULE}.CreatePythonProjectStep') as step_class:
+        project = self._PROJECT_CLASS(context, self._PYTHON)
+        project.create(dry_run=True)
+      step_class.assert_called_once_with(context, self._PYTHON)
+      step_class.return_value.run.assert_called_once_with(True)
 
   def test_update_raises_not_implemented_error(self) -> None:
     """
@@ -63,6 +85,12 @@ class TestPythonProject(unittest.TestCase):
 
       :return: None
     """
-    self.fail(
-      'TODO checkpoint 2: add red assertion for '
-      'PythonProject.update() placeholder behavior')
+    with project_context() as (_project_root, context):
+      with mock.patch(f'{_MODULE}.CreatePythonProjectStep') as step_class:
+        project = self._PROJECT_CLASS(context, self._PYTHON)
+        with self.assertRaisesRegex(
+            NotImplementedError,
+            r'PythonProject\.update\(\) is not implemented yet'
+        ):
+          project.update()
+      step_class.return_value.run.assert_not_called()
