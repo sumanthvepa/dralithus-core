@@ -21,10 +21,12 @@
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
 from __future__ import annotations
+from pathlib import Path
 from typing import override
 
 from dralithus.command import Command
 from dralithus.command_line.command_line import CommandLine
+from dralithus.errors import CommandLineError, ExitCode
 from dralithus.project.project_config import ProjectConfig
 
 
@@ -106,10 +108,25 @@ class ProjectCommand(Command):
       Execute the project command.
 
       :return: The program exit code
-      :raises NotImplementedError: Always in this checkpoint
     """
-    raise NotImplementedError(
-      'ProjectCommand.execute() is not implemented yet')
+    project = self.config.project()
+    project.create(dry_run=self.dry_run)
+    return ExitCode.SUCCESS
+
+
+def _command_error(cmdln: CommandLine, message: str) -> CommandLineError:
+  """
+    Build a command-line error for the project command.
+
+    :param cmdln: The parsed command line
+    :param message: The validation error message
+    :return: The command-line error to raise
+  """
+  return CommandLineError(
+    cmdln.program,
+    cmdln.command_name,
+    cmdln.verbosity,
+    message)
 
 
 def make(cmdln: CommandLine) -> ProjectCommand:
@@ -118,7 +135,24 @@ def make(cmdln: CommandLine) -> ProjectCommand:
 
     :param cmdln: The parsed command line
     :return: The project command
-    :raises NotImplementedError: Always in this checkpoint
+    :raises CommandLineError: When the command line is invalid
   """
-  raise NotImplementedError(
-    'project_command.make() is not implemented yet')
+  create_project = cmdln.command_options.get('create_project', False)
+  assert isinstance(create_project, bool)
+  dry_run = cmdln.command_options.get('dry_run', False)
+  assert isinstance(dry_run, bool)
+
+  if cmdln.command_name != 'project':
+    raise _command_error(cmdln, 'Unknown command \'project\' specified')
+  if not create_project:
+    raise _command_error(
+      cmdln,
+      'No project action specified. Please specify --create.')
+  if len(cmdln.parameters) != 1:
+    raise _command_error(
+      cmdln,
+      'Exactly one project config file must be specified.')
+
+  config_parameter = next(iter(cmdln.parameters))
+  config = ProjectConfig.from_toml_file(Path(config_parameter))
+  return ProjectCommand(config, create_project, dry_run, cmdln.verbosity)

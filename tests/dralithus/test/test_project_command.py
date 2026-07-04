@@ -117,10 +117,10 @@ class TestProjectCommand(unittest.TestCase):
       'dralithus.project_command.ProjectConfig.from_toml_file',
       return_value=config
     ) as from_toml_file:
-      with self.assertRaises(NotImplementedError):
-        make(cmdln)
+      command = make(cmdln)
 
     from_toml_file.assert_called_once_with(Path('project.toml'))
+    self.assertEqual(config, command.config)
 
   def test_make_passes_dry_run_flag_to_project_command(self) -> None:
     """
