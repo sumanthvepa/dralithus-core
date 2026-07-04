@@ -216,11 +216,21 @@ class Option(ABC):
     # to avoid circular imports.
     # pylint: disable=import-outside-toplevel
     from dralithus.command_line.option_terminator import OptionTerminator
+    from dralithus.command_line.create_option import CreateOption
+    from dralithus.command_line.dry_run_option import DryRunOption
     from dralithus.command_line.help_option import HelpOption
     from dralithus.command_line.verbosity_option import VerbosityOption
     from dralithus.command_line.environment_option import EnvironmentOption
     from dralithus.command_line.multi_option import MultiOption
-    return [OptionTerminator, HelpOption, VerbosityOption, EnvironmentOption, MultiOption]
+    return [
+      OptionTerminator,
+      CreateOption,
+      DryRunOption,
+      HelpOption,
+      VerbosityOption,
+      EnvironmentOption,
+      MultiOption,
+    ]
 
   @staticmethod
   def type_of(arg: str, next_arg: str | None) -> type[Option] | None:
