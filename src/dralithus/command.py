@@ -109,13 +109,13 @@ def make(args: list[str]) -> Command:
     :return: The command object
   """
   # We import the command modules here to avoid circular imports.
-  # pylint: disable-next=import-outside-toplevel
+  # pylint: disable-next=import-outside-toplevel, cyclic-import
   from dralithus.help_command import (
     make_from_command_line as make_help_from_command_line,
     make_from_error as make_help_from_error)
-  # pylint: disable-next=import-outside-toplevel
+  # pylint: disable-next=import-outside-toplevel, cyclic-import
   from dralithus.deploy_command import make as make_deploy
-  # pylint: disable-next=import-outside-toplevel
+  # pylint: disable-next=import-outside-toplevel, cyclic-import
   from dralithus.project_command import make as make_project
 
   try:
