@@ -307,9 +307,23 @@ class TestCopyrightHeader(unittest.TestCase):
 
       :return: None
     """
-    self.fail(
-      'TODO checkpoint 2: add red assertion for '
-      'CopyrightHeader.from_license("GPL-3.0-or-later", ...)')
+    header = self._header_from_template(self._TEMPLATE)
+    with mock.patch.object(
+      CopyrightHeader,
+      'from_template_resource',
+      return_value=header
+    ) as from_template_resource:
+      result = CopyrightHeader.from_license(
+        'GPL-3.0-or-later',
+        self._COPYRIGHT_HOLDER,
+        self._COPYRIGHT_YEAR)
+
+    self.assertIs(header, result)
+    from_template_resource.assert_called_once_with(
+      'dralithus.project.templates',
+      'GPL-3.0-or-later.txt',
+      self._COPYRIGHT_HOLDER,
+      self._COPYRIGHT_YEAR)
 
   def test_from_license_supports_unlicensed(self) -> None:
     """
@@ -317,9 +331,23 @@ class TestCopyrightHeader(unittest.TestCase):
 
       :return: None
     """
-    self.fail(
-      'TODO checkpoint 2: add red assertion for '
-      'CopyrightHeader.from_license("UNLICENSED", ...)')
+    header = self._header_from_template(self._TEMPLATE)
+    with mock.patch.object(
+      CopyrightHeader,
+      'from_template_resource',
+      return_value=header
+    ) as from_template_resource:
+      result = CopyrightHeader.from_license(
+        'UNLICENSED',
+        self._COPYRIGHT_HOLDER,
+        self._COPYRIGHT_YEAR)
+
+    self.assertIs(header, result)
+    from_template_resource.assert_called_once_with(
+      'dralithus.project.templates',
+      'UNLICENSED.txt',
+      self._COPYRIGHT_HOLDER,
+      self._COPYRIGHT_YEAR)
 
   def test_from_license_rejects_unsupported_license(self) -> None:
     """
@@ -327,6 +355,11 @@ class TestCopyrightHeader(unittest.TestCase):
 
       :return: None
     """
-    self.fail(
-      'TODO checkpoint 2: add red assertion for '
-      'CopyrightHeader.from_license() unsupported-license rejection')
+    with self.assertRaisesRegex(
+      DralithusProjectError,
+      'Unsupported copyright license: MIT'
+    ):
+      CopyrightHeader.from_license(
+        'MIT',
+        self._COPYRIGHT_HOLDER,
+        self._COPYRIGHT_YEAR)
