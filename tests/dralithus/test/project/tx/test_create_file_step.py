@@ -22,7 +22,16 @@
 # along with this program.  If not, see
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
+from importlib import resources
+from pathlib import Path
+from typing import IO
 import unittest
+from unittest import mock
+
+from dralithus.test.project import FailingWriteFile, project_context
+from dralithus.project.error import DralithusProjectError
+from dralithus.project.tx.create_file_step import CreateFileStep
+from dralithus.project.tx.project_state import ProjectState
 
 
 # pylint: disable-next=too-many-public-methods
@@ -39,6 +48,34 @@ class TestCreateFileStep(unittest.TestCase):
     symlink, dangling-symlink, and TOCTOU re-verification cases are
     carried over from the old suite.
   """
+  _FILENAME = Path('config.ini')
+  _CONTENT = 'setting = value\n'
+
+  def _target(self, project_root: Path) -> Path:
+    """
+      Return the target path for a test project root.
+
+      :param project_root: The project root directory
+      :return: The target file path
+    """
+    return project_root / self._FILENAME
+
+  @staticmethod
+  def _prepare_and_commit(
+      step: CreateFileStep,
+      project_root: Path
+  ) -> None:
+    """
+      Prepare a step against a fresh state and commit it.
+
+      :param step: The step to prepare and commit
+      :param project_root: The project root directory
+      :return: None
+      :raises DralithusProjectError: When prepare or commit fails
+    """
+    step.prepare(ProjectState(project_root))
+    step.commit()
+
   # constructor and factories
 
   def test_init_rejects_absolute_filename(self) -> None:
@@ -47,7 +84,10 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      with self.assertRaises(DralithusProjectError):
+        CreateFileStep(
+          context, project_root / self._FILENAME, self._CONTENT)
 
   def test_from_file_reads_source_content(self) -> None:
     """
@@ -56,7 +96,16 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      source = project_root / 'source.txt'
+      source.write_text(self._CONTENT, encoding='utf-8')
+      step = CreateFileStep.from_file(context, self._FILENAME, source)
+
+      self._prepare_and_commit(step, project_root)
+
+      self.assertEqual(
+        self._CONTENT,
+        self._target(project_root).read_text(encoding='utf-8'))
 
   def test_from_file_wraps_source_read_failure(self) -> None:
     """
@@ -64,7 +113,11 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      source = project_root / 'missing.txt'
+
+      with self.assertRaises(DralithusProjectError):
+        CreateFileStep.from_file(context, self._FILENAME, source)
 
   def test_from_resource_reads_resource_content(self) -> None:
     """
@@ -73,7 +126,22 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      step = CreateFileStep.from_resource(
+        context,
+        self._FILENAME,
+        'dralithus.project',
+        'error.py')
+
+      self._prepare_and_commit(step, project_root)
+
+      expected = (
+        Path(__file__).parents[5]
+        / 'src' / 'dralithus' / 'project' / 'error.py'
+      ).read_text(encoding='utf-8')
+      self.assertEqual(
+        expected,
+        self._target(project_root).read_text(encoding='utf-8'))
 
   def test_from_resource_wraps_resource_read_failure(self) -> None:
     """
@@ -81,7 +149,13 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (_project_root, context):
+      with self.assertRaises(DralithusProjectError):
+        CreateFileStep.from_resource(
+          context,
+          self._FILENAME,
+          'dralithus.project',
+          'missing-resource.txt')
 
   def test_from_template_resource_renders_context_values(self) -> None:
     """
@@ -90,7 +164,29 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context(venv_name='env') as (project_root, context):
+      template_directory = project_root / 'templates'
+      template_directory.mkdir()
+      template = template_directory / 'config.ini.j2'
+      template.write_text(
+        'root={{ project_root }}\n'
+        'venv={{ venv_name }}\n',
+        encoding='utf-8')
+      with mock.patch.object(
+        resources, 'files', return_value=template_directory
+      ):
+        step = CreateFileStep.from_template_resource(
+          context,
+          self._FILENAME,
+          'example.templates',
+          'config.ini.j2')
+
+      self._prepare_and_commit(step, project_root)
+
+      self.assertEqual(
+        f'root={project_root}\n'
+        'venv=env\n',
+        self._target(project_root).read_text(encoding='utf-8'))
 
   def test_from_template_resource_wraps_resource_read_failure(
     self
@@ -100,7 +196,13 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (_project_root, context):
+      with self.assertRaises(DralithusProjectError):
+        CreateFileStep.from_template_resource(
+          context,
+          self._FILENAME,
+          'dralithus.project',
+          'missing-resource.txt')
 
   # prepare
 
@@ -111,7 +213,13 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      step = CreateFileStep(context, self._FILENAME, self._CONTENT)
+      state = ProjectState(project_root)
+
+      step.prepare(state)
+
+      self.assertTrue(state.is_file(self._target(project_root)))
 
   def test_prepare_creates_nothing_on_disk(self) -> None:
     """
@@ -119,7 +227,12 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      step = CreateFileStep(context, self._FILENAME, self._CONTENT)
+
+      step.prepare(ProjectState(project_root))
+
+      self.assertFalse(self._target(project_root).exists())
 
   def test_prepare_accepts_claimed_parent_directory(self) -> None:
     """
@@ -128,7 +241,15 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      filename = Path('src') / self._FILENAME
+      step = CreateFileStep(context, filename, self._CONTENT)
+      state = ProjectState(project_root)
+      state.claim_directory(project_root / 'src')
+
+      step.prepare(state)
+
+      self.assertTrue(state.is_file(project_root / filename))
 
   def test_prepare_reports_missing_parent_directory(self) -> None:
     """
@@ -137,7 +258,16 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      filename = Path('missing') / self._FILENAME
+      step = CreateFileStep(context, filename, self._CONTENT)
+
+      with self.assertRaisesRegex(
+        DralithusProjectError,
+        f'Parent directory does not exist: '
+        f'{project_root / filename.parent}'
+      ):
+        step.prepare(ProjectState(project_root))
 
   def test_prepare_reports_parent_path_that_is_not_directory(
     self
@@ -147,7 +277,19 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      parent = project_root / 'parent'
+      parent.write_text('not a directory\n', encoding='utf-8')
+      step = CreateFileStep(
+        context,
+        Path(parent.name) / self._FILENAME,
+        self._CONTENT)
+
+      with self.assertRaisesRegex(
+        DralithusProjectError,
+        f'Parent path is not a directory: {parent}'
+      ):
+        step.prepare(ProjectState(project_root))
 
   def test_prepare_accepts_valid_symlink_to_parent_directory(
     self
@@ -158,7 +300,19 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      real_parent = project_root / 'real-parent'
+      real_parent.mkdir()
+      (project_root / 'linked-parent').symlink_to(
+        real_parent, target_is_directory=True)
+      filename = Path('linked-parent') / self._FILENAME
+      step = CreateFileStep(context, filename, self._CONTENT)
+
+      self._prepare_and_commit(step, project_root)
+
+      self.assertEqual(
+        self._CONTENT,
+        (real_parent / self._FILENAME).read_text(encoding='utf-8'))
 
   def test_prepare_accepts_preexisting_regular_file(self) -> None:
     """
@@ -167,7 +321,15 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      target = self._target(project_root)
+      target.write_text('user content\n', encoding='utf-8')
+      step = CreateFileStep(context, self._FILENAME, self._CONTENT)
+      state = ProjectState(project_root)
+
+      step.prepare(state)
+
+      self.assertTrue(state.is_file(target))
 
   def test_prepare_accepts_valid_symlink_to_regular_file(self) -> None:
     """
@@ -176,7 +338,13 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      symlink_target = project_root / 'user-config.ini'
+      symlink_target.write_text('user content\n', encoding='utf-8')
+      self._target(project_root).symlink_to(symlink_target)
+      step = CreateFileStep(context, self._FILENAME, self._CONTENT)
+
+      step.prepare(ProjectState(project_root))
 
   def test_prepare_rejects_target_directory(self) -> None:
     """
@@ -184,7 +352,12 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      self._target(project_root).mkdir()
+      step = CreateFileStep(context, self._FILENAME, self._CONTENT)
+
+      with self.assertRaises(DralithusProjectError):
+        step.prepare(ProjectState(project_root))
 
   def test_prepare_rejects_dangling_target_symlink(self) -> None:
     """
@@ -192,7 +365,13 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      target = self._target(project_root)
+      target.symlink_to(project_root / 'missing-target')
+      step = CreateFileStep(context, self._FILENAME, self._CONTENT)
+
+      with self.assertRaises(DralithusProjectError):
+        step.prepare(ProjectState(project_root))
 
   def test_prepare_rejects_symlink_to_non_regular_target(self) -> None:
     """
@@ -200,7 +379,15 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      directory = project_root / 'directory'
+      directory.mkdir()
+      self._target(project_root).symlink_to(
+        directory, target_is_directory=True)
+      step = CreateFileStep(context, self._FILENAME, self._CONTENT)
+
+      with self.assertRaises(DralithusProjectError):
+        step.prepare(ProjectState(project_root))
 
   def test_prepare_wraps_target_read_failure(self) -> None:
     """
@@ -208,7 +395,26 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      target = self._target(project_root)
+      target.write_text('user content\n', encoding='utf-8')
+      step = CreateFileStep(context, self._FILENAME, self._CONTENT)
+      state = ProjectState(project_root)
+      real_open = Path.open
+
+      def fail_target_read(
+        path: Path,
+        mode: str = 'r',
+        encoding: str | None = None
+      ) -> IO[str]:
+        if path == target and mode == 'r':
+          raise OSError('simulated read failure')
+        # noinspection PyTypeChecker
+        return real_open(path, mode, encoding=encoding)
+
+      with mock.patch.object(Path, 'open', fail_target_read):
+        with self.assertRaises(DralithusProjectError):
+          step.prepare(state)
 
   # commit
 
@@ -219,7 +425,14 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      step = CreateFileStep(context, self._FILENAME, self._CONTENT)
+
+      self._prepare_and_commit(step, project_root)
+
+      self.assertEqual(
+        self._CONTENT,
+        self._target(project_root).read_text(encoding='utf-8'))
 
   def test_commit_preserves_trailing_newline(self) -> None:
     """
@@ -228,7 +441,15 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      content = 'first line\nsecond line\n'
+      step = CreateFileStep(context, self._FILENAME, content)
+
+      self._prepare_and_commit(step, project_root)
+
+      self.assertEqual(
+        content,
+        self._target(project_root).read_text(encoding='utf-8'))
 
   def test_commit_preserves_preexisting_regular_file(self) -> None:
     """
@@ -237,7 +458,15 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      target = self._target(project_root)
+      target.write_text('user content\n', encoding='utf-8')
+      step = CreateFileStep(context, self._FILENAME, self._CONTENT)
+
+      self._prepare_and_commit(step, project_root)
+
+      self.assertEqual(
+        'user content\n', target.read_text(encoding='utf-8'))
 
   def test_commit_preserves_valid_symlink_to_regular_file(self) -> None:
     """
@@ -245,7 +474,18 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      symlink_target = project_root / 'user-config.ini'
+      symlink_target.write_text('user content\n', encoding='utf-8')
+      target = self._target(project_root)
+      target.symlink_to(symlink_target)
+      step = CreateFileStep(context, self._FILENAME, self._CONTENT)
+
+      self._prepare_and_commit(step, project_root)
+
+      self.assertTrue(target.is_symlink())
+      self.assertEqual(
+        'user content\n', symlink_target.read_text(encoding='utf-8'))
 
   def test_commit_write_failure_removes_created_file(self) -> None:
     """
@@ -254,7 +494,30 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    real_open = Path.open
+
+    def failing_open(
+      path: Path,
+      mode: str = 'r',
+      encoding: str | None = None
+    ) -> object:
+      # The wrapper (or the caller) is responsible for closing.
+      # noinspection PyTypeChecker
+      # pylint: disable-next=consider-using-with
+      file = real_open(path, mode, encoding=encoding)
+      if mode == 'x':
+        return FailingWriteFile(file)
+      return file
+
+    with project_context() as (project_root, context):
+      step = CreateFileStep(context, self._FILENAME, self._CONTENT)
+      step.prepare(ProjectState(project_root))
+
+      with mock.patch.object(Path, 'open', failing_open):
+        with self.assertRaises(DralithusProjectError):
+          step.commit()
+
+      self.assertFalse(self._target(project_root).exists())
 
   def test_commit_rejects_unacceptable_file_created_after_prepare(
     self
@@ -265,7 +528,16 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      step = CreateFileStep(context, self._FILENAME, self._CONTENT)
+      step.prepare(ProjectState(project_root))
+
+      self._target(project_root).mkdir()
+
+      with self.assertRaises(DralithusProjectError):
+        step.commit()
+
+      self.assertTrue(self._target(project_root).is_dir())
 
   def test_failed_commit_clears_ownership_and_can_be_retried(
     self
@@ -275,7 +547,36 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      target = self._target(project_root)
+      step = CreateFileStep(context, self._FILENAME, self._CONTENT)
+      step.prepare(ProjectState(project_root))
+      real_open = Path.open
+      fail_write = True
+
+      def fail_first_write(
+        path: Path,
+        mode: str = 'r',
+        encoding: str | None = None
+      ) -> object:
+        nonlocal fail_write
+        # The wrapper (or the caller) is responsible for closing.
+        # noinspection PyTypeChecker
+        # pylint: disable-next=consider-using-with
+        file = real_open(path, mode, encoding=encoding)
+        if mode == 'x' and fail_write:
+          fail_write = False
+          return FailingWriteFile(file)
+        return file
+
+      with mock.patch.object(Path, 'open', fail_first_write):
+        with self.assertRaises(DralithusProjectError):
+          step.commit()
+        step.commit()
+
+      self.assertTrue(target.exists())
+      step.abort()
+      self.assertFalse(target.exists())
 
   def test_repeated_commits_are_convergent_and_abort_removes_file(
     self
@@ -286,7 +587,16 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      target = self._target(project_root)
+      step = CreateFileStep(context, self._FILENAME, self._CONTENT)
+
+      step.prepare(ProjectState(project_root))
+      step.commit()
+      step.commit()
+      step.abort()
+
+      self.assertFalse(target.exists())
 
   # abort
 
@@ -296,7 +606,13 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      step = CreateFileStep(context, self._FILENAME, self._CONTENT)
+
+      self._prepare_and_commit(step, project_root)
+      step.abort()
+
+      self.assertFalse(self._target(project_root).exists())
 
   def test_abort_preserves_preexisting_file(self) -> None:
     """
@@ -304,7 +620,16 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      target = self._target(project_root)
+      target.write_text('user content\n', encoding='utf-8')
+      step = CreateFileStep(context, self._FILENAME, self._CONTENT)
+
+      self._prepare_and_commit(step, project_root)
+      step.abort()
+
+      self.assertEqual(
+        'user content\n', target.read_text(encoding='utf-8'))
 
   def test_abort_preserves_preexisting_valid_symlink(self) -> None:
     """
@@ -312,7 +637,19 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      symlink_target = project_root / 'user-config.ini'
+      symlink_target.write_text('user content\n', encoding='utf-8')
+      target = self._target(project_root)
+      target.symlink_to(symlink_target)
+      step = CreateFileStep(context, self._FILENAME, self._CONTENT)
+
+      self._prepare_and_commit(step, project_root)
+      step.abort()
+
+      self.assertTrue(target.is_symlink())
+      self.assertEqual(
+        'user content\n', symlink_target.read_text(encoding='utf-8'))
 
   def test_abort_accepts_created_file_removed_externally(self) -> None:
     """
@@ -321,7 +658,15 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      target = self._target(project_root)
+      step = CreateFileStep(context, self._FILENAME, self._CONTENT)
+
+      self._prepare_and_commit(step, project_root)
+      target.unlink()
+      step.abort()
+
+      self.assertFalse(target.exists())
 
   def test_abort_wraps_removal_failure(self) -> None:
     """
@@ -329,7 +674,24 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      target = self._target(project_root)
+      step = CreateFileStep(context, self._FILENAME, self._CONTENT)
+      self._prepare_and_commit(step, project_root)
+      real_unlink = Path.unlink
+
+      def fail_target_unlink(
+        path: Path,
+        missing_ok: bool = False
+      ) -> None:
+        if path == target:
+          raise OSError('simulated removal failure')
+        # noinspection PyTypeChecker
+        real_unlink(path, missing_ok=missing_ok)
+
+      with mock.patch.object(Path, 'unlink', fail_target_unlink):
+        with self.assertRaises(DralithusProjectError):
+          step.abort()
 
   def test_abort_clears_ownership_and_preserves_recreated_file(
     self
@@ -340,7 +702,20 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      target = self._target(project_root)
+      step = CreateFileStep(context, self._FILENAME, self._CONTENT)
+
+      self._prepare_and_commit(step, project_root)
+      step.abort()
+
+      target.write_text('foreign user content\n', encoding='utf-8')
+      step.abort()
+
+      self.assertTrue(target.exists())
+      self.assertEqual(
+        'foreign user content\n',
+        target.read_text(encoding='utf-8'))
 
   def test_abort_without_commit_changes_nothing(self) -> None:
     """
@@ -348,4 +723,13 @@ class TestCreateFileStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      target = self._target(project_root)
+      target.write_text('user content\n', encoding='utf-8')
+      step = CreateFileStep(context, self._FILENAME, self._CONTENT)
+
+      step.prepare(ProjectState(project_root))
+      step.abort()
+
+      self.assertEqual(
+        'user content\n', target.read_text(encoding='utf-8'))

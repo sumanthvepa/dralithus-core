@@ -24,6 +24,12 @@
 # -------------------------------------------------------------------
 import unittest
 
+from dralithus.test.project import project_context
+from dralithus.test.project.tx import RecordingStep
+from dralithus.project.error import DralithusProjectError
+from dralithus.project.tx.execution_step import execute
+from dralithus.project.tx.project_state import ProjectState
+
 
 class TestExecute(unittest.TestCase):
   """
@@ -42,7 +48,13 @@ class TestExecute(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    log: list[str] = []
+    with project_context() as (_project_root, context):
+      step = RecordingStep(context, 'a', log)
+
+      execute(step, context)
+
+    self.assertEqual(['prepare a', 'commit a'], log)
 
   def test_execute_dry_run_prepares_only(self) -> None:
     """
@@ -51,7 +63,13 @@ class TestExecute(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    log: list[str] = []
+    with project_context() as (_project_root, context):
+      step = RecordingStep(context, 'a', log)
+
+      execute(step, context, dry_run=True)
+
+    self.assertEqual(['prepare a'], log)
 
   def test_execute_passes_state_rooted_at_project_root(self) -> None:
     """
@@ -60,7 +78,18 @@ class TestExecute(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    log: list[str] = []
+    with project_context() as (project_root, context):
+      step = RecordingStep(context, 'a', log)
+
+      execute(step, context)
+
+      state = step.prepared_states[0]
+      self.assertIsInstance(state, ProjectState)
+      state.claim_file(project_root / 'marker.txt')
+      self.assertTrue(state.is_file(project_root / 'marker.txt'))
+      with self.assertRaises(DralithusProjectError):
+        state.claim_file(project_root.parent / 'marker.txt')
 
   def test_execute_aborts_step_and_reraises_on_commit_failure(
     self
@@ -71,7 +100,16 @@ class TestExecute(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    log: list[str] = []
+    with project_context() as (_project_root, context):
+      step = RecordingStep(context, 'a', log, fails_in='commit')
+
+      with self.assertRaisesRegex(
+        DralithusProjectError, 'a commit failed'
+      ):
+        execute(step, context)
+
+    self.assertEqual(['prepare a', 'commit a', 'abort a'], log)
 
   def test_execute_does_not_abort_on_prepare_failure(self) -> None:
     """
@@ -80,4 +118,13 @@ class TestExecute(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    log: list[str] = []
+    with project_context() as (_project_root, context):
+      step = RecordingStep(context, 'a', log, fails_in='prepare')
+
+      with self.assertRaisesRegex(
+        DralithusProjectError, 'a prepare failed'
+      ):
+        execute(step, context)
+
+    self.assertEqual(['prepare a'], log)

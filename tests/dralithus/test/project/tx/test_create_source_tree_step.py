@@ -22,7 +22,16 @@
 # along with this program.  If not, see
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
+from pathlib import Path
 import unittest
+from unittest import mock
+
+from dralithus.test.project import FailingWriteFile, project_context
+from dralithus.project.error import DralithusProjectError
+from dralithus.project.tx.create_source_tree_step import (
+  CreateSourceTreeStep)
+from dralithus.project.tx.execution_step import execute
+from dralithus.project.tx.project_state import ProjectState
 
 
 class TestCreateSourceTreeStep(unittest.TestCase):
@@ -37,6 +46,58 @@ class TestCreateSourceTreeStep(unittest.TestCase):
     failure cleaned up by the single global abort. The children's
     exhaustive file-type handling is covered by their own suites.
   """
+  _PACKAGE_NAME = 'sample'
+
+  @classmethod
+  def _src(cls, project_root: Path) -> Path:
+    """
+      Return the src directory path.
+
+      :param project_root: The project root directory
+      :return: The src directory path
+    """
+    return project_root / 'src'
+
+  @classmethod
+  def _src_package(cls, project_root: Path) -> Path:
+    """
+      Return the src/<package_name> directory path.
+
+      :param project_root: The project root directory
+      :return: The src package directory path
+    """
+    return cls._src(project_root) / cls._PACKAGE_NAME
+
+  @classmethod
+  def _src_gitignore(cls, project_root: Path) -> Path:
+    """
+      Return the src/.gitignore path.
+
+      :param project_root: The project root directory
+      :return: The src .gitignore path
+    """
+    return cls._src(project_root) / '.gitignore'
+
+  @classmethod
+  def _src_package_gitignore(cls, project_root: Path) -> Path:
+    """
+      Return the src/<package_name>/.gitignore path.
+
+      :param project_root: The project root directory
+      :return: The src package .gitignore path
+    """
+    return cls._src_package(project_root) / '.gitignore'
+
+  @classmethod
+  def _src_package_init(cls, project_root: Path) -> Path:
+    """
+      Return the src/<package_name>/__init__.py path.
+
+      :param project_root: The project root directory
+      :return: The src package __init__.py path
+    """
+    return cls._src_package(project_root) / '__init__.py'
+
   # execute: real run
 
   def test_execute_creates_full_source_tree(self) -> None:
@@ -46,7 +107,16 @@ class TestCreateSourceTreeStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      step = CreateSourceTreeStep(context)
+
+      execute(step, context)
+
+      self.assertTrue(self._src(project_root).is_dir())
+      self.assertTrue(self._src_package(project_root).is_dir())
+      self.assertTrue(self._src_gitignore(project_root).is_file())
+      self.assertTrue(
+        self._src_package_gitignore(project_root).is_file())
 
   def test_execute_creates_namespace_package_without_init_py(
     self
@@ -58,7 +128,13 @@ class TestCreateSourceTreeStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      step = CreateSourceTreeStep(context)
+
+      execute(step, context)
+
+      self.assertTrue(self._src_package(project_root).is_dir())
+      self.assertFalse(self._src_package_init(project_root).exists())
 
   def test_execute_creates_empty_gitignore_files(self) -> None:
     """
@@ -66,7 +142,18 @@ class TestCreateSourceTreeStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      step = CreateSourceTreeStep(context)
+
+      execute(step, context)
+
+      self.assertEqual(
+        '',
+        self._src_gitignore(project_root).read_text(encoding='utf-8'))
+      self.assertEqual(
+        '',
+        self._src_package_gitignore(project_root).read_text(
+          encoding='utf-8'))
 
   def test_execute_preserves_preexisting_src_and_gitignore(
     self
@@ -77,7 +164,20 @@ class TestCreateSourceTreeStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      self._src(project_root).mkdir()
+      self._src_gitignore(project_root).write_text(
+        'user ignore\n', encoding='utf-8')
+      step = CreateSourceTreeStep(context)
+
+      execute(step, context)
+
+      self.assertEqual(
+        'user ignore\n',
+        self._src_gitignore(project_root).read_text(encoding='utf-8'))
+      self.assertTrue(self._src_package(project_root).is_dir())
+      self.assertTrue(
+        self._src_package_gitignore(project_root).is_file())
 
   def test_execute_aborts_all_owned_work_on_mid_commit_failure(
     self
@@ -89,7 +189,31 @@ class TestCreateSourceTreeStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    real_open = Path.open
+
+    with project_context() as (project_root, context):
+      failing_path = self._src_package_gitignore(project_root)
+
+      def failing_open(
+        path: Path,
+        mode: str = 'r',
+        encoding: str | None = None
+      ) -> object:
+        # The wrapper (or the caller) is responsible for closing.
+        # noinspection PyTypeChecker
+        # pylint: disable-next=consider-using-with
+        file = real_open(path, mode, encoding=encoding)
+        if mode == 'x' and path == failing_path:
+          return FailingWriteFile(file)
+        return file
+
+      step = CreateSourceTreeStep(context)
+
+      with mock.patch.object(Path, 'open', failing_open):
+        with self.assertRaises(DralithusProjectError):
+          execute(step, context)
+
+      self.assertFalse(self._src(project_root).exists())
 
   def test_execute_prepare_failure_leaves_disk_untouched(self) -> None:
     """
@@ -98,7 +222,19 @@ class TestCreateSourceTreeStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      # A directory at src/.gitignore is caught by prepare, before
+      # any commit runs; under the old hierarchy this same scenario
+      # failed midway through the run and needed rollback.
+      self._src_gitignore(project_root).mkdir(parents=True)
+      step = CreateSourceTreeStep(context)
+
+      with self.assertRaises(DralithusProjectError):
+        execute(step, context)
+
+      self.assertTrue(self._src(project_root).is_dir())
+      self.assertTrue(self._src_gitignore(project_root).is_dir())
+      self.assertFalse(self._src_package(project_root).exists())
 
   # execute: dry run
 
@@ -112,7 +248,12 @@ class TestCreateSourceTreeStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      step = CreateSourceTreeStep(context)
+
+      execute(step, context, dry_run=True)
+
+      self.assertFalse(self._src(project_root).exists())
 
   def test_execute_dry_run_rejects_unusable_existing_target(
     self
@@ -123,7 +264,12 @@ class TestCreateSourceTreeStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      self._src_gitignore(project_root).mkdir(parents=True)
+      step = CreateSourceTreeStep(context)
+
+      with self.assertRaises(DralithusProjectError):
+        execute(step, context, dry_run=True)
 
   # abort
 
@@ -134,7 +280,15 @@ class TestCreateSourceTreeStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      step = CreateSourceTreeStep(context)
+
+      step.prepare(ProjectState(project_root))
+      step.commit()
+      step.abort()
+
+      self.assertFalse(self._src(project_root).exists())
+      self.assertFalse(self._src_package(project_root).exists())
 
   def test_abort_preserves_preexisting_artifacts(self) -> None:
     """
@@ -143,4 +297,18 @@ class TestCreateSourceTreeStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      self._src(project_root).mkdir()
+      self._src_gitignore(project_root).write_text(
+        'user ignore\n', encoding='utf-8')
+      step = CreateSourceTreeStep(context)
+
+      step.prepare(ProjectState(project_root))
+      step.commit()
+      step.abort()
+
+      self.assertTrue(self._src(project_root).is_dir())
+      self.assertEqual(
+        'user ignore\n',
+        self._src_gitignore(project_root).read_text(encoding='utf-8'))
+      self.assertFalse(self._src_package(project_root).exists())
