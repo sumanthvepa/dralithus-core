@@ -223,3 +223,31 @@ class CopyrightHeader:
         f'Could not read copyright header resource: {package}/{resource}'
       ) from error
     return cls(template, copyright_holder, copyright_year)
+
+  @classmethod
+  def from_license(
+    cls,
+    license_id: str,
+    copyright_holder: str,
+    copyright_year: int
+  ) -> Self:
+    """
+      Create a copyright header renderer from a license identifier.
+
+      This is the command-facing factory for supported project
+      licenses such as GPL-3.0-or-later and UNLICENSED. The concrete
+      license-to-template mapping is intentionally left unimplemented
+      in this skeleton.
+
+      :param license_id: The supported project license identifier
+      :param copyright_holder: The copyright holder name
+      :param copyright_year: The copyright year
+      :return: The configured copyright header renderer
+      :raises NotImplementedError: Always in this skeleton
+    """
+    del cls
+    del license_id
+    del copyright_holder
+    del copyright_year
+    raise NotImplementedError(
+      'CopyrightHeader.from_license() is not implemented yet')
