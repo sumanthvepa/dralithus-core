@@ -25,6 +25,7 @@
 from abc import ABC, abstractmethod
 
 from dralithus.project.context import ProjectContext
+from dralithus.project.error import DralithusProjectError
 from dralithus.project.tx.project_state import ProjectState
 
 
@@ -91,7 +92,6 @@ class ExecutionStep(ABC):
       'abort() must be implemented in derived class')
 
 
-# pylint: disable-next=unused-argument
 def execute(
     step: ExecutionStep,
     context: ProjectContext,
@@ -113,4 +113,11 @@ def execute(
     :raises DralithusProjectError: When prepare or commit fails; on
       a commit failure the whole tree is aborted before re-raising
   """
-  raise NotImplementedError('execute() is not implemented yet')
+  state = ProjectState(context.project_root)
+  step.prepare(state)
+  if not dry_run:
+    try:
+      step.commit()
+    except DralithusProjectError:
+      step.abort()
+      raise

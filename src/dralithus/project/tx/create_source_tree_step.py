@@ -20,9 +20,14 @@
 # along with this program.  If not, see
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
+from pathlib import Path
+
 from dralithus.project.context import ProjectContext
 from dralithus.project.tx.composite_execution_step import (
   CompositeExecutionStep)
+from dralithus.project.tx.create_gitignore_file_step import (
+  CreateGitIgnoreFileStep)
+from dralithus.project.tx.mkdir_step import MkdirStep
 
 
 class CreateSourceTreeStep(CompositeExecutionStep):
@@ -36,7 +41,6 @@ class CreateSourceTreeStep(CompositeExecutionStep):
     all phase logic, ownership, and rollback live in the children
     and in CompositeExecutionStep.
   """
-  # pylint: disable-next=super-init-not-called,unused-argument
   def __init__(self, context: ProjectContext) -> None:
     """
       Initialize the source tree creation step.
@@ -44,5 +48,9 @@ class CreateSourceTreeStep(CompositeExecutionStep):
       :param context: The shared project creation context
       :return: None
     """
-    raise NotImplementedError(
-      'CreateSourceTreeStep.__init__() is not implemented yet')
+    package = Path('src') / context.package_name
+    super().__init__(
+      context,
+      (MkdirStep(context, package),
+       CreateGitIgnoreFileStep(context, Path('src')),
+       CreateGitIgnoreFileStep(context, package)))

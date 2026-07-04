@@ -43,7 +43,6 @@ class CompositeExecutionStep(ExecutionStep):
     commit() deliberately does no failure handling: the execute()
     driver owns the one global abort path.
   """
-  # pylint: disable-next=super-init-not-called,unused-argument
   def __init__(
       self,
       context: ProjectContext,
@@ -56,8 +55,8 @@ class CompositeExecutionStep(ExecutionStep):
       :param steps: The child steps, in dependency order
       :return: None
     """
-    raise NotImplementedError(
-      'CompositeExecutionStep.__init__() is not implemented yet')
+    super().__init__(context)
+    self._steps = steps
 
   @override
   def prepare(self, state: ProjectState) -> None:
@@ -69,8 +68,8 @@ class CompositeExecutionStep(ExecutionStep):
       :raises DralithusProjectError: When a child step cannot be
         satisfied given the current-or-projected state
     """
-    raise NotImplementedError(
-      'prepare() is not implemented yet')
+    for step in self._steps:
+      step.prepare(state)
 
   @override
   def commit(self) -> None:
@@ -81,8 +80,8 @@ class CompositeExecutionStep(ExecutionStep):
       :raises DralithusProjectError: When a child step cannot
         complete its work
     """
-    raise NotImplementedError(
-      'commit() is not implemented yet')
+    for step in self._steps:
+      step.commit()
 
   @override
   def abort(self) -> None:
@@ -92,5 +91,5 @@ class CompositeExecutionStep(ExecutionStep):
       :return: None
       :raises DralithusProjectError: When a child step cleanup fails
     """
-    raise NotImplementedError(
-      'abort() is not implemented yet')
+    for step in reversed(self._steps):
+      step.abort()

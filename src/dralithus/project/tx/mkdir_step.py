@@ -20,10 +20,12 @@
 # along with this program.  If not, see
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
+import os
 from pathlib import Path
 from typing import override
 
 from dralithus.project.context import ProjectContext
+from dralithus.project.error import DralithusProjectError
 from dralithus.project.tx.execution_step import ExecutionStep
 from dralithus.project.tx.project_state import ProjectState
 
@@ -38,7 +40,71 @@ class MkdirStep(ExecutionStep):
     removes the recorded directories in reverse order; pre-existing
     directories are left in place.
   """
-  # pylint: disable-next=super-init-not-called,unused-argument
+  def _missing_directories(self, root: Path) -> list[Path]:
+    """
+      Find the directories that need to be created.
+
+      :param root: The project root path
+      :return: Project-relative directories that need to be created
+      :raises DralithusProjectError: When a path exists but is not a
+        directory
+    """
+    missing: list[Path] = []
+    current = self._directory
+    while current != Path('.') and self._directory_does_not_exist(
+        root / current):
+      missing.append(current)
+      current = current.parent
+    return missing
+
+  def _create_directory(self, root: Path) -> None:
+    """
+      Create the directory for this step.
+
+      :param root: The project root path
+      :return: None
+      :raises DralithusProjectError: When directory creation fails
+    """
+    try:
+      target = root / self._directory
+      target.mkdir(parents=True, exist_ok=True)
+    except OSError as error:
+      raise DralithusProjectError(
+        f'Could not create directory: {self._directory}') from error
+
+  @staticmethod
+  def _directory_does_not_exist(path: Path) -> bool:
+    """
+      Check if a directory path does not exist.
+
+      :param path: The path to check
+      :return: True if path does not exist, False if path is a
+        directory
+      :raises DralithusProjectError: When path exists but is not a
+        directory
+    """
+    if path.is_dir():
+      return False
+    if path.exists():
+      raise DralithusProjectError(f'Path is not a directory: {path}')
+    return True
+
+  @staticmethod
+  def _remove_directory(base: Path, path: Path) -> None:
+    """
+      Remove a directory.
+
+      :param base: The base directory for path
+      :param path: The path of the directory to remove
+      :return: None
+      :raises DralithusProjectError: When directory removal fails
+    """
+    try:
+      (base / path).rmdir()
+    except OSError as error:
+      raise DralithusProjectError(
+        f'Could not remove directory: {path}') from error
+
   def __init__(self, context: ProjectContext, directory: Path) -> None:
     """
       Initialize the directory creation step.
@@ -48,8 +114,12 @@ class MkdirStep(ExecutionStep):
       :return: None
       :raises DralithusProjectError: When directory is not relative
     """
-    raise NotImplementedError(
-      'MkdirStep.__init__() is not implemented yet')
+    super().__init__(context)
+    if directory.is_absolute():
+      raise DralithusProjectError(
+        f'Directory must be relative: {directory}')
+    self._directory = directory
+    self._created_directories: list[Path] = []
 
   @override
   def prepare(self, state: ProjectState) -> None:
@@ -57,16 +127,24 @@ class MkdirStep(ExecutionStep):
       Validate the directory path and claim it.
 
       Claims the directory and every missing parent this step would
-      create. Rejects a current-or-projected non-directory occupant
-      of the path.
+      create, walking up until a current-or-projected directory is
+      found. Rejects a current-or-projected non-directory occupant
+      of any path on the way.
 
       :param state: The projected project state to read and extend
       :return: None
-      :raises DralithusProjectError: When the path is occupied by a
+      :raises DralithusProjectError: When a path is occupied by a
         non-directory
     """
-    raise NotImplementedError(
-      'prepare() is not implemented yet')
+    root = self._context.project_root
+    current = self._directory
+    while current != Path('.') and not state.is_dir(root / current):
+      path = root / current
+      if state.is_file(path) or os.path.lexists(path):
+        raise DralithusProjectError(
+          f'Path is not a directory: {path}')
+      state.claim_directory(path)
+      current = current.parent
 
   @override
   def commit(self) -> None:
@@ -76,8 +154,9 @@ class MkdirStep(ExecutionStep):
       :return: None
       :raises DralithusProjectError: When directory creation fails
     """
-    raise NotImplementedError(
-      'commit() is not implemented yet')
+    missing = self._missing_directories(self._context.project_root)
+    self._create_directory(self._context.project_root)
+    self._created_directories.extend(reversed(missing))
 
   @override
   def abort(self) -> None:
@@ -89,5 +168,8 @@ class MkdirStep(ExecutionStep):
       :return: None
       :raises DralithusProjectError: When directory removal fails
     """
-    raise NotImplementedError(
-      'abort() is not implemented yet')
+    while self._created_directories:
+      self._remove_directory(
+        self._context.project_root,
+        self._created_directories[-1])
+      self._created_directories.pop()

@@ -20,10 +20,15 @@
 # along with this program.  If not, see
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
+from importlib import resources
+import os
 from pathlib import Path
 from typing import Self, override
 
-from dralithus.project.context import ProjectContext
+from jinja2 import Environment, TemplateError
+
+from dralithus.project.context import ProjectContext, ProjectContextDict
+from dralithus.project.error import DralithusProjectError
 from dralithus.project.tx.execution_step import ExecutionStep
 from dralithus.project.tx.project_state import ProjectState
 
@@ -39,12 +44,121 @@ class CreateFileStep(ExecutionStep):
     succeeds, and then writes the content. abort() removes the file
     only when this step created it.
   """
-  # pylint: disable-next=super-init-not-called,unused-argument
+  _file_created: bool
+
+  def _remove_created_file(self, path: Path) -> None:
+    """
+      Remove the file owned by this step.
+
+      Files already removed externally are accepted silently.
+
+      :param path: The target file path
+      :return: None
+      :raises DralithusProjectError: When the file cannot be removed
+    """
+    try:
+      path.unlink(missing_ok=True)
+    except OSError as error:
+      raise DralithusProjectError(
+        f'Could not remove file: {path}') from error
+    self._file_created = False
+
+  def _create_file(self, path: Path) -> None:
+    """
+      Create the target file exclusively.
+
+      Ownership is recorded the instant exclusive creation succeeds,
+      before the content write, so a failed write can still be
+      cleaned up. A pre-existing target is re-verified rather than
+      overwritten, because it may have appeared after prepare.
+
+      :param path: The target file path
+      :return: None
+      :raises DralithusProjectError: When the file cannot be created
+        or written
+    """
+    try:
+      # The with statement starts only after ownership is recorded.
+      # pylint: disable-next=consider-using-with
+      file = path.open('x', encoding='utf-8')
+    except FileExistsError:
+      self._verify_existing_file(path)
+    except OSError as error:
+      raise DralithusProjectError(
+        f'Could not create file: {path}') from error
+    else:
+      self._file_created = True
+      try:
+        with file:
+          file.write(self._content)
+      except OSError as error:
+        self._remove_created_file(path)
+        raise DralithusProjectError(
+          f'Could not write file: {path}') from error
+
+  @staticmethod
+  def _verify_parent(path: Path, state: ProjectState) -> None:
+    """
+      Verify that the target parent is a usable directory.
+
+      The parent is acceptable when it is a directory on the real
+      file system or is claimed as a directory by an earlier step.
+
+      :param path: The target file path
+      :param state: The projected project state to read
+      :return: None
+      :raises DralithusProjectError: When the parent is not a
+        current-or-projected directory
+    """
+    if not state.is_dir(path.parent):
+      if os.path.lexists(path.parent):
+        raise DralithusProjectError(
+          f'Parent path is not a directory: {path.parent}')
+      raise DralithusProjectError(
+        f'Parent directory does not exist: {path.parent}')
+
+  @staticmethod
+  def _verify_existing_file(path: Path) -> None:
+    """
+      Verify that an existing target is a readable regular file.
+
+      Valid symlinks to readable regular files are accepted.
+
+      :param path: The target file path
+      :return: None
+      :raises DralithusProjectError: When the target is not a
+        readable regular file
+    """
+    try:
+      regular_file = path.is_file()
+    except OSError as error:
+      raise DralithusProjectError(
+        f'Could not inspect file: {path}') from error
+    if not regular_file:
+      raise DralithusProjectError(
+        f'Path is not a regular file: {path}')
+    try:
+      with path.open('r', encoding='utf-8'):
+        pass
+    except OSError as error:
+      raise DralithusProjectError(
+        f'Could not read file: {path}') from error
+
+  @staticmethod
+  def _template_context(context: ProjectContext) -> ProjectContextDict:
+    """
+      Convert a project context into a Jinja2 template context.
+
+      :param context: The shared project creation context
+      :return: The template context dictionary
+    """
+    return context.as_dict()
+
   def __init__(
-      self,
-      context: ProjectContext,
-      filename: Path,
-      content: str
+    self,
+    context: ProjectContext,
+    filename: Path,
+    content: str
   ) -> None:
     """
       Initialize the file creation step.
@@ -55,8 +169,13 @@ class CreateFileStep(ExecutionStep):
       :return: None
       :raises DralithusProjectError: When filename is absolute
     """
-    raise NotImplementedError(
-      'CreateFileStep.__init__() is not implemented yet')
+    super().__init__(context)
+    if filename.is_absolute():
+      raise DralithusProjectError(
+        f'Filename must be relative: {filename}')
+    self._filename = filename
+    self._content = content
+    self._file_created = False
 
   @override
   def prepare(self, state: ProjectState) -> None:
@@ -73,8 +192,11 @@ class CreateFileStep(ExecutionStep):
         current-or-projected directory or the target cannot be
         accepted
     """
-    raise NotImplementedError(
-      'prepare() is not implemented yet')
+    path = self._context.project_root / self._filename
+    self._verify_parent(path, state)
+    if os.path.lexists(path):
+      self._verify_existing_file(path)
+    state.claim_file(path)
 
   @override
   def commit(self) -> None:
@@ -89,8 +211,7 @@ class CreateFileStep(ExecutionStep):
       :raises DralithusProjectError: When the file cannot be created
         or written
     """
-    raise NotImplementedError(
-      'commit() is not implemented yet')
+    self._create_file(self._context.project_root / self._filename)
 
   @override
   def abort(self) -> None:
@@ -104,15 +225,16 @@ class CreateFileStep(ExecutionStep):
       :raises DralithusProjectError: When the owned file cannot be
         removed
     """
-    raise NotImplementedError(
-      'abort() is not implemented yet')
+    if self._file_created:
+      self._remove_created_file(
+        self._context.project_root / self._filename)
 
   @classmethod
   def from_file(
-      cls,
-      context: ProjectContext,
-      filename: Path,
-      source_filename: Path
+    cls,
+    context: ProjectContext,
+    filename: Path,
+    source_filename: Path
   ) -> Self:
     """
       Create a step whose content is read from a file.
@@ -123,16 +245,20 @@ class CreateFileStep(ExecutionStep):
       :return: The configured file creation step
       :raises DralithusProjectError: When the source cannot be read
     """
-    raise NotImplementedError(
-      'from_file() is not implemented yet')
+    try:
+      content = source_filename.read_text(encoding='utf-8')
+    except (OSError, UnicodeError) as error:
+      raise DralithusProjectError(
+        f'Could not read source file: {source_filename}') from error
+    return cls(context, filename, content)
 
   @classmethod
   def from_resource(
-      cls,
-      context: ProjectContext,
-      filename: Path,
-      package: str,
-      resource: str
+    cls,
+    context: ProjectContext,
+    filename: Path,
+    package: str,
+    resource: str
   ) -> Self:
     """
       Create a step whose content is read from a package resource.
@@ -145,16 +271,22 @@ class CreateFileStep(ExecutionStep):
       :raises DralithusProjectError: When the resource cannot be
         read
     """
-    raise NotImplementedError(
-      'from_resource() is not implemented yet')
+    try:
+      content = resources.files(package).joinpath(resource).read_text(
+        encoding='utf-8')
+    except (ImportError, OSError, TypeError, UnicodeError) as error:
+      raise DralithusProjectError(
+        f'Could not read package resource: '
+        f'{package}/{resource}') from error
+    return cls(context, filename, content)
 
   @classmethod
   def from_template_resource(
-      cls,
-      context: ProjectContext,
-      filename: Path,
-      package: str,
-      resource: str
+    cls,
+    context: ProjectContext,
+    filename: Path,
+    package: str,
+    resource: str
   ) -> Self:
     """
       Create a step whose content is rendered from a package
@@ -168,5 +300,20 @@ class CreateFileStep(ExecutionStep):
       :raises DralithusProjectError: When the resource cannot be
         read or rendered
     """
-    raise NotImplementedError(
-      'from_template_resource() is not implemented yet')
+    try:
+      template_text = resources.files(package).joinpath(
+        resource).read_text(encoding='utf-8')
+      content = Environment(keep_trailing_newline=True).from_string(
+        template_text).render(
+        cls._template_context(context))
+    except (
+      ImportError,
+      OSError,
+      TemplateError,
+      TypeError,
+      UnicodeError
+    ) as error:
+      raise DralithusProjectError(
+        f'Could not render package resource: '
+        f'{package}/{resource}') from error
+    return cls(context, filename, content)

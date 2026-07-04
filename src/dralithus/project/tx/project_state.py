@@ -20,7 +20,10 @@
 # along with this program.  If not, see
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
+import os
 from pathlib import Path
+
+from dralithus.project.error import DralithusProjectError
 
 
 class ProjectState:
@@ -35,7 +38,93 @@ class ProjectState:
 
     All paths are absolute and must lie within the project root.
   """
-  # pylint: disable-next=unused-argument
+  def _validate_path(self, path: Path) -> Path:
+    """
+      Validate that a path is absolute and within the project root.
+
+      :param path: The path to validate
+      :return: The validated path
+      :raises DralithusProjectError: When path is relative or lies
+        outside the project root
+    """
+    if not path.is_absolute():
+      raise DralithusProjectError(f'Path must be absolute: {path}')
+    if not path.is_relative_to(self._project_root):
+      raise DralithusProjectError(
+        f'Path is not within the project root: {path}')
+    return path
+
+  @staticmethod
+  def _real_is_dir(path: Path) -> bool:
+    """
+      Check whether path is a directory on the real file system.
+
+      :param path: The path to check
+      :return: True if path is a real directory
+      :raises DralithusProjectError: When the path cannot be
+        inspected
+    """
+    try:
+      return path.is_dir()
+    except OSError as error:
+      raise DralithusProjectError(
+        f'Could not inspect path: {path}') from error
+
+  @staticmethod
+  def _real_is_file(path: Path) -> bool:
+    """
+      Check whether path is a regular file on the real file system.
+
+      :param path: The path to check
+      :return: True if path is a real regular file
+      :raises DralithusProjectError: When the path cannot be
+        inspected
+    """
+    try:
+      return path.is_file()
+    except OSError as error:
+      raise DralithusProjectError(
+        f'Could not inspect path: {path}') from error
+
+  @staticmethod
+  def _real_is_executable(path: Path) -> bool:
+    """
+      Check whether path is an executable file on the real file
+      system.
+
+      :param path: The path to check
+      :return: True if path is a real executable regular file
+      :raises DralithusProjectError: When the path cannot be
+        inspected
+    """
+    try:
+      return path.is_file() and os.access(path, os.X_OK)
+    except OSError as error:
+      raise DralithusProjectError(
+        f'Could not inspect path: {path}') from error
+
+  @staticmethod
+  def _read_venv_version(pyvenv_cfg: Path) -> str | None:
+    """
+      Read the Python version from a venv's pyvenv.cfg file.
+
+      :param pyvenv_cfg: The pyvenv.cfg path to read
+      :return: The version value, or None when the file has no
+        version entry
+      :raises DralithusProjectError: When the file cannot be read
+    """
+    version: str | None = None
+    try:
+      for line in pyvenv_cfg.read_text(encoding='utf-8').splitlines():
+        name, separator, value = line.partition('=')
+        if separator == '=' and name.strip() == 'version':
+          version = value.strip()
+          break
+    except (OSError, UnicodeError) as error:
+      raise DralithusProjectError(
+        f'Could not read venv metadata: {pyvenv_cfg}') from error
+    return version
+
   def __init__(self, project_root: Path) -> None:
     """
       Initialize the projected project state.
@@ -43,8 +132,11 @@ class ProjectState:
       :param project_root: The root directory of the project
       :return: None
     """
-    raise NotImplementedError(
-      'ProjectState.__init__() is not implemented yet')
+    self._project_root = project_root
+    self._directories: set[Path] = set()
+    self._files: set[Path] = set()
+    self._executables: set[Path] = set()
+    self._venvs: dict[Path, str] = {}
 
   def claim_directory(self, path: Path) -> None:
     """
@@ -55,8 +147,7 @@ class ProjectState:
       :raises DralithusProjectError: When path is not within the
         project root
     """
-    raise NotImplementedError(
-      'claim_directory() is not implemented yet')
+    self._directories.add(self._validate_path(path))
 
   def claim_file(self, path: Path) -> None:
     """
@@ -67,8 +158,7 @@ class ProjectState:
       :raises DralithusProjectError: When path is not within the
         project root
     """
-    raise NotImplementedError(
-      'claim_file() is not implemented yet')
+    self._files.add(self._validate_path(path))
 
   def claim_executable(self, path: Path) -> None:
     """
@@ -79,8 +169,7 @@ class ProjectState:
       :raises DralithusProjectError: When path is not within the
         project root
     """
-    raise NotImplementedError(
-      'claim_executable() is not implemented yet')
+    self._executables.add(self._validate_path(path))
 
   def claim_venv(self, path: Path, python_version: str) -> None:
     """
@@ -94,8 +183,7 @@ class ProjectState:
       :raises DralithusProjectError: When path is not within the
         project root
     """
-    raise NotImplementedError(
-      'claim_venv() is not implemented yet')
+    self._venvs[self._validate_path(path)] = python_version
 
   def is_dir(self, path: Path) -> bool:
     """
@@ -104,9 +192,14 @@ class ProjectState:
       :param path: The absolute path to check
       :return: True if path is a directory on the real file system
         or is claimed as a directory
+      :raises DralithusProjectError: When path is not within the
+        project root or cannot be inspected
     """
-    raise NotImplementedError(
-      'is_dir() is not implemented yet')
+    path = self._validate_path(path)
+    return (
+      path in self._directories
+      or path in self._venvs
+      or self._real_is_dir(path))
 
   def is_file(self, path: Path) -> bool:
     """
@@ -115,9 +208,14 @@ class ProjectState:
       :param path: The absolute path to check
       :return: True if path is a regular file on the real file
         system or is claimed as a file
+      :raises DralithusProjectError: When path is not within the
+        project root or cannot be inspected
     """
-    raise NotImplementedError(
-      'is_file() is not implemented yet')
+    path = self._validate_path(path)
+    return (
+      path in self._files
+      or path in self._executables
+      or self._real_is_file(path))
 
   def is_executable(self, path: Path) -> bool:
     """
@@ -126,18 +224,32 @@ class ProjectState:
       :param path: The absolute path to check
       :return: True if path is an executable file on the real file
         system or is claimed as an executable
+      :raises DralithusProjectError: When path is not within the
+        project root or cannot be inspected
     """
-    raise NotImplementedError(
-      'is_executable() is not implemented yet')
+    path = self._validate_path(path)
+    return (
+      path in self._executables
+      or self._real_is_executable(path))
 
   def venv_python_version(self, path: Path) -> str | None:
     """
       Return the Python version of a current or projected venv.
 
+      A venv claim takes precedence over a real venv at the same
+      path, because the claim projects the post-commit state.
+
       :param path: The absolute path of the virtual environment
         directory
       :return: The Python version the virtual environment at path
         provides, or None when no venv exists or is claimed there
+      :raises DralithusProjectError: When path is not within the
+        project root or the venv metadata cannot be read
     """
-    raise NotImplementedError(
-      'venv_python_version() is not implemented yet')
+    path = self._validate_path(path)
+    version = self._venvs.get(path)
+    if version is None:
+      pyvenv_cfg = path / 'pyvenv.cfg'
+      if self._real_is_file(pyvenv_cfg):
+        version = self._read_venv_version(pyvenv_cfg)
+    return version

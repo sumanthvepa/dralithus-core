@@ -26,6 +26,7 @@ from pathlib import Path
 from typing import override
 
 from dralithus.project.context import ProjectContext
+from dralithus.project.tx.create_file_step import CreateFileStep
 from dralithus.project.tx.execution_step import ExecutionStep
 from dralithus.project.tx.project_state import ProjectState
 
@@ -38,7 +39,8 @@ class CreateGitIgnoreFileStep(ExecutionStep):
     Delegates every phase to an inner CreateFileStep that creates an
     empty .gitignore in the given directory.
   """
-  # pylint: disable-next=super-init-not-called,unused-argument
+  _GITIGNORE_FILENAME = '.gitignore'
+
   def __init__(self, context: ProjectContext, directory: Path) -> None:
     """
       Initialize the .gitignore creation step.
@@ -49,8 +51,11 @@ class CreateGitIgnoreFileStep(ExecutionStep):
       :return: None
       :raises DralithusProjectError: When directory is absolute
     """
-    raise NotImplementedError(
-      'CreateGitIgnoreFileStep.__init__() is not implemented yet')
+    super().__init__(context)
+    self._create_file_step = CreateFileStep(
+      context,
+      directory / self._GITIGNORE_FILENAME,
+      '')
 
   @override
   def prepare(self, state: ProjectState) -> None:
@@ -62,8 +67,7 @@ class CreateGitIgnoreFileStep(ExecutionStep):
       :raises DralithusProjectError: When the .gitignore target
         cannot be accepted
     """
-    raise NotImplementedError(
-      'prepare() is not implemented yet')
+    self._create_file_step.prepare(state)
 
   @override
   def commit(self) -> None:
@@ -74,8 +78,7 @@ class CreateGitIgnoreFileStep(ExecutionStep):
       :raises DralithusProjectError: When the .gitignore file cannot
         be created or written
     """
-    raise NotImplementedError(
-      'commit() is not implemented yet')
+    self._create_file_step.commit()
 
   @override
   def abort(self) -> None:
@@ -86,5 +89,4 @@ class CreateGitIgnoreFileStep(ExecutionStep):
       :raises DralithusProjectError: When the owned .gitignore file
         cannot be removed
     """
-    raise NotImplementedError(
-      'abort() is not implemented yet')
+    self._create_file_step.abort()
