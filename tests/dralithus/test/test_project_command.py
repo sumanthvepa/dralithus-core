@@ -20,20 +20,59 @@
 # along with this program.  If not, see
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
+from pathlib import Path
 import unittest
+from unittest import mock
+
+from dralithus.command_line.command_line import CommandLine
+from dralithus.command_line.options import Options
+from dralithus.errors import CommandLineError, ExitCode
+from dralithus.project.context import ProjectContext
+from dralithus.project.copyright_header import CopyrightHeader
+from dralithus.project.project_config import ProjectConfig
+from dralithus.project_command import ProjectCommand, make
 
 
 class TestProjectCommand(unittest.TestCase):
   """
     Unit tests for the ProjectCommand module.
   """
+  @staticmethod
+  def _config() -> ProjectConfig:
+    """
+      Return a minimal ProjectConfig for command tests.
+
+      :return: A minimal ProjectConfig instance
+    """
+    return ProjectConfig(
+      ProjectContext(
+        project_name='sample',
+        project_description='Sample Project',
+        project_version='0.1.0',
+        project_copyright=CopyrightHeader(
+          'Copyright header\n',
+          'Sumanth Vepa',
+          2026),
+        project_root=Path.cwd(),
+        package_name='sample',
+        venv_name='venv'),
+      Path('/usr/bin/python3'))
+
   def test_make_requires_create_option(self) -> None:
     """
       Verify make rejects a project command without --create.
 
       :return: None
     """
-    self.fail('TODO: verify make() requires --create')
+    cmdln = CommandLine(
+      program='drl',
+      command_name='project',
+      global_options=Options([]),
+      command_options=Options([]),
+      parameters={'project.toml'})
+
+    with self.assertRaises(CommandLineError):
+      make(cmdln)
 
   def test_make_requires_exactly_one_config_parameter(self) -> None:
     """
@@ -41,8 +80,24 @@ class TestProjectCommand(unittest.TestCase):
 
       :return: None
     """
-    self.fail(
-      'TODO: verify make() requires exactly one config parameter')
+    cases = (
+      CommandLine(
+        program='drl',
+        command_name='project',
+        global_options=Options([]),
+        command_options=Options(['--create']),
+        parameters=set()),
+      CommandLine(
+        program='drl',
+        command_name='project',
+        global_options=Options([]),
+        command_options=Options(['--create']),
+        parameters={'a.toml', 'b.toml'}))
+
+    for cmdln in cases:
+      with self.subTest(parameters=cmdln.parameters):
+        with self.assertRaises(CommandLineError):
+          make(cmdln)
 
   def test_make_loads_project_config_from_toml_file(self) -> None:
     """
@@ -50,8 +105,22 @@ class TestProjectCommand(unittest.TestCase):
 
       :return: None
     """
-    self.fail(
-      'TODO: verify make() loads ProjectConfig.from_toml_file()')
+    config = self._config()
+    cmdln = CommandLine(
+      program='drl',
+      command_name='project',
+      global_options=Options([]),
+      command_options=Options(['--create']),
+      parameters={'project.toml'})
+
+    with mock.patch(
+      'dralithus.project_command.ProjectConfig.from_toml_file',
+      return_value=config
+    ) as from_toml_file:
+      with self.assertRaises(NotImplementedError):
+        make(cmdln)
+
+    from_toml_file.assert_called_once_with(Path('project.toml'))
 
   def test_make_passes_dry_run_flag_to_project_command(self) -> None:
     """
@@ -59,8 +128,24 @@ class TestProjectCommand(unittest.TestCase):
 
       :return: None
     """
-    self.fail(
-      'TODO: verify make() passes the dry-run flag through')
+    config = self._config()
+    cmdln = CommandLine(
+      program='drl',
+      command_name='project',
+      global_options=Options([]),
+      command_options=Options(['--create', '--dry-run']),
+      parameters={'project.toml'})
+
+    with mock.patch(
+      'dralithus.project_command.ProjectConfig.from_toml_file',
+      return_value=config
+    ):
+      command = make(cmdln)
+
+    self.assertTrue(command.create_project)
+    self.assertTrue(command.dry_run)
+    self.assertEqual(config, command.config)
+    self.assertEqual(cmdln.verbosity, command.verbosity)
 
   def test_execute_calls_project_create_with_dry_run_flag(self) -> None:
     """
@@ -68,8 +153,18 @@ class TestProjectCommand(unittest.TestCase):
 
       :return: None
     """
-    self.fail(
-      'TODO: verify execute() calls project.create(dry_run=...)')
+    config = self._config()
+    command = ProjectCommand(
+      config=config,
+      create_project=True,
+      dry_run=True,
+      verbosity=0)
+    project = mock.Mock()
+
+    with mock.patch.object(config, 'project', return_value=project):
+      command.execute()
+
+    project.create.assert_called_once_with(dry_run=True)
 
   def test_execute_returns_success_on_success(self) -> None:
     """
@@ -77,5 +172,14 @@ class TestProjectCommand(unittest.TestCase):
 
       :return: None
     """
-    self.fail(
-      'TODO: verify execute() returns ExitCode.SUCCESS on success')
+    config = self._config()
+    command = ProjectCommand(
+      config=config,
+      create_project=True,
+      dry_run=False,
+      verbosity=0)
+
+    with mock.patch.object(config, 'project', return_value=mock.Mock()):
+      exit_code = command.execute()
+
+    self.assertEqual(ExitCode.SUCCESS, exit_code)
