@@ -20,9 +20,16 @@
 # along with this program.  If not, see
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
+from pathlib import Path
+
 from dralithus.project.context import ProjectContext
 from dralithus.project.tx.composite_execution_step import (
   CompositeExecutionStep)
+from dralithus.project.tx.create_gitignore_file_step import (
+  CreateGitIgnoreFileStep)
+from dralithus.project.tx.create_python_init_file_step import (
+  CreatePythonInitFileStep)
+from dralithus.project.tx.mkdir_step import MkdirStep
 
 
 class CreateTestsTreeStep(CompositeExecutionStep):
@@ -37,7 +44,6 @@ class CreateTestsTreeStep(CompositeExecutionStep):
     child; all phase logic, ownership, and rollback live in the
     children and in CompositeExecutionStep.
   """
-  # pylint: disable-next=super-init-not-called,unused-argument
   def __init__(self, context: ProjectContext) -> None:
     """
       Initialize the tests tree creation step.
@@ -45,5 +51,21 @@ class CreateTestsTreeStep(CompositeExecutionStep):
       :param context: The shared project creation context
       :return: None
     """
-    raise NotImplementedError(
-      'CreateTestsTreeStep.__init__() is not implemented yet')
+    package_name = context.package_name
+    tests = Path('tests')
+    package = tests / package_name
+    test_package = package / 'test'
+    description = (
+      f'{package_name}/test/__init__.py: '
+      f'Unit tests for {package_name}.')
+    super().__init__(
+      context,
+      (MkdirStep(context, test_package),
+       CreateGitIgnoreFileStep(context, tests),
+       CreateGitIgnoreFileStep(context, package),
+       CreateGitIgnoreFileStep(context, test_package),
+       CreatePythonInitFileStep(
+         context,
+         test_package,
+         context.copyright_header,
+         description)))

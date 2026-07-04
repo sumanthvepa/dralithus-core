@@ -22,7 +22,19 @@
 # along with this program.  If not, see
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
+from pathlib import Path
 import unittest
+from unittest import mock
+
+from dralithus.test.project import (
+  FailingWriteFile,
+  copyright_header,
+  project_context)
+from dralithus.project.error import DralithusProjectError
+from dralithus.project.tx.create_tests_tree_step import (
+  CreateTestsTreeStep)
+from dralithus.project.tx.execution_step import execute
+from dralithus.project.tx.project_state import ProjectState
 
 
 class TestCreateTestsTreeStep(unittest.TestCase):
@@ -38,6 +50,49 @@ class TestCreateTestsTreeStep(unittest.TestCase):
     rejection of unusable targets. The children's exhaustive
     file-type handling is covered by their own suites.
   """
+  _PACKAGE_NAME = 'sample'
+  _DESCRIPTION = 'sample/test/__init__.py: Unit tests for sample.'
+
+  @classmethod
+  def _tests(cls, project_root: Path) -> Path:
+    """
+      Return the tests directory path.
+
+      :param project_root: The project root directory
+      :return: The tests directory path
+    """
+    return project_root / 'tests'
+
+  @classmethod
+  def _package(cls, project_root: Path) -> Path:
+    """
+      Return the tests/<package_name> directory path.
+
+      :param project_root: The project root directory
+      :return: The tests package directory path
+    """
+    return cls._tests(project_root) / cls._PACKAGE_NAME
+
+  @classmethod
+  def _test_package(cls, project_root: Path) -> Path:
+    """
+      Return the tests/<package_name>/test directory path.
+
+      :param project_root: The project root directory
+      :return: The test package directory path
+    """
+    return cls._package(project_root) / 'test'
+
+  @classmethod
+  def _init_py(cls, project_root: Path) -> Path:
+    """
+      Return the generated test package __init__.py path.
+
+      :param project_root: The project root directory
+      :return: The test package __init__.py path
+    """
+    return cls._test_package(project_root) / '__init__.py'
+
   # execute: real run
 
   def test_execute_creates_full_tests_tree(self) -> None:
@@ -48,7 +103,21 @@ class TestCreateTestsTreeStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      step = CreateTestsTreeStep(context)
+
+      execute(step, context)
+
+      self.assertTrue(self._tests(project_root).is_dir())
+      self.assertTrue(self._package(project_root).is_dir())
+      self.assertTrue(self._test_package(project_root).is_dir())
+      self.assertTrue(
+        (self._tests(project_root) / '.gitignore').is_file())
+      self.assertTrue(
+        (self._package(project_root) / '.gitignore').is_file())
+      self.assertTrue(
+        (self._test_package(project_root) / '.gitignore').is_file())
+      self.assertTrue(self._init_py(project_root).is_file())
 
   def test_execute_creates_init_py_with_docstring_and_header(
     self
@@ -59,7 +128,23 @@ class TestCreateTestsTreeStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      header = copyright_header()
+      step = CreateTestsTreeStep(context)
+
+      execute(step, context)
+
+      # The rendered-content assertion repeats across step suites; a
+      # future refactoring could extract a shared helper.
+      # pylint: disable=duplicate-code
+      self.assertEqual(
+        '"""\n'
+        f'  {self._DESCRIPTION}\n'
+        '"""\n'
+        f'# {self._DESCRIPTION}\n'
+        f'# Copyright (C) {header.copyright_year} '
+        f'{header.copyright_holder}.\n',
+        self._init_py(project_root).read_text(encoding='utf-8'))
 
   def test_execute_creates_empty_gitignore_files(self) -> None:
     """
@@ -67,7 +152,19 @@ class TestCreateTestsTreeStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      step = CreateTestsTreeStep(context)
+
+      execute(step, context)
+
+      for directory in (
+        self._tests(project_root),
+        self._package(project_root),
+        self._test_package(project_root)
+      ):
+        self.assertEqual(
+          '',
+          (directory / '.gitignore').read_text(encoding='utf-8'))
 
   def test_execute_preserves_preexisting_init_py(self) -> None:
     """
@@ -76,7 +173,16 @@ class TestCreateTestsTreeStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      self._test_package(project_root).mkdir(parents=True)
+      init_py = self._init_py(project_root)
+      init_py.write_text('# existing\n', encoding='utf-8')
+      step = CreateTestsTreeStep(context)
+
+      execute(step, context)
+
+      self.assertEqual(
+        '# existing\n', init_py.read_text(encoding='utf-8'))
 
   def test_execute_aborts_all_owned_work_on_mid_commit_failure(
     self
@@ -87,7 +193,34 @@ class TestCreateTestsTreeStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    real_open = Path.open
+
+    with project_context() as (project_root, context):
+      failing_path = self._init_py(project_root)
+
+      # The write-failure closure repeats across step suites; a
+      # future refactoring could extract a shared helper.
+      # pylint: disable=duplicate-code
+      def failing_open(
+        path: Path,
+        mode: str = 'r',
+        encoding: str | None = None
+      ) -> object:
+        # The wrapper (or the caller) is responsible for closing.
+        # noinspection PyTypeChecker
+        # pylint: disable-next=consider-using-with
+        file = real_open(path, mode, encoding=encoding)
+        if mode == 'x' and path == failing_path:
+          return FailingWriteFile(file)
+        return file
+
+      step = CreateTestsTreeStep(context)
+
+      with mock.patch.object(Path, 'open', failing_open):
+        with self.assertRaises(DralithusProjectError):
+          execute(step, context)
+
+      self.assertFalse(self._tests(project_root).exists())
 
   def test_execute_prepare_failure_leaves_disk_untouched(self) -> None:
     """
@@ -96,7 +229,17 @@ class TestCreateTestsTreeStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      tests_gitignore = self._tests(project_root) / '.gitignore'
+      tests_gitignore.mkdir(parents=True)
+      step = CreateTestsTreeStep(context)
+
+      with self.assertRaises(DralithusProjectError):
+        execute(step, context)
+
+      self.assertTrue(self._tests(project_root).is_dir())
+      self.assertTrue(tests_gitignore.is_dir())
+      self.assertFalse(self._package(project_root).exists())
 
   # execute: dry run
 
@@ -110,7 +253,12 @@ class TestCreateTestsTreeStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      step = CreateTestsTreeStep(context)
+
+      execute(step, context, dry_run=True)
+
+      self.assertFalse(self._tests(project_root).exists())
 
   def test_execute_dry_run_rejects_unusable_existing_target(
     self
@@ -121,7 +269,12 @@ class TestCreateTestsTreeStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      (self._tests(project_root) / '.gitignore').mkdir(parents=True)
+      step = CreateTestsTreeStep(context)
+
+      with self.assertRaises(DralithusProjectError):
+        execute(step, context, dry_run=True)
 
   # abort
 
@@ -132,7 +285,14 @@ class TestCreateTestsTreeStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      step = CreateTestsTreeStep(context)
+
+      step.prepare(ProjectState(project_root))
+      step.commit()
+      step.abort()
+
+      self.assertFalse(self._tests(project_root).exists())
 
   def test_abort_preserves_preexisting_init_py(self) -> None:
     """
@@ -141,4 +301,16 @@ class TestCreateTestsTreeStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      self._test_package(project_root).mkdir(parents=True)
+      init_py = self._init_py(project_root)
+      init_py.write_text('# existing\n', encoding='utf-8')
+      step = CreateTestsTreeStep(context)
+
+      step.prepare(ProjectState(project_root))
+      step.commit()
+      step.abort()
+
+      self.assertEqual(
+        '# existing\n', init_py.read_text(encoding='utf-8'))
+      self.assertTrue(self._test_package(project_root).is_dir())

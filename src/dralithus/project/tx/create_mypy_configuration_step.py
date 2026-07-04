@@ -22,9 +22,13 @@
 # along with this program.  If not, see
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
+from pathlib import Path
+
 from dralithus.project.context import ProjectContext
 from dralithus.project.tx.composite_execution_step import (
   CompositeExecutionStep)
+from dralithus.project.tx.create_file_step import CreateFileStep
+from dralithus.project.tx.mkdir_step import MkdirStep
 
 
 class CreateMypyConfigurationStep(CompositeExecutionStep):
@@ -39,7 +43,6 @@ class CreateMypyConfigurationStep(CompositeExecutionStep):
     stub tree; all phase logic, ownership, and rollback live in the
     children and in CompositeExecutionStep.
   """
-  # pylint: disable-next=super-init-not-called,unused-argument
   def __init__(self, context: ProjectContext) -> None:
     """
       Initialize the mypy configuration creation step.
@@ -49,6 +52,19 @@ class CreateMypyConfigurationStep(CompositeExecutionStep):
       :raises DralithusProjectError: When a packaged resource cannot
         be read
     """
-    raise NotImplementedError(
-      'CreateMypyConfigurationStep.__init__() is not implemented '
-      'yet')
+    parameterized = Path('stubs') / 'parameterized'
+    super().__init__(
+      context,
+      (CreateFileStep.from_resource(
+        context,
+        Path('mypy.ini'),
+        'dralithus.project.templates',
+        'mypy.ini'),
+       MkdirStep(context, parameterized),
+       CreateFileStep(context, Path('stubs') / '.gitignore', ''),
+       CreateFileStep(context, parameterized / '.gitignore', ''),
+       CreateFileStep.from_resource(
+         context,
+         parameterized / '__init__.pyi',
+         'dralithus.project.templates.parameterized',
+         '__init__.pyi')))

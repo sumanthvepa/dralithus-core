@@ -27,6 +27,21 @@ from pathlib import Path
 from dralithus.project.context import ProjectContext
 from dralithus.project.tx.composite_execution_step import (
   CompositeExecutionStep)
+from dralithus.project.tx.create_packages_step import (
+  CreatePackagesStep)
+from dralithus.project.tx.create_source_tree_step import (
+  CreateSourceTreeStep)
+from dralithus.project.tx.create_tests_tree_step import (
+  CreateTestsTreeStep)
+from dralithus.project.tx.create_pylint_configuration_step import (
+  CreatePylintConfigurationStep)
+from dralithus.project.tx.create_mypy_configuration_step import (
+  CreateMypyConfigurationStep)
+from dralithus.project.tx.create_venv_step import CreateVenvStep
+from dralithus.project.tx.create_pyproject_toml_step import (
+  CreatePyProjectTomlStep)
+from dralithus.project.tx.install_dependencies_step import (
+  InstallDependenciesStep)
 
 
 class CreatePythonProjectStep(CompositeExecutionStep):
@@ -41,7 +56,6 @@ class CreatePythonProjectStep(CompositeExecutionStep):
     validate against the venv and dependency files that earlier
     children will create at commit time.
   """
-  # pylint: disable-next=super-init-not-called,unused-argument
   def __init__(
     self,
     context: ProjectContext,
@@ -57,5 +71,17 @@ class CreatePythonProjectStep(CompositeExecutionStep):
       :raises DralithusProjectError: When a child step constructor
         rejects its inputs
     """
-    raise NotImplementedError(
-      'CreatePythonProjectStep.__init__() is not implemented yet')
+    super().__init__(
+      context,
+      (CreatePackagesStep(context),
+       CreateSourceTreeStep(context),
+       CreateTestsTreeStep(context),
+       CreatePylintConfigurationStep(context),
+       CreateMypyConfigurationStep(context),
+       CreateVenvStep(context, python_executable),
+       CreatePyProjectTomlStep(
+         context,
+         context.project_name,
+         context.project_description,
+         context.project_version),
+       InstallDependenciesStep(context)))

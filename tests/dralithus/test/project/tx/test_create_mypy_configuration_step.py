@@ -22,7 +22,16 @@
 # along with this program.  If not, see
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
+from importlib import resources
+from pathlib import Path
 import unittest
+
+from dralithus.test.project import project_context
+from dralithus.project.error import DralithusProjectError
+from dralithus.project.tx.create_mypy_configuration_step import (
+  CreateMypyConfigurationStep)
+from dralithus.project.tx.execution_step import execute
+from dralithus.project.tx.project_state import ProjectState
 
 
 class TestCreateMypyConfigurationStep(unittest.TestCase):
@@ -36,13 +45,94 @@ class TestCreateMypyConfigurationStep(unittest.TestCase):
     prepare-time rejection of unusable targets. The children's
     exhaustive file-type handling is covered by their own suites.
   """
+  @staticmethod
+  def _mypy_ini(project_root: Path) -> Path:
+    """
+      Return the project mypy configuration path.
+
+      :param project_root: The project root directory
+      :return: The mypy.ini path
+    """
+    return project_root / 'mypy.ini'
+
+  @staticmethod
+  def _stubs(project_root: Path) -> Path:
+    """
+      Return the project stubs directory path.
+
+      :param project_root: The project root directory
+      :return: The stubs directory path
+    """
+    return project_root / 'stubs'
+
+  @classmethod
+  def _stubs_gitignore(cls, project_root: Path) -> Path:
+    """
+      Return the stubs .gitignore path.
+
+      :param project_root: The project root directory
+      :return: The stubs .gitignore path
+    """
+    return cls._stubs(project_root) / '.gitignore'
+
+  @classmethod
+  def _parameterized(cls, project_root: Path) -> Path:
+    """
+      Return the parameterized stub package directory path.
+
+      :param project_root: The project root directory
+      :return: The parameterized stub package directory path
+    """
+    return cls._stubs(project_root) / 'parameterized'
+
+  @classmethod
+  def _parameterized_gitignore(cls, project_root: Path) -> Path:
+    """
+      Return the parameterized .gitignore path.
+
+      :param project_root: The project root directory
+      :return: The parameterized .gitignore path
+    """
+    return cls._parameterized(project_root) / '.gitignore'
+
+  @classmethod
+  def _parameterized_stub(cls, project_root: Path) -> Path:
+    """
+      Return the generated parameterized stub path.
+
+      :param project_root: The project root directory
+      :return: The parameterized __init__.pyi path
+    """
+    return cls._parameterized(project_root) / '__init__.pyi'
+
+  @staticmethod
+  def _mypy_template_content() -> str:
+    """
+      Read the packaged mypy configuration template.
+
+      :return: The packaged mypy.ini resource text
+    """
+    return resources.files('dralithus.project.templates').joinpath(
+      'mypy.ini').read_text(encoding='utf-8')
+
+  @staticmethod
+  def _stub_template_content() -> str:
+    """
+      Read the packaged parameterized stub template.
+
+      :return: The packaged parameterized __init__.pyi resource text
+    """
+    return resources.files(
+      'dralithus.project.templates.parameterized').joinpath(
+        '__init__.pyi').read_text(encoding='utf-8')
+
   def test_mypy_ini_resource_can_be_read(self) -> None:
     """
       Verify that the packaged mypy.ini resource can be read.
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    self.assertNotEqual('', self._mypy_template_content())
 
   def test_parameterized_stub_resource_can_be_read(self) -> None:
     """
@@ -50,7 +140,7 @@ class TestCreateMypyConfigurationStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    self.assertNotEqual('', self._stub_template_content())
 
   # execute: real run
 
@@ -61,7 +151,18 @@ class TestCreateMypyConfigurationStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      step = CreateMypyConfigurationStep(context)
+
+      execute(step, context)
+
+      self.assertTrue(self._mypy_ini(project_root).is_file())
+      self.assertTrue(self._stubs(project_root).is_dir())
+      self.assertTrue(self._stubs_gitignore(project_root).is_file())
+      self.assertTrue(self._parameterized(project_root).is_dir())
+      self.assertTrue(
+        self._parameterized_gitignore(project_root).is_file())
+      self.assertTrue(self._parameterized_stub(project_root).is_file())
 
   def test_execute_creates_mypy_ini_from_resource(self) -> None:
     """
@@ -69,7 +170,14 @@ class TestCreateMypyConfigurationStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      step = CreateMypyConfigurationStep(context)
+
+      execute(step, context)
+
+      self.assertEqual(
+        self._mypy_template_content(),
+        self._mypy_ini(project_root).read_text(encoding='utf-8'))
 
   def test_execute_creates_parameterized_stub_from_resource(
     self
@@ -80,7 +188,15 @@ class TestCreateMypyConfigurationStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      step = CreateMypyConfigurationStep(context)
+
+      execute(step, context)
+
+      self.assertEqual(
+        self._stub_template_content(),
+        self._parameterized_stub(project_root).read_text(
+          encoding='utf-8'))
 
   def test_execute_creates_empty_gitignore_files(self) -> None:
     """
@@ -89,7 +205,19 @@ class TestCreateMypyConfigurationStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      step = CreateMypyConfigurationStep(context)
+
+      execute(step, context)
+
+      self.assertEqual(
+        '',
+        self._stubs_gitignore(project_root).read_text(
+          encoding='utf-8'))
+      self.assertEqual(
+        '',
+        self._parameterized_gitignore(project_root).read_text(
+          encoding='utf-8'))
 
   def test_execute_preserves_representative_preexisting_artifacts(
     self
@@ -100,7 +228,25 @@ class TestCreateMypyConfigurationStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      self._mypy_ini(project_root).write_text(
+        'user mypy config\n',
+        encoding='utf-8')
+      self._parameterized(project_root).mkdir(parents=True)
+      (self._parameterized(project_root) / 'user-file.txt').write_text(
+        'user data\n',
+        encoding='utf-8')
+      step = CreateMypyConfigurationStep(context)
+
+      execute(step, context)
+
+      self.assertEqual(
+        'user mypy config\n',
+        self._mypy_ini(project_root).read_text(encoding='utf-8'))
+      self.assertEqual(
+        'user data\n',
+        (self._parameterized(project_root)
+         / 'user-file.txt').read_text(encoding='utf-8'))
 
   def test_execute_prepare_failure_leaves_disk_untouched(self) -> None:
     """
@@ -111,7 +257,17 @@ class TestCreateMypyConfigurationStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      self._parameterized_gitignore(project_root).mkdir(parents=True)
+      step = CreateMypyConfigurationStep(context)
+
+      with self.assertRaises(DralithusProjectError):
+        execute(step, context)
+
+      self.assertFalse(self._mypy_ini(project_root).exists())
+      self.assertFalse(self._stubs_gitignore(project_root).exists())
+      self.assertTrue(
+        self._parameterized_gitignore(project_root).is_dir())
 
   # execute: dry run
 
@@ -125,7 +281,13 @@ class TestCreateMypyConfigurationStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      step = CreateMypyConfigurationStep(context)
+
+      execute(step, context, dry_run=True)
+
+      self.assertFalse(self._mypy_ini(project_root).exists())
+      self.assertFalse(self._stubs(project_root).exists())
 
   def test_execute_dry_run_rejects_unusable_existing_target(
     self
@@ -136,7 +298,12 @@ class TestCreateMypyConfigurationStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      self._mypy_ini(project_root).mkdir()
+      step = CreateMypyConfigurationStep(context)
+
+      with self.assertRaises(DralithusProjectError):
+        execute(step, context, dry_run=True)
 
   # abort
 
@@ -146,7 +313,15 @@ class TestCreateMypyConfigurationStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      step = CreateMypyConfigurationStep(context)
+
+      step.prepare(ProjectState(project_root))
+      step.commit()
+      step.abort()
+
+      self.assertFalse(self._mypy_ini(project_root).exists())
+      self.assertFalse(self._stubs(project_root).exists())
 
   def test_abort_preserves_preexisting_artifacts(self) -> None:
     """
@@ -154,4 +329,18 @@ class TestCreateMypyConfigurationStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      self._mypy_ini(project_root).write_text(
+        'user mypy config\n',
+        encoding='utf-8')
+      self._parameterized(project_root).mkdir(parents=True)
+      step = CreateMypyConfigurationStep(context)
+
+      step.prepare(ProjectState(project_root))
+      step.commit()
+      step.abort()
+
+      self.assertEqual(
+        'user mypy config\n',
+        self._mypy_ini(project_root).read_text(encoding='utf-8'))
+      self.assertTrue(self._parameterized(project_root).is_dir())

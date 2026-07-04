@@ -22,9 +22,11 @@
 # along with this program.  If not, see
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
+from pathlib import Path
 from typing import override
 
 from dralithus.project.context import ProjectContext
+from dralithus.project.tx.create_file_step import CreateFileStep
 from dralithus.project.tx.execution_step import ExecutionStep
 from dralithus.project.tx.project_state import ProjectState
 
@@ -38,7 +40,6 @@ class CreatePylintConfigurationStep(ExecutionStep):
     generated for new projects. Delegates every phase to an inner
     CreateFileStep built from that resource.
   """
-  # pylint: disable-next=super-init-not-called,unused-argument
   def __init__(self, context: ProjectContext) -> None:
     """
       Initialize the Pylint configuration creation step.
@@ -48,9 +49,12 @@ class CreatePylintConfigurationStep(ExecutionStep):
       :raises DralithusProjectError: When the packaged pylintrc
         resource cannot be read
     """
-    raise NotImplementedError(
-      'CreatePylintConfigurationStep.__init__() is not implemented '
-      'yet')
+    super().__init__(context)
+    self._pylintrc_step = CreateFileStep.from_resource(
+      context,
+      Path('pylintrc'),
+      'dralithus.project.templates',
+      'pylintrc')
 
   @override
   def prepare(self, state: ProjectState) -> None:
@@ -62,8 +66,7 @@ class CreatePylintConfigurationStep(ExecutionStep):
       :raises DralithusProjectError: When the pylintrc target cannot
         be accepted
     """
-    raise NotImplementedError(
-      'prepare() is not implemented yet')
+    self._pylintrc_step.prepare(state)
 
   @override
   def commit(self) -> None:
@@ -74,8 +77,7 @@ class CreatePylintConfigurationStep(ExecutionStep):
       :raises DralithusProjectError: When pylintrc cannot be created
         or written
     """
-    raise NotImplementedError(
-      'commit() is not implemented yet')
+    self._pylintrc_step.commit()
 
   @override
   def abort(self) -> None:
@@ -86,5 +88,4 @@ class CreatePylintConfigurationStep(ExecutionStep):
       :raises DralithusProjectError: When an owned pylintrc cannot
         be removed
     """
-    raise NotImplementedError(
-      'abort() is not implemented yet')
+    self._pylintrc_step.abort()

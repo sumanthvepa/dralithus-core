@@ -22,7 +22,15 @@
 # along with this program.  If not, see
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
+from importlib import resources
+from pathlib import Path
 import unittest
+
+from dralithus.test.project import project_context
+from dralithus.project.error import DralithusProjectError
+from dralithus.project.tx.create_pylint_configuration_step import (
+  CreatePylintConfigurationStep)
+from dralithus.project.tx.project_state import ProjectState
 
 
 class TestCreatePylintConfigurationStep(unittest.TestCase):
@@ -35,13 +43,41 @@ class TestCreatePylintConfigurationStep(unittest.TestCase):
     inner step's exhaustive file-type handling, which is covered by
     its own suite.
   """
+  _INIT_HOOK = (
+    'init-hook=\'import os, sys; sys.path.append(os.path.abspath('
+    'os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, '
+    'os.pardir, os.pardir, os.pardir, os.pardir, "src"))); '
+    'sys.path.append(os.path.abspath(os.path.join('
+    'os.path.dirname(__file__), os.pardir, os.pardir, os.pardir, '
+    'os.pardir, os.pardir, os.pardir, "tests")))\'')
+
+  @staticmethod
+  def _pylintrc(project_root: Path) -> Path:
+    """
+      Return the project Pylint configuration path.
+
+      :param project_root: The project root directory
+      :return: The pylintrc path
+    """
+    return project_root / 'pylintrc'
+
+  @staticmethod
+  def _pylintrc_template_content() -> str:
+    """
+      Read the packaged Pylint configuration template.
+
+      :return: The packaged pylintrc resource text
+    """
+    return resources.files('dralithus.project.templates').joinpath(
+      'pylintrc').read_text(encoding='utf-8')
+
   def test_pylintrc_resource_can_be_read(self) -> None:
     """
       Verify that the packaged pylintrc resource can be read.
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    self.assertNotEqual('', self._pylintrc_template_content())
 
   # prepare
 
@@ -51,7 +87,12 @@ class TestCreatePylintConfigurationStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      step = CreatePylintConfigurationStep(context)
+
+      step.prepare(ProjectState(project_root))
+
+      self.assertFalse(self._pylintrc(project_root).exists())
 
   def test_prepare_rejects_unusable_existing_target(self) -> None:
     """
@@ -59,7 +100,12 @@ class TestCreatePylintConfigurationStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      self._pylintrc(project_root).mkdir()
+      step = CreatePylintConfigurationStep(context)
+
+      with self.assertRaises(DralithusProjectError):
+        step.prepare(ProjectState(project_root))
 
   # commit
 
@@ -69,7 +115,15 @@ class TestCreatePylintConfigurationStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      step = CreatePylintConfigurationStep(context)
+
+      step.prepare(ProjectState(project_root))
+      step.commit()
+
+      self.assertEqual(
+        self._pylintrc_template_content(),
+        self._pylintrc(project_root).read_text(encoding='utf-8'))
 
   def test_commit_preserves_portable_init_hook(self) -> None:
     """
@@ -78,7 +132,15 @@ class TestCreatePylintConfigurationStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      step = CreatePylintConfigurationStep(context)
+
+      step.prepare(ProjectState(project_root))
+      step.commit()
+
+      self.assertIn(
+        self._INIT_HOOK,
+        self._pylintrc(project_root).read_text(encoding='utf-8'))
 
   def test_commit_preserves_preexisting_pylintrc(self) -> None:
     """
@@ -86,7 +148,16 @@ class TestCreatePylintConfigurationStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      pylintrc = self._pylintrc(project_root)
+      pylintrc.write_text('user config\n', encoding='utf-8')
+      step = CreatePylintConfigurationStep(context)
+
+      step.prepare(ProjectState(project_root))
+      step.commit()
+
+      self.assertEqual(
+        'user config\n', pylintrc.read_text(encoding='utf-8'))
 
   # abort
 
@@ -96,7 +167,14 @@ class TestCreatePylintConfigurationStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      step = CreatePylintConfigurationStep(context)
+
+      step.prepare(ProjectState(project_root))
+      step.commit()
+      step.abort()
+
+      self.assertFalse(self._pylintrc(project_root).exists())
 
   def test_abort_preserves_preexisting_pylintrc(self) -> None:
     """
@@ -104,4 +182,14 @@ class TestCreatePylintConfigurationStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      pylintrc = self._pylintrc(project_root)
+      pylintrc.write_text('user config\n', encoding='utf-8')
+      step = CreatePylintConfigurationStep(context)
+
+      step.prepare(ProjectState(project_root))
+      step.commit()
+      step.abort()
+
+      self.assertEqual(
+        'user config\n', pylintrc.read_text(encoding='utf-8'))
