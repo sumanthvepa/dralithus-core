@@ -122,8 +122,9 @@ class DryRunOption(Option):
       :return: The dry-run option and whether to skip the next arg
       :raises ValueError: When the option is given a value
     """
-    assert cls.is_option(current_arg, next_arg)
     flag, value = cls._split_flag_value(current_arg)
+    if flag != 'dry-run':
+      assert cls.is_option(current_arg, next_arg)
     if value is not None:
       raise ValueError(
         f'Dry-run option does not accept a value: {current_arg}')

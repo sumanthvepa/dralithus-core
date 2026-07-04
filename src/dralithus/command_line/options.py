@@ -59,6 +59,8 @@ class Options(Mapping[str, None | bool | int | str | set[str]]):
       :return: A dictionary of options
     """
     dictionary: dict[str, None | bool | int | str | set[str]] = {
+      'create_project': False,
+      'dry_run': False,
       'requires_help': False,
       'verbosity': 0,
       'environments': set(),
@@ -107,7 +109,10 @@ class Options(Mapping[str, None | bool | int | str | set[str]]):
       Return an iterator over the option names.
       :return: An iterator over the option names
     """
-    return iter(self._options)
+    return iter([
+      key for key, value in self._options.items()
+      if key not in ('create_project', 'dry_run') or value is not False
+    ])
 
   @override
   def __len__(self) -> int:
@@ -116,7 +121,7 @@ class Options(Mapping[str, None | bool | int | str | set[str]]):
 
       :return: The number of options
     """
-    return len(self._options)
+    return sum(1 for _ in self.__iter__())
 
   @property
   def end_index(self) -> int:
