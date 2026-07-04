@@ -21,6 +21,7 @@
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
 from pathlib import Path
+import sys
 from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
@@ -35,7 +36,7 @@ class TestProjectConfig(unittest.TestCase):
     Unit tests for the ProjectConfig class.
   """
   _CONFIG_PATH = Path('/tmp/project.toml')
-  _PYTHON = Path('/usr/bin/python3.14')
+  _PYTHON = Path(sys.executable)
 
   @classmethod
   def _config_text(
