@@ -22,6 +22,9 @@
 # -------------------------------------------------------------------
 import unittest
 
+from dralithus.command_line.dry_run_option import DryRunOption
+from dralithus.command_line.options import Options
+
 
 class TestDryRunOption(unittest.TestCase):
   """
@@ -33,9 +36,7 @@ class TestDryRunOption(unittest.TestCase):
 
       :return: None
     """
-    self.fail(
-      'TODO checkpoint 10: add red assertion for '
-      'DryRunOption.is_option("--dry-run", None)')
+    self.assertTrue(DryRunOption.is_option('--dry-run', None))
 
   def test_make_rejects_value(self) -> None:
     """
@@ -43,9 +44,8 @@ class TestDryRunOption(unittest.TestCase):
 
       :return: None
     """
-    self.fail(
-      'TODO checkpoint 10: add red assertion for '
-      'DryRunOption.make("--dry-run=true", None) value rejection')
+    with self.assertRaises(ValueError):
+      DryRunOption.make('--dry-run=true', None)
 
   def test_add_to_sets_dry_run_key(self) -> None:
     """
@@ -53,9 +53,10 @@ class TestDryRunOption(unittest.TestCase):
 
       :return: None
     """
-    self.fail(
-      'TODO checkpoint 10: add red assertion for '
-      'DryRunOption.add_to() dictionary update')
+    option = DryRunOption('dry-run')
+    dictionary: dict[str, None | bool | int | str | set[str]] = {}
+    option.add_to(dictionary)
+    self.assertTrue(dictionary['dry_run'])
 
   def test_options_integration_records_dry_run(self) -> None:
     """
@@ -63,6 +64,6 @@ class TestDryRunOption(unittest.TestCase):
 
       :return: None
     """
-    self.fail(
-      'TODO checkpoint 10: add red assertion for '
-      'Options(["--dry-run"]) integration')
+    options = Options(['--dry-run'])
+    self.assertFalse(options['create_project'])
+    self.assertTrue(options['dry_run'])

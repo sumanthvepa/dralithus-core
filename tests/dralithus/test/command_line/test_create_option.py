@@ -22,6 +22,9 @@
 # -------------------------------------------------------------------
 import unittest
 
+from dralithus.command_line.create_option import CreateOption
+from dralithus.command_line.options import Options
+
 
 class TestCreateOption(unittest.TestCase):
   """
@@ -33,9 +36,7 @@ class TestCreateOption(unittest.TestCase):
 
       :return: None
     """
-    self.fail(
-      'TODO checkpoint 10: add red assertion for '
-      'CreateOption.is_option("--create", None)')
+    self.assertTrue(CreateOption.is_option('--create', None))
 
   def test_make_rejects_value(self) -> None:
     """
@@ -43,9 +44,8 @@ class TestCreateOption(unittest.TestCase):
 
       :return: None
     """
-    self.fail(
-      'TODO checkpoint 10: add red assertion for '
-      'CreateOption.make("--create=true", None) value rejection')
+    with self.assertRaises(ValueError):
+      CreateOption.make('--create=true', None)
 
   def test_add_to_sets_create_project_key(self) -> None:
     """
@@ -53,9 +53,10 @@ class TestCreateOption(unittest.TestCase):
 
       :return: None
     """
-    self.fail(
-      'TODO checkpoint 10: add red assertion for '
-      'CreateOption.add_to() dictionary update')
+    option = CreateOption('create')
+    dictionary: dict[str, None | bool | int | str | set[str]] = {}
+    option.add_to(dictionary)
+    self.assertTrue(dictionary['create_project'])
 
   def test_options_integration_records_create_project(self) -> None:
     """
@@ -63,6 +64,6 @@ class TestCreateOption(unittest.TestCase):
 
       :return: None
     """
-    self.fail(
-      'TODO checkpoint 10: add red assertion for '
-      'Options(["--create"]) integration')
+    options = Options(['--create'])
+    self.assertTrue(options['create_project'])
+    self.assertFalse(options['dry_run'])
