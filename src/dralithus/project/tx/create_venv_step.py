@@ -20,10 +20,15 @@
 # along with this program.  If not, see
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
+import os
 from pathlib import Path
+import shutil
+import subprocess
+
 from typing import override
 
 from dralithus.project.context import ProjectContext
+from dralithus.project.error import DralithusProjectError
 from dralithus.project.tx.execution_step import ExecutionStep
 from dralithus.project.tx.project_state import ProjectState
 
@@ -38,7 +43,121 @@ class CreateVenvStep(ExecutionStep):
     because a venv bakes absolute paths into its metadata; abort is
     the backstop.
   """
-  # pylint: disable-next=super-init-not-called,unused-argument
+  def _venv_exists(self, venv_dir: Path) -> bool:
+    """
+      Check that a specified venv exists.
+
+      :param venv_dir: The project virtual environment directory
+      :return: True if path exists and is a venv, False otherwise.
+      :raises DralithusProjectError: When path exists but is not a
+        venv
+    """
+    if not venv_dir.exists():
+      return False
+    if not venv_dir.is_dir():
+      raise DralithusProjectError(
+        f'Venv path is not a directory: {venv_dir}')
+    if not self._is_venv(venv_dir):
+      raise DralithusProjectError(f'Path is not a venv: {venv_dir}')
+    return True
+
+  def _create_venv(self, venv_dir: Path) -> None:
+    """
+      Create the virtual environment.
+
+      :param venv_dir: The project virtual environment directory
+      :return: None
+      :raises DralithusProjectError: When venv creation fails
+    """
+    try:
+      command: list[str] = [
+        str(self._python_executable), '-m', 'venv', str(venv_dir)]
+      subprocess.run(command, check=True)
+    except OSError as error:
+      raise DralithusProjectError(
+        f'Could not create venv: {venv_dir}') from error
+    except subprocess.CalledProcessError as error:
+      raise DralithusProjectError(
+        f'Could not create venv: {venv_dir}') from error
+
+  @staticmethod
+  def _delete_venv(venv_dir: Path) -> None:
+    """
+      Delete the virtual environment.
+
+      :param venv_dir: The project virtual environment directory
+      :return: None
+      :raises DralithusProjectError: When venv removal fails
+    """
+    try:
+      shutil.rmtree(venv_dir)
+    except OSError as error:
+      raise DralithusProjectError(
+        f'Could not remove venv: {venv_dir}') from error
+
+  @staticmethod
+  def _validate_python_version(python_executable: Path) -> str:
+    """
+      Validate that python_executable is a single Python executable,
+      and return the version string reported by the executable.
+
+      :param python_executable: The path to validate
+      :return: The Python version reported by the executable
+      :raises DralithusProjectError: When python_executable is not a
+        runnable Python executable
+    """
+    try:
+      result = subprocess.run(
+        [str(python_executable), '--version'],
+        capture_output=True,
+        check=True,
+        text=True)
+    except OSError as error:
+      raise DralithusProjectError(
+        f'Could not run Python executable: '
+        f'{python_executable}') from error
+    except subprocess.CalledProcessError as error:
+      raise DralithusProjectError(
+        f'Python executable failed version check: {python_executable}'
+      ) from error
+    version = result.stdout.strip() or result.stderr.strip()
+    if not version.startswith('Python '):
+      raise DralithusProjectError(
+        f'Executable is not Python: {python_executable}')
+    return version
+
+  @staticmethod
+  def _validate_python(python_executable: Path) -> str:
+    """
+      Validate that python_executable is a runnable Python
+      executable.
+
+      :param python_executable: The path to validate
+      :return: The Python version reported by the executable
+      :raises DralithusProjectError: When python_executable is not a
+        runnable Python executable
+    """
+    if not python_executable.exists():
+      raise DralithusProjectError(
+        f'Python executable does not exist: {python_executable}')
+    if not python_executable.is_file():
+      raise DralithusProjectError(
+        f'Python executable is not a file: {python_executable}')
+    if not os.access(python_executable, os.X_OK):
+      raise DralithusProjectError(
+        f'Python executable is not executable: {python_executable}')
+    return CreateVenvStep._validate_python_version(python_executable)
+
+  @staticmethod
+  def _is_venv(path: Path) -> bool:
+    """
+      Check if path looks like a Python virtual environment.
+
+      :param path: The path to check
+      :return: True if path contains Python venv metadata
+    """
+    return (path / 'pyvenv.cfg').is_file()
+
   def __init__(
     self,
     context: ProjectContext,
@@ -53,8 +172,10 @@ class CreateVenvStep(ExecutionStep):
       :raises DralithusProjectError: When python_executable is not a
         runnable Python executable
     """
-    raise NotImplementedError(
-      'CreateVenvStep.__init__() is not implemented yet')
+    super().__init__(context)
+    self._python_version = self._validate_python(python_executable)
+    self._python_executable = python_executable
+    self._created_venv = False
 
   @override
   def prepare(self, state: ProjectState) -> None:
@@ -73,8 +194,12 @@ class CreateVenvStep(ExecutionStep):
       :raises DralithusProjectError: When the venv path is occupied
         by something that is not a venv
     """
-    raise NotImplementedError(
-      'prepare() is not implemented yet')
+    venv_path = self._context.venv_path
+    if not self._venv_exists(venv_path):
+      state.claim_venv(
+        venv_path,
+        self._python_version.removeprefix('Python '))
+      state.claim_executable(self._context.venv_python)
 
   @override
   def commit(self) -> None:
@@ -87,8 +212,10 @@ class CreateVenvStep(ExecutionStep):
       :return: None
       :raises DralithusProjectError: When venv creation fails
     """
-    raise NotImplementedError(
-      'commit() is not implemented yet')
+    venv_path = self._context.venv_path
+    if not self._venv_exists(venv_path):
+      self._create_venv(venv_path)
+      self._created_venv = True
 
   @override
   def abort(self) -> None:
@@ -100,5 +227,6 @@ class CreateVenvStep(ExecutionStep):
       :return: None
       :raises DralithusProjectError: When venv removal fails
     """
-    raise NotImplementedError(
-      'abort() is not implemented yet')
+    if self._created_venv:
+      self._delete_venv(self._context.venv_path)
+      self._created_venv = False

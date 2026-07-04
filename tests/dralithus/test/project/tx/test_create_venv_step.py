@@ -22,7 +22,16 @@
 # along with this program.  If not, see
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
+from pathlib import Path
+import stat
+import subprocess
+import sys
 import unittest
+
+from dralithus.test.project import project_context
+from dralithus.project.error import DralithusProjectError
+from dralithus.project.tx.create_venv_step import CreateVenvStep
+from dralithus.project.tx.project_state import ProjectState
 
 
 # pylint: disable-next=too-many-public-methods
@@ -36,6 +45,46 @@ class TestCreateVenvStep(unittest.TestCase):
     claim the projected venv with a version derived from the same
     source the real run uses.
   """
+  @staticmethod
+  def _python_executable() -> Path:
+    """
+      Return the Python executable used to run the test suite. This
+      uses the executable running the test suite itself as the
+      python interpreter to ensure compatibility with the test.
+
+      :return: The Python executable path
+    """
+    return Path(sys.executable)
+
+  @classmethod
+  def _probed_version(cls) -> str:
+    """
+      Return the version the test interpreter reports, without the
+      'Python ' prefix.
+
+      :return: The interpreter version string
+    """
+    result = subprocess.run(
+      [str(cls._python_executable()), '--version'],
+      capture_output=True,
+      check=True,
+      text=True)
+    version = result.stdout.strip() or result.stderr.strip()
+    return version.removeprefix('Python ')
+
+  @staticmethod
+  def _make_fake_venv(venv_path: Path, version: str = '3.13.1') -> None:
+    """
+      Create a fake venv directory with pyvenv.cfg metadata.
+
+      :param venv_path: The venv directory to create
+      :param version: The version to record in pyvenv.cfg
+      :return: None
+    """
+    venv_path.mkdir()
+    (venv_path / 'pyvenv.cfg').write_text(
+      f'version = {version}\n', encoding='utf-8')
+
   # constructor
 
   def test_init_rejects_missing_python_executable(self) -> None:
@@ -44,7 +93,14 @@ class TestCreateVenvStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      executable = project_root / 'missing-python'
+
+      with self.assertRaisesRegex(
+        DralithusProjectError,
+        'Python executable does not exist'
+      ):
+        CreateVenvStep(context, executable)
 
   def test_init_rejects_python_executable_directory(self) -> None:
     """
@@ -53,7 +109,14 @@ class TestCreateVenvStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      executable = project_root
+
+      with self.assertRaisesRegex(
+        DralithusProjectError,
+        'Python executable is not a file'
+      ):
+        CreateVenvStep(context, executable)
 
   def test_init_rejects_non_executable_python_file(self) -> None:
     """
@@ -62,7 +125,15 @@ class TestCreateVenvStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      executable = project_root / 'python'
+      executable.write_text('#!/bin/sh\n', encoding='utf-8')
+
+      with self.assertRaisesRegex(
+        DralithusProjectError,
+        'Python executable is not executable'
+      ):
+        CreateVenvStep(context, executable)
 
   def test_init_rejects_executable_that_is_not_python(self) -> None:
     """
@@ -71,7 +142,23 @@ class TestCreateVenvStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      executable = project_root / 'not-python'
+      executable.write_text(
+        '#!/bin/sh\n'
+        'echo "not python"\n',
+        encoding='utf-8')
+      executable.chmod(
+        executable.stat().st_mode
+        | stat.S_IXUSR
+        | stat.S_IXGRP
+        | stat.S_IXOTH)
+
+      with self.assertRaisesRegex(
+        DralithusProjectError,
+        'Executable is not Python'
+      ):
+        CreateVenvStep(context, executable)
 
   def test_init_wraps_python_execution_failure(self) -> None:
     """
@@ -80,7 +167,20 @@ class TestCreateVenvStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      executable = project_root / 'not-python'
+      executable.write_text('#!/bin/sh\nexit 1\n', encoding='utf-8')
+      executable.chmod(
+        executable.stat().st_mode
+        | stat.S_IXUSR
+        | stat.S_IXGRP
+        | stat.S_IXOTH)
+
+      with self.assertRaisesRegex(
+        DralithusProjectError,
+        'Python executable failed version check'
+      ):
+        CreateVenvStep(context, executable)
 
   # prepare
 
@@ -92,7 +192,17 @@ class TestCreateVenvStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      step = CreateVenvStep(context, self._python_executable())
+      state = ProjectState(project_root)
+
+      step.prepare(state)
+
+      self.assertTrue(state.is_dir(context.venv_path))
+      self.assertEqual(
+        self._probed_version(),
+        state.venv_python_version(context.venv_path))
+      self.assertTrue(state.is_executable(context.venv_python))
 
   def test_prepare_accepts_preexisting_venv(self) -> None:
     """
@@ -101,7 +211,15 @@ class TestCreateVenvStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      self._make_fake_venv(context.venv_path, version='3.13.1')
+      step = CreateVenvStep(context, self._python_executable())
+      state = ProjectState(project_root)
+
+      step.prepare(state)
+
+      self.assertEqual(
+        '3.13.1', state.venv_python_version(context.venv_path))
 
   def test_prepare_rejects_plain_directory_venv_path(self) -> None:
     """
@@ -110,7 +228,14 @@ class TestCreateVenvStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      (project_root / 'venv').mkdir()
+      step = CreateVenvStep(context, self._python_executable())
+
+      with self.assertRaisesRegex(
+        DralithusProjectError, 'Path is not a venv'
+      ):
+        step.prepare(ProjectState(project_root))
 
   def test_prepare_rejects_file_venv_path(self) -> None:
     """
@@ -119,7 +244,12 @@ class TestCreateVenvStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      (project_root / 'venv').touch()
+      step = CreateVenvStep(context, self._python_executable())
+
+      with self.assertRaises(DralithusProjectError):
+        step.prepare(ProjectState(project_root))
 
   def test_prepare_creates_nothing_on_disk(self) -> None:
     """
@@ -127,7 +257,12 @@ class TestCreateVenvStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      step = CreateVenvStep(context, self._python_executable())
+
+      step.prepare(ProjectState(project_root))
+
+      self.assertFalse((project_root / 'venv').exists())
 
   # commit
 
@@ -137,7 +272,15 @@ class TestCreateVenvStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      step = CreateVenvStep(context, self._python_executable())
+      target = project_root / 'venv'
+
+      step.prepare(ProjectState(project_root))
+      step.commit()
+
+      self.assertTrue(target.is_dir())
+      self.assertTrue((target / 'pyvenv.cfg').is_file())
 
   def test_commit_creates_named_venv_directory(self) -> None:
     """
@@ -146,7 +289,15 @@ class TestCreateVenvStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context(venv_name='env') as (project_root, context):
+      step = CreateVenvStep(context, self._python_executable())
+      target = context.venv_path
+
+      step.prepare(ProjectState(project_root))
+      step.commit()
+
+      self.assertTrue(target.is_dir())
+      self.assertTrue((target / 'pyvenv.cfg').is_file())
 
   def test_commit_preserves_preexisting_venv(self) -> None:
     """
@@ -155,7 +306,16 @@ class TestCreateVenvStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      self._make_fake_venv(context.venv_path, version='3.13.1')
+      step = CreateVenvStep(context, self._python_executable())
+
+      step.prepare(ProjectState(project_root))
+      step.commit()
+
+      self.assertEqual(
+        'version = 3.13.1\n',
+        (context.venv_path / 'pyvenv.cfg').read_text(encoding='utf-8'))
 
   def test_repeated_commits_are_convergent(self) -> None:
     """
@@ -164,7 +324,19 @@ class TestCreateVenvStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      step = CreateVenvStep(context, self._python_executable())
+      target = project_root / 'venv'
+
+      # The phase-call sequence repeats across step suites; a future
+      # refactoring could extract a shared helper.
+      # pylint: disable=duplicate-code
+      step.prepare(ProjectState(project_root))
+      step.commit()
+      step.commit()
+      step.abort()
+
+      self.assertFalse(target.exists())
 
   # abort
 
@@ -174,7 +346,15 @@ class TestCreateVenvStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      step = CreateVenvStep(context, self._python_executable())
+      target = project_root / 'venv'
+
+      step.prepare(ProjectState(project_root))
+      step.commit()
+      step.abort()
+
+      self.assertFalse(target.exists())
 
   def test_abort_is_idempotent(self) -> None:
     """
@@ -182,7 +362,16 @@ class TestCreateVenvStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      step = CreateVenvStep(context, self._python_executable())
+      target = project_root / 'venv'
+
+      step.prepare(ProjectState(project_root))
+      step.commit()
+      step.abort()
+      step.abort()
+
+      self.assertFalse(target.exists())
 
   def test_abort_preserves_preexisting_venv(self) -> None:
     """
@@ -190,7 +379,16 @@ class TestCreateVenvStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      self._make_fake_venv(context.venv_path, version='3.13.1')
+      step = CreateVenvStep(context, self._python_executable())
+
+      step.prepare(ProjectState(project_root))
+      step.commit()
+      step.abort()
+
+      self.assertTrue(context.venv_path.is_dir())
+      self.assertTrue((context.venv_path / 'pyvenv.cfg').is_file())
 
   def test_abort_wraps_venv_removal_failure(self) -> None:
     """
@@ -198,4 +396,16 @@ class TestCreateVenvStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      step = CreateVenvStep(context, self._python_executable())
+      target = project_root / 'venv'
+
+      step.prepare(ProjectState(project_root))
+      step.commit()
+      target.rename(project_root / 'saved-venv')
+      target.touch()
+
+      with self.assertRaises(DralithusProjectError):
+        step.abort()
+
+      self.assertTrue(target.is_file())

@@ -22,7 +22,16 @@
 # along with this program.  If not, see
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
+from pathlib import Path
 import unittest
+from unittest import mock
+
+from dralithus.test.project import FailingWriteFile, project_context
+from dralithus.project.error import DralithusProjectError
+from dralithus.project.packages import Packages
+from dralithus.project.tx.create_packages_step import (
+  CreatePackagesStep)
+from dralithus.project.tx.project_state import ProjectState
 
 
 # pylint: disable-next=too-many-public-methods
@@ -37,6 +46,26 @@ class TestCreatePackagesStep(unittest.TestCase):
     validates existing dependency files, which the old dry run
     never did.
   """
+  @staticmethod
+  def _packages_txt(project_root: Path) -> Path:
+    """
+      Return the project packages.txt path.
+
+      :param project_root: The project root directory
+      :return: The packages.txt path
+    """
+    return project_root / Packages.PACKAGES_FILENAME
+
+  @staticmethod
+  def _local_packages_txt(project_root: Path) -> Path:
+    """
+      Return the project local-packages.txt path.
+
+      :param project_root: The project root directory
+      :return: The local-packages.txt path
+    """
+    return project_root / Packages.LOCAL_PACKAGES_FILENAME
+
   # prepare
 
   def test_prepare_claims_both_dependency_files(self) -> None:
@@ -46,7 +75,15 @@ class TestCreatePackagesStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      step = CreatePackagesStep(context)
+      state = ProjectState(project_root)
+
+      step.prepare(state)
+
+      self.assertTrue(state.is_file(self._packages_txt(project_root)))
+      self.assertTrue(
+        state.is_file(self._local_packages_txt(project_root)))
 
   def test_prepare_accepts_existing_dependency_files(self) -> None:
     """
@@ -54,7 +91,19 @@ class TestCreatePackagesStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      self._packages_txt(project_root).write_text(
+        'requests\n', encoding='utf-8')
+      self._local_packages_txt(project_root).write_text(
+        '../common-lib\n', encoding='utf-8')
+      step = CreatePackagesStep(context)
+      state = ProjectState(project_root)
+
+      step.prepare(state)
+
+      self.assertTrue(state.is_file(self._packages_txt(project_root)))
+      self.assertTrue(
+        state.is_file(self._local_packages_txt(project_root)))
 
   def test_prepare_rejects_unreadable_packages_txt(self) -> None:
     """
@@ -63,7 +112,15 @@ class TestCreatePackagesStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      self._packages_txt(project_root).mkdir()
+      step = CreatePackagesStep(context)
+
+      with self.assertRaisesRegex(
+        DralithusProjectError,
+        'Could not read dependency file'
+      ):
+        step.prepare(ProjectState(project_root))
 
   def test_prepare_rejects_dangling_local_packages_symlink(
     self
@@ -73,7 +130,18 @@ class TestCreatePackagesStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      local_packages_txt = self._local_packages_txt(project_root)
+      local_packages_txt.symlink_to(project_root / 'does-not-exist')
+      step = CreatePackagesStep(context)
+
+      with self.assertRaisesRegex(
+        DralithusProjectError,
+        'Could not read dependency file'
+      ):
+        step.prepare(ProjectState(project_root))
+
+      self.assertTrue(local_packages_txt.is_symlink())
 
   def test_prepare_creates_nothing_on_disk(self) -> None:
     """
@@ -81,7 +149,13 @@ class TestCreatePackagesStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      step = CreatePackagesStep(context)
+
+      step.prepare(ProjectState(project_root))
+
+      self.assertFalse(self._packages_txt(project_root).exists())
+      self.assertFalse(self._local_packages_txt(project_root).exists())
 
   # commit
 
@@ -91,7 +165,20 @@ class TestCreatePackagesStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      packages_txt = self._packages_txt(project_root)
+      local_packages_txt = self._local_packages_txt(project_root)
+      step = CreatePackagesStep(context)
+
+      step.prepare(ProjectState(project_root))
+      step.commit()
+
+      self.assertTrue(packages_txt.is_file())
+      self.assertTrue(local_packages_txt.is_file())
+      self.assertTrue(
+        packages_txt.read_text(encoding='utf-8').startswith('#'))
+      self.assertTrue(
+        local_packages_txt.read_text(encoding='utf-8').startswith('#'))
 
   def test_commit_writes_header_content(self) -> None:
     """
@@ -100,7 +187,24 @@ class TestCreatePackagesStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      step = CreatePackagesStep(context)
+
+      step.prepare(ProjectState(project_root))
+      step.commit()
+
+      packages_text = self._packages_txt(project_root).read_text(
+        encoding='utf-8')
+      local_text = self._local_packages_txt(project_root).read_text(
+        encoding='utf-8')
+      self.assertEqual(
+        '# Third-party packages, one per line.\n'
+        '# Append " [dev]" to mark a development-only dependency.\n',
+        packages_text)
+      self.assertEqual(
+        '# Local editable packages, one path per line.\n'
+        '# Append " [dev]" to mark a development-only dependency.\n',
+        local_text)
 
   def test_commit_keeps_existing_packages_txt(self) -> None:
     """
@@ -109,7 +213,17 @@ class TestCreatePackagesStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      packages_txt = self._packages_txt(project_root)
+      packages_txt.write_text('requests\n', encoding='utf-8')
+      step = CreatePackagesStep(context)
+
+      step.prepare(ProjectState(project_root))
+      step.commit()
+
+      self.assertEqual(
+        'requests\n', packages_txt.read_text(encoding='utf-8'))
+      self.assertTrue(self._local_packages_txt(project_root).is_file())
 
   def test_commit_keeps_existing_local_packages_txt(self) -> None:
     """
@@ -118,7 +232,18 @@ class TestCreatePackagesStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      local_packages_txt = self._local_packages_txt(project_root)
+      local_packages_txt.write_text('../common-lib\n', encoding='utf-8')
+      step = CreatePackagesStep(context)
+
+      step.prepare(ProjectState(project_root))
+      step.commit()
+
+      self.assertEqual(
+        '../common-lib\n',
+        local_packages_txt.read_text(encoding='utf-8'))
+      self.assertTrue(self._packages_txt(project_root).is_file())
 
   def test_commit_write_failure_removes_partially_created_files(
     self
@@ -129,7 +254,32 @@ class TestCreatePackagesStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    real_open = Path.open
+
+    def fail_local_open(
+      path: Path,
+      mode: str = 'r',
+      encoding: str | None = None
+    ) -> object:
+      if mode == 'x' and path.name == Packages.LOCAL_PACKAGES_FILENAME:
+        raise OSError('simulated write failure')
+      # The caller is responsible for closing.
+      # pylint: disable-next=consider-using-with
+      return real_open(path, mode, encoding=encoding)
+
+    with project_context() as (project_root, context):
+      step = CreatePackagesStep(context)
+      step.prepare(ProjectState(project_root))
+
+      with mock.patch.object(Path, 'open', fail_local_open):
+        with self.assertRaises(DralithusProjectError) as context_manager:
+          step.commit()
+
+      self.assertEqual(
+        f'Could not write dependency file: {project_root}',
+        str(context_manager.exception))
+      self.assertFalse(self._packages_txt(project_root).exists())
+      self.assertFalse(self._local_packages_txt(project_root).exists())
 
   def test_commit_write_failure_after_creation_removes_file(
     self
@@ -141,7 +291,33 @@ class TestCreatePackagesStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    real_open = Path.open
+
+    def failing_open(
+      path: Path,
+      mode: str = 'r',
+      encoding: str | None = None
+    ) -> object:
+      # The wrapper (or the caller) is responsible for closing.
+      # pylint: disable-next=consider-using-with
+      file = real_open(path, mode, encoding=encoding)
+      if mode == 'x' and path.name == Packages.PACKAGES_FILENAME:
+        return FailingWriteFile(file)
+      return file
+
+    with project_context() as (project_root, context):
+      step = CreatePackagesStep(context)
+      step.prepare(ProjectState(project_root))
+
+      with mock.patch.object(Path, 'open', failing_open):
+        with self.assertRaises(DralithusProjectError) as context_manager:
+          step.commit()
+
+      self.assertEqual(
+        f'Could not write dependency file: {project_root}',
+        str(context_manager.exception))
+      self.assertFalse(self._packages_txt(project_root).exists())
+      self.assertFalse(self._local_packages_txt(project_root).exists())
 
   def test_commit_removes_created_files_when_validation_fails(
     self
@@ -153,7 +329,21 @@ class TestCreatePackagesStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      step = CreatePackagesStep(context)
+      step.prepare(ProjectState(project_root))
+
+      local_packages_txt = self._local_packages_txt(project_root)
+      local_packages_txt.symlink_to(project_root / 'does-not-exist')
+
+      with self.assertRaisesRegex(
+        DralithusProjectError,
+        'Could not read dependency file'
+      ):
+        step.commit()
+
+      self.assertTrue(local_packages_txt.is_symlink())
+      self.assertFalse(self._packages_txt(project_root).exists())
 
   # abort
 
@@ -163,7 +353,15 @@ class TestCreatePackagesStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      step = CreatePackagesStep(context)
+
+      step.prepare(ProjectState(project_root))
+      step.commit()
+      step.abort()
+
+      self.assertFalse(self._packages_txt(project_root).exists())
+      self.assertFalse(self._local_packages_txt(project_root).exists())
 
   def test_abort_is_idempotent(self) -> None:
     """
@@ -172,7 +370,16 @@ class TestCreatePackagesStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      step = CreatePackagesStep(context)
+
+      step.prepare(ProjectState(project_root))
+      step.commit()
+      step.abort()
+      step.abort()
+
+      self.assertFalse(self._packages_txt(project_root).exists())
+      self.assertFalse(self._local_packages_txt(project_root).exists())
 
   def test_abort_keeps_preexisting_files(self) -> None:
     """
@@ -180,7 +387,18 @@ class TestCreatePackagesStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      packages_txt = self._packages_txt(project_root)
+      packages_txt.write_text('requests\n', encoding='utf-8')
+      step = CreatePackagesStep(context)
+
+      step.prepare(ProjectState(project_root))
+      step.commit()
+      step.abort()
+
+      self.assertEqual(
+        'requests\n', packages_txt.read_text(encoding='utf-8'))
+      self.assertFalse(self._local_packages_txt(project_root).exists())
 
   def test_abort_preserves_preexisting_local_packages_txt(
     self
@@ -191,7 +409,19 @@ class TestCreatePackagesStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      local_packages_txt = self._local_packages_txt(project_root)
+      local_packages_txt.write_text('../common-lib\n', encoding='utf-8')
+      step = CreatePackagesStep(context)
+
+      step.prepare(ProjectState(project_root))
+      step.commit()
+      step.abort()
+
+      self.assertEqual(
+        '../common-lib\n',
+        local_packages_txt.read_text(encoding='utf-8'))
+      self.assertFalse(self._packages_txt(project_root).exists())
 
   def test_abort_accepts_already_removed_file(self) -> None:
     """
@@ -200,7 +430,17 @@ class TestCreatePackagesStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      packages_txt = self._packages_txt(project_root)
+      step = CreatePackagesStep(context)
+
+      step.prepare(ProjectState(project_root))
+      step.commit()
+      packages_txt.unlink()
+      step.abort()
+
+      self.assertFalse(packages_txt.exists())
+      self.assertFalse(self._local_packages_txt(project_root).exists())
 
   def test_abort_wraps_removal_failure(self) -> None:
     """
@@ -208,7 +448,20 @@ class TestCreatePackagesStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      packages_txt = self._packages_txt(project_root)
+      step = CreatePackagesStep(context)
+
+      step.prepare(ProjectState(project_root))
+      step.commit()
+      packages_txt.unlink()
+      packages_txt.mkdir()
+
+      with self.assertRaisesRegex(
+        DralithusProjectError,
+        'Could not remove dependency file'
+      ):
+        step.abort()
 
   def test_repeated_commits_are_convergent(self) -> None:
     """
@@ -217,4 +470,13 @@ class TestCreatePackagesStep(unittest.TestCase):
 
       :return: None
     """
-    raise NotImplementedError('test not implemented yet')
+    with project_context() as (project_root, context):
+      step = CreatePackagesStep(context)
+
+      step.prepare(ProjectState(project_root))
+      step.commit()
+      step.commit()
+      step.abort()
+
+      self.assertFalse(self._packages_txt(project_root).exists())
+      self.assertFalse(self._local_packages_txt(project_root).exists())

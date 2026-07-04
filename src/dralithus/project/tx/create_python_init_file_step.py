@@ -27,6 +27,7 @@ from typing import override
 
 from dralithus.project.context import ProjectContext
 from dralithus.project.copyright_header import CopyrightHeader
+from dralithus.project.tx.create_file_step import CreateFileStep
 from dralithus.project.tx.execution_step import ExecutionStep
 from dralithus.project.tx.project_state import ProjectState
 
@@ -41,7 +42,6 @@ class CreatePythonInitFileStep(ExecutionStep):
     description.
   """
   # pylint: disable-next=too-many-arguments,too-many-positional-arguments
-  # pylint: disable-next=super-init-not-called,unused-argument
   def __init__(
     self,
     context: ProjectContext,
@@ -67,8 +67,13 @@ class CreatePythonInitFileStep(ExecutionStep):
       :return: None
       :raises DralithusProjectError: When directory is absolute
     """
-    raise NotImplementedError(
-      'CreatePythonInitFileStep.__init__() is not implemented yet')
+    super().__init__(context)
+    header = copyright_header.text('python', description)
+    content = f'"""\n  {description}\n"""\n{header}'
+    self._create_file_step = CreateFileStep(
+      context,
+      directory / self.init_filename,
+      content)
 
   @property
   def init_filename(self) -> str:
@@ -77,8 +82,7 @@ class CreatePythonInitFileStep(ExecutionStep):
 
       :return: The initializer filename
     """
-    raise NotImplementedError(
-      'init_filename is not implemented yet')
+    return '__init__.py'
 
   @override
   def prepare(self, state: ProjectState) -> None:
@@ -90,8 +94,7 @@ class CreatePythonInitFileStep(ExecutionStep):
       :raises DralithusProjectError: When the __init__.py target
         cannot be accepted
     """
-    raise NotImplementedError(
-      'prepare() is not implemented yet')
+    self._create_file_step.prepare(state)
 
   @override
   def commit(self) -> None:
@@ -102,8 +105,7 @@ class CreatePythonInitFileStep(ExecutionStep):
       :raises DralithusProjectError: When the __init__.py file
         cannot be created or written
     """
-    raise NotImplementedError(
-      'commit() is not implemented yet')
+    self._create_file_step.commit()
 
   @override
   def abort(self) -> None:
@@ -114,5 +116,4 @@ class CreatePythonInitFileStep(ExecutionStep):
       :raises DralithusProjectError: When the owned __init__.py file
         cannot be removed
     """
-    raise NotImplementedError(
-      'abort() is not implemented yet')
+    self._create_file_step.abort()

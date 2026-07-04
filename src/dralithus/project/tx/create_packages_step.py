@@ -20,9 +20,13 @@
 # along with this program.  If not, see
 # <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------
+import os
+from pathlib import Path
 from typing import override
 
 from dralithus.project.context import ProjectContext
+from dralithus.project.error import DralithusProjectError
+from dralithus.project.packages import Packages
 from dralithus.project.tx.execution_step import ExecutionStep
 from dralithus.project.tx.project_state import ProjectState
 
@@ -54,7 +58,102 @@ class CreatePackagesStep(ExecutionStep):
     since name-based unlink cannot be made atomic with an identity
     or content check.
   """
-  # pylint: disable-next=super-init-not-called,unused-argument
+  _PACKAGES_HEADER = (
+    '# Third-party packages, one per line.\n'
+    '# Append " [dev]" to mark a development-only dependency.\n')
+  _LOCAL_PACKAGES_HEADER = (
+    '# Local editable packages, one path per line.\n'
+    '# Append " [dev]" to mark a development-only dependency.\n')
+
+  _created_files: list[Path]
+
+  def _remove_created_files(self) -> None:
+    """
+      Remove the dependency files created by this step.
+
+      Files already removed externally are accepted silently.
+
+      :return: None
+      :raises DralithusProjectError: When a created dependency file
+        cannot be removed
+    """
+    for path in self._created_files:
+      try:
+        path.unlink(missing_ok=True)
+      except OSError as error:
+        raise DralithusProjectError(
+          f'Could not remove dependency file: {path}') from error
+    self._created_files = []
+
+  def _create_missing_files(self, project_root: Path) -> None:
+    """
+      Create the missing dependency files in the project root.
+
+      Records exactly the files this step created. On a write
+      failure the files this step created are removed before
+      raising, so nothing is left behind.
+
+      :param project_root: The project root directory
+      :return: None
+      :raises DralithusProjectError: When a missing dependency file
+        cannot be written
+    """
+    targets = (
+      (project_root / Packages.PACKAGES_FILENAME,
+       self._PACKAGES_HEADER),
+      (project_root / Packages.LOCAL_PACKAGES_FILENAME,
+       self._LOCAL_PACKAGES_HEADER))
+    try:
+      for path, content in targets:
+        self._create_file(path, content)
+    except OSError as error:
+      self._remove_created_files()
+      raise DralithusProjectError(
+        f'Could not write dependency file: {project_root}') from error
+
+  def _create_file(self, path: Path, content: str) -> None:
+    """
+      Create path with content unless the path already exists.
+
+      Creation is exclusive, so a file that appears between any
+      earlier existence check and the write is never overwritten,
+      and a path that already exists (including as a dangling
+      symlink) is neither replaced nor claimed. Ownership is
+      recorded the instant exclusive creation succeeds, before the
+      content write, so a write failure cannot leave an untracked
+      partial file behind.
+
+      :param path: The dependency file to create
+      :param content: The content to write
+      :return: None
+      :raises OSError: When the file cannot be created or written
+    """
+    try:
+      # The with statement starts only after ownership is recorded.
+      # pylint: disable-next=consider-using-with
+      file = path.open('x', encoding='utf-8')
+    except FileExistsError:
+      pass
+    else:
+      self._created_files.append(path)
+      with file:
+        file.write(content)
+
+  @staticmethod
+  def _validate_readable(path: Path) -> None:
+    """
+      Validate that an existing dependency file can be read.
+
+      :param path: The dependency file to read
+      :return: None
+      :raises DralithusProjectError: When the file cannot be read
+    """
+    try:
+      path.read_text(encoding='utf-8')
+    except (OSError, UnicodeError) as error:
+      raise DralithusProjectError(
+        f'Could not read dependency file: {path}') from error
+
   def __init__(self, context: ProjectContext) -> None:
     """
       Initialize the packages creation step.
@@ -62,8 +161,8 @@ class CreatePackagesStep(ExecutionStep):
       :param context: The shared project creation context
       :return: None
     """
-    raise NotImplementedError(
-      'CreatePackagesStep.__init__() is not implemented yet')
+    super().__init__(context)
+    self._created_files = []
 
   @override
   def prepare(self, state: ProjectState) -> None:
@@ -80,8 +179,16 @@ class CreatePackagesStep(ExecutionStep):
       :raises DralithusProjectError: When an existing dependency
         file cannot be read or parsed
     """
-    raise NotImplementedError(
-      'prepare() is not implemented yet')
+    project_root = self._context.project_root
+    packages_txt = project_root / Packages.PACKAGES_FILENAME
+    local_packages_txt = (
+      project_root / Packages.LOCAL_PACKAGES_FILENAME)
+    if os.path.lexists(packages_txt):
+      Packages(project_root)
+    elif os.path.lexists(local_packages_txt):
+      self._validate_readable(local_packages_txt)
+    state.claim_file(packages_txt)
+    state.claim_file(local_packages_txt)
 
   @override
   def commit(self) -> None:
@@ -100,8 +207,12 @@ class CreatePackagesStep(ExecutionStep):
       :raises DralithusProjectError: When a missing dependency file
         cannot be written, or the resulting files cannot be parsed
     """
-    raise NotImplementedError(
-      'commit() is not implemented yet')
+    self._create_missing_files(self._context.project_root)
+    try:
+      Packages(self._context.project_root)
+    except DralithusProjectError:
+      self._remove_created_files()
+      raise
 
   @override
   def abort(self) -> None:
@@ -115,5 +226,4 @@ class CreatePackagesStep(ExecutionStep):
       :raises DralithusProjectError: When a created dependency file
         cannot be removed
     """
-    raise NotImplementedError(
-      'abort() is not implemented yet')
+    self._remove_created_files()
