@@ -119,3 +119,116 @@ For tests in this alternate workflow, include both `src` and `tests`:
 ```bash
 PYTHONPATH=src:tests python -m unittest discover -s tests/dralithus/test
 ```
+
+## Building a Distributable Package
+
+To build a production-style package instead of installing the project in
+editable mode, run this from the project root:
+
+```bash
+python -m build
+```
+
+This creates the source distribution and wheel under `dist/`, for
+example:
+
+```text
+dist/dralithus_core-0.2.0.tar.gz
+dist/dralithus_core-0.2.0-py3-none-any.whl
+```
+
+To build only the wheel:
+
+```bash
+python -m build --wheel
+```
+
+Install the built wheel with:
+
+```bash
+python -m pip install dist/dralithus_core-0.2.0-py3-none-any.whl
+```
+
+Unlike `pip install -e .`, installing the wheel copies the packaged
+files into `site-packages`. This is useful for checking production
+packaging issues, such as missing template resources.
+
+A simple smoke test in a fresh virtual environment is:
+
+```bash
+python3.14 -m venv /tmp/dralithus-install-test
+/tmp/dralithus-install-test/bin/python -m pip install --upgrade pip
+/tmp/dralithus-install-test/bin/python -m pip install dist/dralithus_core-0.2.0-py3-none-any.whl
+/tmp/dralithus-install-test/bin/drl --help
+```
+
+If `python -m build` fails because the `build` package is not
+installed, refresh the project venv with `~/bin/packages3.sh`; `build`
+is listed in `packages.txt`.
+
+## Distribution with Devpi
+
+Devpi can host private wheels and also proxy public PyPI packages. This
+lets pip use one internal package index for both Milestone 42 packages
+and public dependencies.
+
+Install the Devpi server and client tools in the environment that will
+administer the index:
+
+```bash
+python -m pip install devpi-server devpi-client
+```
+
+Initialize and run a local Devpi server:
+
+```bash
+devpi-init --serverdir ~/devpi-server
+devpi-server --serverdir ~/devpi-server --host 127.0.0.1 --port 3141
+```
+
+In another shell, configure a user index that inherits from Devpi's
+public PyPI mirror:
+
+```bash
+devpi use http://127.0.0.1:3141
+devpi user -m root password=<root-password>
+devpi login root --password=<root-password>
+devpi user -c milestone42 password=<user-password>
+devpi user -m milestone42 pypi_whitelist='*'
+devpi login milestone42 --password=<user-password>
+devpi index -c dev bases=root/pypi
+devpi use milestone42/dev
+```
+
+Build the dralithus wheel and upload it:
+
+```bash
+python -m build --wheel
+devpi upload --from-dir dist
+```
+
+Install from the Devpi index:
+
+```bash
+python -m pip install --index-url http://127.0.0.1:3141/milestone42/dev/+simple/ dralithus-core
+```
+
+Or configure a venv to use Devpi by default:
+
+```bash
+python -m pip config set global.index-url http://127.0.0.1:3141/milestone42/dev/+simple/
+```
+
+With this setup, pip asks Devpi for every package. Devpi serves private
+packages uploaded to `milestone42/dev` and falls back to `root/pypi` for
+public packages. This avoids using pip's `extra-index-url`, where public
+and private indexes are searched together and a public package with the
+same name can be selected if it has the best matching version.
+
+For a server reachable by other machines, run Devpi behind HTTPS and
+use a stable service manager instead of an interactive shell. Devpi can
+generate example service and web-server configuration with:
+
+```bash
+devpi-gen-config --serverdir ~/devpi-server
+```
