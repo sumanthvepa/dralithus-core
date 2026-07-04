@@ -66,3 +66,23 @@ class TestCommand(unittest.TestCase, CaseExecutor):
       :param case: The test case
     """
     self.execute(make, case)
+
+  def test_make_dispatches_project_command(self) -> None:
+    """
+      Verify make dispatches the project command to its factory.
+
+      :return: None
+    """
+    self.fail(
+      'TODO: verify command.make() dispatches project to '
+      'project_command.make()')
+
+  def test_make_keeps_existing_help_and_deploy_behavior(self) -> None:
+    """
+      Verify project dispatch does not disturb help/deploy behavior.
+
+      :return: None
+    """
+    self.fail(
+      'TODO: verify project dispatch leaves help/deploy behavior '
+      'conceptually unchanged')
