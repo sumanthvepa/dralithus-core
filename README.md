@@ -232,3 +232,26 @@ generate example service and web-server configuration with:
 ```bash
 devpi-gen-config --serverdir ~/devpi-server
 ```
+
+## Local Install of Dralithus
+
+To install Dralithus in a local virtual environment, run the following commands:
+
+```bash
+python -m venv venv
+source venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install <path-to-dralithus-wheel>/ 
+```
+
+Now you have a local installation of Dralithus in your virtual environment. You can verify the installation by running:
+
+```bash
+drl --help
+```
+
+To create a new project using Dralithus, run:
+
+```bash
+drl project --create [--dry-run] <project-config.toml>
+```
