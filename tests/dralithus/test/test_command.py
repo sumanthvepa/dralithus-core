@@ -22,6 +22,7 @@
 # -------------------------------------------------------------------
 
 import unittest
+from unittest import mock
 
 from parameterized import parameterized
 
@@ -73,9 +74,16 @@ class TestCommand(unittest.TestCase, CaseExecutor):
 
       :return: None
     """
-    self.fail(
-      'TODO: verify command.make() dispatches project to '
-      'project_command.make()')
+    project_command = mock.Mock()
+
+    with mock.patch(
+      'dralithus.project_command.make',
+      return_value=project_command
+    ) as make_project_command:
+      command = make(['drl', 'project', '--create', 'project.toml'])
+
+    make_project_command.assert_called_once()
+    self.assertIs(project_command, command)
 
   def test_make_keeps_existing_help_and_deploy_behavior(self) -> None:
     """
@@ -83,6 +91,6 @@ class TestCommand(unittest.TestCase, CaseExecutor):
 
       :return: None
     """
-    self.fail(
-      'TODO: verify project dispatch leaves help/deploy behavior '
-      'conceptually unchanged')
+    command = make(['drl', '--help'])
+
+    self.assertEqual(HelpCommand('drl', None, None, 0), command)
