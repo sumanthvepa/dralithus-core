@@ -32,6 +32,7 @@ namespaces = true
 "dralithus.project.templates" = [
   "pylintrc",
   "mypy.ini",
-  "python-copyleft-header.txt",
+  "GPL-3.0-or-later.txt",
+  "UNLICENSED.txt",
 ]
 "dralithus.project.templates.parameterized" = ["__init__.pyi"]
