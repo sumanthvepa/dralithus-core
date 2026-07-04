@@ -300,3 +300,33 @@ class TestCopyrightHeader(unittest.TestCase):
         'missing-copyright-template.txt',
         self._COPYRIGHT_HOLDER,
         self._COPYRIGHT_YEAR)
+
+  def test_from_license_supports_gpl_3_0_or_later(self) -> None:
+    """
+      Verify from_license supports GPL-3.0-or-later.
+
+      :return: None
+    """
+    self.fail(
+      'TODO checkpoint 2: add red assertion for '
+      'CopyrightHeader.from_license("GPL-3.0-or-later", ...)')
+
+  def test_from_license_supports_unlicensed(self) -> None:
+    """
+      Verify from_license supports UNLICENSED.
+
+      :return: None
+    """
+    self.fail(
+      'TODO checkpoint 2: add red assertion for '
+      'CopyrightHeader.from_license("UNLICENSED", ...)')
+
+  def test_from_license_rejects_unsupported_license(self) -> None:
+    """
+      Verify from_license rejects unsupported license identifiers.
+
+      :return: None
+    """
+    self.fail(
+      'TODO checkpoint 2: add red assertion for '
+      'CopyrightHeader.from_license() unsupported-license rejection')
