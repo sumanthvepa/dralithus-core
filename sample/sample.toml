@@ -1,0 +1,28 @@
+# Project metadata and filesystem layout.
+[project]
+# The Python distribution/package project name.
+name = "sample"
+# A short human-readable project description.
+description = "Sample Project"
+# The initial project version written to pyproject.toml.
+version = "0.1.0"
+# The project root to populate, resolved relative to this TOML file.
+root = "."
+# The importable Python package directory to create under src/.
+package = "sample"
+# The virtual environment directory to create inside the project root.
+venv = "venv"
+
+# Python-specific project creation settings.
+[python]
+# The Python executable used to create the virtual environment.
+executable = "python"
+
+# Copyright and license metadata used for generated source headers.
+[copyright]
+# The copyright holder written into generated source headers.
+holder = "Sumanth Vepa"
+# The copyright year written into generated source headers.
+year = 2026
+# The license template to use for generated source headers.
+license = "GPL-3.0-or-later"
