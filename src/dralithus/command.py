@@ -115,6 +115,8 @@ def make(args: list[str]) -> Command:
     make_from_error as make_help_from_error)
   # pylint: disable-next=import-outside-toplevel
   from dralithus.deploy_command import make as make_deploy
+  # pylint: disable-next=import-outside-toplevel
+  from dralithus.project_command import make as make_project
 
   try:
     cmdln = parse(args)
@@ -124,6 +126,8 @@ def make(args: list[str]) -> Command:
 
     if cmdln.command_name == 'deploy':
       return make_deploy(cmdln)
+    if cmdln.command_name == 'project':
+      return make_project(cmdln)
 
     message = 'No command specified' if cmdln.command_name is None \
         else f'Unknown command \'{cmdln.command_name}\' specified'
