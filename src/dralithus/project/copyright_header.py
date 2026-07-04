@@ -30,6 +30,12 @@ from jinja2 import Environment, TemplateError
 from dralithus.project.error import DralithusProjectError
 
 
+_SUPPORTED_LICENSE_TEMPLATES = {
+  'GPL-3.0-or-later': 'GPL-3.0-or-later.txt',
+  'UNLICENSED': 'UNLICENSED.txt',
+}
+
+
 class CopyrightHeader:
   """
     Render a copyright header from a template.
@@ -235,19 +241,21 @@ class CopyrightHeader:
       Create a copyright header renderer from a license identifier.
 
       This is the command-facing factory for supported project
-      licenses such as GPL-3.0-or-later and UNLICENSED. The concrete
-      license-to-template mapping is intentionally left unimplemented
-      in this skeleton.
+      licenses such as GPL-3.0-or-later and UNLICENSED.
 
       :param license_id: The supported project license identifier
       :param copyright_holder: The copyright holder name
       :param copyright_year: The copyright year
       :return: The configured copyright header renderer
-      :raises NotImplementedError: Always in this skeleton
+      :raises DralithusProjectError: When license_id is unsupported
     """
-    del cls
-    del license_id
-    del copyright_holder
-    del copyright_year
-    raise NotImplementedError(
-      'CopyrightHeader.from_license() is not implemented yet')
+    if license_id in _SUPPORTED_LICENSE_TEMPLATES:
+      resource = _SUPPORTED_LICENSE_TEMPLATES[license_id]
+    else:
+      raise DralithusProjectError(
+        f'Unsupported copyright license: {license_id}')
+    return cls.from_template_resource(
+      'dralithus.project.templates',
+      resource,
+      copyright_holder,
+      copyright_year)

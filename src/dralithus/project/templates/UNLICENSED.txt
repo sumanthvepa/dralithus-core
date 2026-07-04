@@ -1,0 +1,5 @@
+{{ description }}
+
+Copyright (C) {{ copyright_year }} {{ copyright_holder }}.
+
+All rights reserved.
